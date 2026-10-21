@@ -1,0 +1,176 @@
+package app.planner
+
+import android.content.Context
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import app.planner.core.database.*
+import app.planner.core.model.*
+import app.planner.data.PlannerRepository
+import app.planner.domain.*
+import com.google.gson.Gson
+import java.time.*
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
+import org.junit.*
+import org.junit.Assert.*
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+@RunWith(RobolectricTestRunner::class) @Config(sdk = [35], application = android.app.Application::class)
+class RepositoryTest {
+    private lateinit var db: PlannerDatabase
+    private lateinit var repo: PlannerRepository
+    @Before fun setup() { db = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext<Context>(), PlannerDatabase::class.java).build(); repo = PlannerRepository(db, Gson()) }
+    @After fun close() { db.close() }
+    @Test fun captureAtomicallySavesNoteAndOutbox() = runBlocking {
+        val note = repo.capture("A thought", false)
+        assertEquals("A thought", db.dao().noteById(note.id)?.originalContent)
+        assertEquals(note.id, db.dao().nextOperation(Long.MAX_VALUE)?.entityId)
+        assertEquals(note, PlannerRepository(db, Gson()).dao.noteById(note.id))
+    }
+    @Test fun privateCaptureNeverUploads() = runBlocking {
+        repo.capture("Private", true)
+        assertNull(db.dao().nextOperation(Long.MAX_VALUE))
+    }
+    @Test fun diskDatabaseSurvivesCloseAndRecreation() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        context.deleteDatabase("persistence-test.db")
+        val first = Room.databaseBuilder(context, PlannerDatabase::class.java, "persistence-test.db").build()
+        val note = PlannerRepository(first, Gson()).capture("Persistent", true)
+        first.close()
+        val second = Room.databaseBuilder(context, PlannerDatabase::class.java, "persistence-test.db").build()
+        assertEquals("Persistent", second.dao().noteById(note.id)?.content)
+        second.close(); context.deleteDatabase("persistence-test.db"); Unit
+    }
+    @Test fun completionAndUndoPreserveRawInput() = runBlocking {
+        val note = repo.capture("Read", true, manualKind = "task", plannedFor = "2026-10-14")
+        val record = db.dao().recordsForNote(note.id).single()
+        repo.complete(record)
+        val complete = db.dao().recordById(record.id)!!
+        assertEquals("completed", complete.state); assertNotNull(complete.completedAt)
+        repo.complete(complete, true)
+        assertNull(db.dao().recordById(record.id)?.completedAt)
+        assertEquals("Read", db.dao().noteById(note.id)?.originalContent)
+    }
+    @Test fun ideaSelectionIsStableAndLaterDoesNotReplaceIt() = runBlocking {
+        repo.capture("First idea", true, manualKind = "idea")
+        val date = LocalDate.of(2026, 10, 14)
+        val chosen = repo.selectedIdea(date)!!
+        repo.capture("Another idea", true, manualKind = "idea")
+        assertEquals(chosen.id, repo.selectedIdea(date)?.id)
+        repo.later(chosen, date)
+        assertNull(repo.selectedIdea(date))
+        assertNotNull(repo.selectedIdea(date.plusDays(1)))
+    }
+    @Test fun todaySeparatesDeadlineAndSchedulingAndHandlesDst() {
+        val day = LocalDate.of(2026, 10, 25); val zone = ZoneId.of("Europe/Paris")
+        val bounds = dayBounds(day, zone)
+        assertEquals(25, Duration.between(Instant.parse(bounds.start), Instant.parse(bounds.end)).toHours())
+        assertTrue(isVisibleToday(Record(sourceNoteId = "n", title = "Due", dueDate = day.toString()), day, zone))
+        assertFalse(isVisibleToday(Record(sourceNoteId = "n", title = "Later", plannedFor = day.plusDays(1).toString()), day, zone))
+        assertFalse(isVisibleToday(Record(sourceNoteId = "n", title = "Done", plannedFor = day.toString(), state = "completed"), day, zone))
+    }
+    @Test fun retriesAreBoundedAndJittered() { assertTrue(retryDelayMillis(2, 0.0) < retryDelayMillis(2, 1.0)); assertTrue(retryDelayMillis(100, 1.0) <= 21_600_000) }
+    @Test fun scheduledMembershipHandlesContinuingSpansAndFutureStartsSeparatelyFromDeadlines() = runBlocking {
+        val day = LocalDate.of(2026, 10, 15); val zone = ZoneId.of("Europe/Paris")
+        val note = repo.capture("A timed item", true)
+        val ongoing = Record(sourceNoteId = note.id, title = "Continues", baseKind = "event", startAt = "2026-10-14T13:00:00.000Z", endAt = "2026-10-15T16:00:00.000Z")
+        val future = Record(sourceNoteId = note.id, title = "Future start, today's deadline", startAt = "2026-10-16T13:00:00.000Z", dueDate = day.toString())
+        db.dao().record(ongoing); db.dao().record(future)
+        val bounds = dayBounds(day, zone)
+        assertEquals(2, db.dao().day(bounds.day, bounds.start, bounds.end).first().size)
+        assertTrue(isScheduledOnDay(ongoing, day, zone))
+        assertFalse(isScheduledOnDay(future, day, zone))
+        assertFalse(isScheduledOnDay(ongoing.copy(state = "archived"), day, zone))
+    }
+
+    @Test fun pendingCorrectionsAndConfirmedRecordsRejectStaleAi() = runBlocking {
+        val note = repo.capture("Idea", false, manualKind = "idea")
+        val local = db.dao().recordsForNote(note.id).single()
+        repo.edit(local.copy(title = "Corrected"))
+        repo.mergeRecord(local.copy(title = "Late AI", isUserConfirmed = false, version = 100))
+        assertEquals("Corrected", db.dao().recordById(local.id)?.title)
+        for (op in db.dao().operationsForEntity(note.id) + db.dao().operationsForEntity(local.id)) db.dao().deleteOperation(op.id)
+        repo.mergeRecord(local.copy(id = java.util.UUID.randomUUID().toString(), title = "Unexpected task", baseKind = "task", isUserConfirmed = false))
+        assertEquals(1, db.dao().recordsForNote(note.id).size)
+    }
+    @Test fun outboxRetainsRetryIdentityAndOrdersParentBeforeEdits() = runBlocking {
+        val note = repo.capture("Task", false, manualKind = "task")
+        val record = db.dao().recordsForNote(note.id).single()
+        repo.edit(record.copy(title = "Changed"))
+        val first = db.dao().nextOperation(Long.MAX_VALUE)!!
+        assertEquals("notes", first.path)
+        db.dao().operation(first.copy(retryCount = 1))
+        assertEquals(first.id, db.dao().nextOperation(Long.MAX_VALUE)?.id)
+        db.dao().deleteOperation(first.id)
+        assertEquals("PATCH", db.dao().nextOperation(Long.MAX_VALUE)?.method)
+    }
+    @Test fun failedBackgroundSchedulingDoesNotTurnCommittedCaptureIntoFailure() = runBlocking {
+        repo.requestSync = { error("Unavailable scheduler") }
+        val saved = repo.capture("Durable without scheduler", false)
+        assertEquals(saved.content, db.dao().noteById(saved.id)?.content)
+        assertNotNull(db.dao().nextOperation(Long.MAX_VALUE))
+    }
+    @Test fun staleEditorCannotOverwriteANewerCorrection() = runBlocking {
+        val note = repo.capture("Original", true, manualKind = "task")
+        val before = db.dao().recordsForNote(note.id).single()
+        repo.edit(before.copy(title = "New correction"))
+        val result = runCatching { repo.edit(before.copy(title = "Stale form")) }
+        assertTrue(result.isFailure)
+        assertEquals("New correction", db.dao().recordById(before.id)?.title)
+    }
+    @Test fun completionUsesLatestFieldsAndDuplicateTapsDoNotRewriteTimestamp() = runBlocking {
+        val note = repo.capture("Original title", true, manualKind = "task")
+        val row = db.dao().recordsForNote(note.id).single()
+        repo.edit(row.copy(title = "Updated title"))
+        repo.complete(row)
+        val done = db.dao().recordById(row.id)!!
+        repo.complete(row)
+        assertEquals(done, db.dao().recordById(row.id))
+        assertEquals("Updated title", done.title)
+        repo.complete(row, true)
+        assertEquals("pending", db.dao().recordById(row.id)?.state)
+    }
+    @Test fun legacySchemasUpgradeWithoutLosingNotesOrOutbox() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        for (version in listOf(1, 2)) {
+            val name = "migration-$version.db"
+            context.deleteDatabase(name)
+            val schema = com.google.gson.JsonParser.parseString(java.io.File("schemas/app.planner.core.database.PlannerDatabase/$version.json").readText()).asJsonObject.getAsJsonObject("database")
+            context.openOrCreateDatabase(name, Context.MODE_PRIVATE, null).use { legacy ->
+                for (entry in schema.getAsJsonArray("entities")) {
+                    val entity = entry.asJsonObject
+                    fun sql(value: String) = value.replace("\${TABLE_NAME}", entity.get("tableName").asString)
+                    legacy.execSQL(sql(entity.get("createSql").asString))
+                    for (index in entity.getAsJsonArray("indices") ?: com.google.gson.JsonArray()) legacy.execSQL(sql(index.asJsonObject.get("createSql").asString))
+                }
+                legacy.execSQL("INSERT INTO notes VALUES (?, ?, ?, ?, ?, 'APP', 'CLOUD_ALLOWED', 'pending', 'pending', 1, 'en', 'UTC', 0)", arrayOf("legacy", "Unchanged", "Unchanged", "2026-10-14T00:00:00Z", "2026-10-14T00:00:00.123456Z"))
+                legacy.execSQL("INSERT INTO outbox VALUES ('op', 'legacy', 'legacy', 'notes', 'POST', '{}', 2, 0, NULL, 'queued', 1)")
+                legacy.version = version
+            }
+            val upgraded = Room.databaseBuilder(context, PlannerDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+            try {
+                val saved = upgraded.dao().noteById("legacy")!!
+                assertEquals("Unchanged", saved.originalContent)
+                if (version == 1) assertEquals("2026-10-14T00:00:00.000Z", saved.createdAt)
+                assertEquals(2, upgraded.dao().nextOperation(Long.MAX_VALUE)?.retryCount)
+            } finally { upgraded.close(); context.deleteDatabase(name) }
+        }
+    }
+    @Test fun developmentApprovalRejectsStaleResultsAndCreatesTasksOnce() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val engine = app.planner.sync.SyncEngine(context, repo, app.planner.core.Preferences(context), app.planner.core.network.TokenStore(context))
+        val note = repo.capture("Saved idea", false, manualKind = "idea")
+        val idea = db.dao().recordsForNote(note.id).single()
+        fun result(version: Int) = """{"id":"job-fixture","status":"complete","recordVersion":$version,"result":{"steps":["Contact school","Recruit tutors","Schedule a pilot"]}}"""
+        db.dao().meta(Meta("job:${idea.id}", result(idea.version + 1)))
+        assertTrue(runCatching { engine.approve(idea, "job-fixture", listOf("Contact school")) }.isFailure)
+        assertEquals(1, db.dao().noteCount())
+        db.dao().meta(Meta("job:${idea.id}", result(idea.version)))
+        engine.approve(idea, "job-fixture", listOf("Contact school", "Recruit tutors"))
+        engine.approve(idea, "job-fixture", listOf("Contact school", "Recruit tutors"))
+        assertEquals(3, db.dao().noteCount())
+        assertEquals(2, db.dao().notePage(50, 0).flatMap { db.dao().recordsForNote(it.id) }.count { it.baseKind == "task" })
+    }
+}

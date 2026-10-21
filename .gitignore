@@ -33,3 +33,13 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Backend and secrets
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.db
+*.sqlite*
+tmp/
