@@ -84,3 +84,5 @@ data class IdeaSlot(@PrimaryKey val day: String, val recordId: String?)
 data class Meta(@PrimaryKey val key: String, val value: String)
 
 data class StatusCount(val status: String, val count: Int)
+data class ProfileSummary(val notes: Int = 0, val completed: Int = 0, val ideas: Int = 0, val tasks: Int = 0)
+data class CollectionCount(val name: String, val count: Int)

@@ -2,11 +2,11 @@
 
 A runnable offline-first Android AI organizer with a FastAPI/PostgreSQL backend. Capture first; keep original notes; return structured tasks, commitments and ideas through a calm Today screen. Room drives Android business data, and AI proposes information that deterministic, version-aware code applies.
 
-The app includes Today, Journal, day Calendar, Ideas, Review, Settings, editable records, task completion/undo, durable sync and opt-in floating capture. It launches and supports private/manual capture without an AI key. The real provider adapter is implemented; **live AI remains unverified because no key/model was configured**.
+The app includes Today, day Calendar, Tasks, Ideas, Profile, Journal, Review, Settings, editable records, task completion/undo, durable sync and opt-in floating capture. It launches and supports private/manual capture without an AI key. The real provider adapter is implemented; **live AI remains unverified because no key/model was configured**.
 
 ## Run locally
 
-Requires Android Studio/JDK 21/SDK 37 and Docker Desktop:
+Requires Android Studio supporting AGP 9.4 (Quail 4 / 2026.1.4 or newer), a compatible Gradle JDK, SDK 37 and Docker Desktop:
 ```powershell
 if (!(Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }
 docker compose up -d --build
@@ -20,9 +20,9 @@ Complete SDK/environment, host/emulator networking, same-owner enrollment/renewa
 
 ## Verification
 
-Debug and unsigned release builds pass; lint has no errors. **15 Android unit tests, 5 Android acceptance tests and the separate runtime fixture test passed**. **31 backend tests passed**; PostgreSQL/Docker checks and detailed results are in [Testing](docs/TESTING.md). Offline save/reopen, real HTTP sync without AI configuration and API 36 overlay behavior were exercised.
+Debug and unsigned release builds pass; lint has no errors. The correction increment has **24 Android unit tests, 10 device acceptance tests, 2 component screenshot comparisons and 48 backend tests passing**; PostgreSQL/Docker checks and detailed results are in [Testing](docs/TESTING.md). Offline save/reopen, real HTTP sync without AI configuration and API 36 overlay behavior were exercised.
 
-Physical devices, live-provider inference, Play review and representative performance/accessibility remain open gates. Timed reminder delivery, recurrence expansion, external calendars, Search/media, cloud backup/import and fine-tuning are not delivered.
+Physical devices, live-provider inference, Play review and representative performance/accessibility remain open gates. Timed reminder delivery, recurrence expansion, external calendars, global Search/media, cloud backup/import and fine-tuning are not delivered.
 
 ## Documentation index
 
@@ -38,9 +38,11 @@ Physical devices, live-provider inference, Play review and representative perfor
 | [Roadmap](docs/ROADMAP.md) | Milestones, completed work and remaining acceptance |
 | [Running](docs/RUNNING.md) | Reproducible startup/configuration and platform limits |
 | [Testing](docs/TESTING.md) | Commands, executed outcomes and live-provider smoke procedure |
+| [Design system](docs/DESIGN_SYSTEM.md) | Fonts/licenses, tokens, components and responsive rules |
+| [Visual audit](docs/VISUAL_AUDIT.md) | Actual emulator captures and reference comparisons |
 | [UX behavior](docs/UX_BEHAVIOR.md) | Links to the owning behavior specifications |
 
-Project instructions: [AGENTS.md](AGENTS.md). Supplied pictures are unchanged **concepts**; runtime captures are separately captioned and use explicit QA fixtures, not production sample data.
+Project instructions: [AGENTS.md](AGENTS.md). Supplied pictures are unchanged **design references**; runtime captures are separately captioned and use explicit QA fixtures, not production sample data.
 
 ## Living documentation workflow
 

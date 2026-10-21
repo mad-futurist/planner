@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quick_capture_title">Quick capture</string>
+    <string name="quick_capture_subtitle">Jot it down. Organize later.</string>
+    <string name="quick_capture_private">Keep on this device</string>
+    <string name="quick_capture_trust">Saved locally first</string>
+</resources>

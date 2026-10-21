@@ -1,6 +1,6 @@
 # Running Planner
 
-Verified local environment: Windows 11, Java 21 (Android Studio JBR), Android SDK/platform 37, API 36 x86_64 emulator, Python 3.12, uv 0.12.2, Docker Desktop. Run PowerShell commands from the repository root unless stated otherwise.
+Current verification environment (2026-10-21): Windows 11, Android Studio 2026.2.2 with bundled JBR 25.0.4 (previous checks used Java 21), Android SDK/platform 37, API 36 x86_64 emulator, Python 3.12, uv 0.12.2, Docker Desktop. Run PowerShell commands from the repository root unless stated otherwise.
 
 ## Backend with Docker Compose
 
@@ -32,11 +32,12 @@ LLM_BASE_URL=https://YOUR_COMPATIBLE_PROVIDER/v1
 LLM_API_KEY=YOUR_BACKEND_ONLY_KEY
 LLM_MODEL=YOUR_PROVIDER_MODEL_ID
 LLM_TIMEOUT_SECONDS=30
+LLM_RESPONSE_FORMAT=auto
 WORKER_CONCURRENCY=2
 MAX_JOB_ATTEMPTS=5
 ```
 
-The adapter calls /chat/completions with JSON-object output plus a schema in the prompt and validates the result. Select a model/provider supporting that contract and max_tokens. This is replaceable backend integration; no provider key belongs in Android. Requests may incur provider charges.
+The adapter calls /chat/completions with strict JSON Schema by default. Auto mode falls back once only on an explicit unsupported-format error; json_schema disallows fallback and json_object selects validated legacy JSON mode. Both paths decode/validate before durable application. [API negotiation](API.md#error-and-job-handling) describes the unchanged extraction DTO and provider-only wire lists. Select a model/provider supporting that contract and max_tokens. This is replaceable backend integration; no provider key belongs in Android. Requests may incur provider charges.
 
 After configuration:
 ```powershell
@@ -60,7 +61,7 @@ In another terminal, from backend: uv run --frozen python -m app.jobs.worker. Is
 
 ## Android
 
-Open the android folder in Android Studio and use JDK 21 for Gradle. Install SDK platform 37/build tools and an API 36 emulator. Minimum runtime is API 26; the executed device tests cover API 36.
+Open the android folder in Android Studio Quail 4 (2026.1.4) or newer that supports AGP 9.4. Keep the pinned AGP 9.4.1 / Gradle 9.6.0; Studio 2025.2.1 only supports AGP 8.13. The current installed Studio 2026.2.2 bundled JBR 25.0.4 runs the build; Java 21 also passed earlier checks. Select the compatible bundled JBR in Settings → Build Tools → Gradle. Install SDK platform 37/build tools and an API 36 emulator. Minimum runtime is API 26; the executed device tests cover API 36.
 
 Android Studio creates ignored android/local.properties. On Windows, a manual SDK path needs an escaped drive colon, e.g. sdk.dir=C\:/Users/NAME/AppData/Local/Android/Sdk. Set ANDROID_HOME or JAVA_HOME as appropriate for CLI use.
 
@@ -73,7 +74,7 @@ adb shell am start -n app.planner/.MainActivity
 
 If adb is not on PATH, use SDK/platform-tools/adb.exe. Linux/macOS use ./android/gradlew -p android :app:assembleDebug.
 
-The application works without a backend: write a note, view Journal, use the plus menu for a manual task/idea, and edit stored records. For cloud processing, Settings → backend URL **http://10.0.2.2:8000** on the standard emulator and the invitation above. 10.0.2.2 routes to the host; localhost inside the emulator refers to the emulator itself. Physical devices need a reachable HTTPS endpoint; Android's local HTTP exception is restricted to debug emulator/loopback hosts. adb reverse tcp:8000 tcp:8000 plus http://127.0.0.1:8000 is another debug-device option.
+The application works without a backend: write a private note, open Profile → Journal, use the plus menu for a manual task/idea, and edit stored records. For cloud processing, explicitly allow Cloud AI from the composer privacy control (or the first-use explanation); existing private notes stay private. Then Profile → Settings → AI organization & connection → backend URL **http://10.0.2.2:8000** on the standard emulator and the invitation above. 10.0.2.2 routes to the host; localhost inside the emulator refers to the emulator itself. Physical devices need a reachable HTTPS endpoint; Android's local HTTP exception is restricted to debug emulator/loopback hosts. adb reverse tcp:8000 tcp:8000 plus http://127.0.0.1:8000 is another debug-device option.
 
 Release build:
 ```powershell

@@ -313,3 +313,23 @@ def test_irrelevant_correction_is_not_a_universal_context_example(system):
     provider = MockProvider()
     process_one(factory, provider)
     assert provider.context["corrections"] == []
+
+
+@pytest.mark.parametrize("text,evidence", [("Meet Thursday at 14", "Thursday at 14"), ("Rendez-vous jeudi à 14", "jeudi à 14"), ("Встреча в четверг в 14", "четверг в 14")])
+def test_bare_hours_with_explicit_time_intro_are_valid(text, evidence):
+    from app.domain.validation import semantic_review
+    result = Extraction.model_validate({"records": [{"baseKind": "event", "title": "Meeting", "startAt": "2026-10-15T12:00:00Z", "evidence": {"startAt": evidence}}]})
+    assert semantic_review(result, text, "2026-10-13T09:00:00Z", "Europe/Paris") == []
+
+
+def test_bare_quantity_does_not_validate_an_invented_hour():
+    from app.domain.validation import semantic_review
+    result = Extraction.model_validate({"records": [{"baseKind": "task", "title": "Read", "dueAt": "2026-10-14T12:00:00Z", "evidence": {"dueAt": "Read 14 pages tomorrow"}}]})
+    assert "A precise time was not supplied" in semantic_review(result, "Read 14 pages tomorrow", "2026-10-13T09:00:00Z", "Europe/Paris")
+
+
+@pytest.mark.parametrize("text", ["Due at 2026-10-22", "Meet Thursday at 14:3", "Meet Thursday at 14.30"])
+def test_partial_year_or_malformed_clock_is_not_an_explicit_hour(text):
+    from app.domain.validation import semantic_review
+    result = Extraction.model_validate({"records": [{"baseKind": "task", "title": "Saved", "dueAt": "2026-10-22T20:00:00Z", "evidence": {"dueAt": text}}]})
+    assert "A precise time was not supplied" in semantic_review(result, text, "2026-10-21T09:00:00Z", "UTC")

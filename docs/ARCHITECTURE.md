@@ -1,12 +1,16 @@
 # Architecture
 
-Last reviewed: **2026-10-17**. Actual source structure and behavior are described below. Verification and remaining gates: [Features](FEATURES.md), [Testing](TESTING.md).
+Last reviewed: **2026-10-21**. Actual source structure and behavior are described below. Verification and remaining gates: [Features](FEATURES.md), [Testing](TESTING.md).
 
 ## Modules and dependencies
 
-One Android app module keeps package boundaries without speculative build modules. Kotlin, Compose/Material 3, MVVM, Hilt, Room, DataStore, Retrofit/OkHttp, WorkManager, and Navigation Compose are used. [Gradle build](../android/app/build.gradle.kts) pins versions; [root build](../android/build.gradle.kts) pins plugins and the official wrapper pins Gradle 9.6.0 with a distribution checksum. AGP 9.4.1, Kotlin/Compose compiler 2.4.21, KSP 2.3.12; compile SDK 37, target 36, minimum 26; Java 21 runs Gradle and bytecode targets Java 17. Material 3 1.4.0 avoids an unpublished dependency pulled by unused preview tooling.
+One Android app module keeps package boundaries without speculative build modules. Kotlin, Compose/Material 3, MVVM, Hilt, Room, DataStore, Retrofit/OkHttp, WorkManager, and Navigation Compose are used. [Gradle build](../android/app/build.gradle.kts) pins versions; [root build](../android/build.gradle.kts) pins plugins and the official wrapper pins Gradle 9.6.0 with a distribution checksum. AGP 9.4.1, Kotlin/Compose compiler 2.4.21, KSP 2.3.12; compile SDK 37, target 36, minimum 26; Gradle passed earlier checks on Java 21 and current checks on JBR 25.0.4; bytecode targets Java 17. Material 3 1.4.0 avoids an unpublished dependency pulled by unused preview tooling.
 
 Backend is a Python 3.12 modular monolith with a separately run worker sharing PostgreSQL. FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, httpx, and psycopg are resolved in [uv.lock](../backend/uv.lock). [Docker Compose](../docker-compose.yml) defines database, one-shot migration, API, and durable worker. No in-memory FastAPI background queue, Redis, Kafka, or microservices.
+
+The installed IDE is Android Studio 2026.2.2. Studio Quail 4 (2026.1.4) or newer supporting AGP 9.4 is required for IDE sync; the earlier 2025.2.1 installation supported only AGP 8.13. Keep the pinned toolchain; no downgrade was made. The current bundled JBR runs the wrapper; Java 17 remains the output target. See [Running](RUNNING.md).
+
+Presentation now uses a shared [design system](DESIGN_SYSTEM.md), a navigation/composer shell, [organizer screens](../android/app/src/main/java/app/planner/features/OrganizerScreens.kt), and separate [record dialogs](../android/app/src/main/java/app/planner/features/RecordDialogs.kt). No new runtime UI dependency was introduced. Fonts and licenses are bundled for offline rendering. Task/idea lists page 50 rows; count/profile queries aggregate in Room rather than counting the visible page. Daily review/rotation reuse existing Meta/IdeaSlot tables; schema stays v3.
 
 ## Source map
 
@@ -51,7 +55,7 @@ flowchart LR
 
 ## Lifecycle, bounds, and failure handling
 
-Room suspend queries and Retrofit run away from the UI thread. UI subscribes with lifecycle-aware collectors; obsolete date/page queries cancel through flatMapLatest. Journal pages contain 50 notes; Today/Ideas queries cap records at 200; sync sends at most 50 operations and pulls at most ten 100-change pages per run. Export streams keyset pages. Metadata observation excludes accumulated job results, which are observed per selected idea. Stable LazyColumn keys prevent row identity churn.
+Room suspend queries and Retrofit run away from the UI thread. UI subscribes with lifecycle-aware collectors; obsolete date/page queries cancel through flatMapLatest. Journal pages contain 50 notes; Today queries cap records at 200; Tasks/Ideas use 50-row paging; sync sends at most 50 operations and pulls at most ten 100-change pages per run. Export streams keyset pages. Metadata observation excludes accumulated job results, which are observed per selected idea. Stable LazyColumn keys prevent row identity churn.
 
 WorkManager provides connectivity-aware one-time work plus 15-minute periodic refresh; it is not an exact scheduler. Foreground polling runs while STARTED, every eight seconds after the previous run. Transport retry limit is eight; AI retry limit defaults to five with exponential jitter. Worker concurrency defaults to two and is clamped to 1–8. Leases expire after two minutes and protect application of obsolete results. Temporary database failures retry without logging SQL parameters or private text. HTTP request bodies cap at 128 KiB; response/schema bounds are documented in [API](API.md).
 
@@ -63,7 +67,13 @@ User-started specialUse foreground service owns WindowManager views, a low-impor
 
 The bubble hides inside Planner, on screen-off/lock, and during its own permission flow. AppOps revocation stops the service. Rotation removes/repositions windows and preserves the draft. No AccessibilityService, clipboard monitoring, other-app reading, boot receiver, or resurrection promise. Android secure windows suppress overlays; Play review and OEM behavior require separate validation ([ADR-013](DECISIONS.md#adr-013-opt-in-overlay-and-notification-lifecycle)).
 
+## Provider structured output boundary
+
+The HTTP adapter defaults to strict closed JSON Schema. [Provider wire schema](../backend/app/ai/structured.py) adapts open fields/evidence maps to bounded key/value arrays; decoding restores unchanged extraction v1 before Pydantic and semantic validation. Automatic fallback occurs once only after an explicit unsupported-format HTTP 400/422. Refusal, truncation, bad output and auth errors do not downgrade. Request/response bounds and durable job/version guards remain. [API](API.md#error-and-job-handling) owns negotiation details.
+
 ## Security boundary
+
+New captures are private unless the persisted consent version and explicit cloud mode both allow transmission. Consent and mode are written in one DataStore edit. The main composer explains server/provider transmission; native overlay cannot enable cloud without recorded consent. Previously eligible queued notes retain their original choice.
 
 Operator-issued invitations enroll independent random device tokens; Android encrypts its token with Keystore AES-GCM, while PostgreSQL stores hashes. A local dataset has one persisted owner; changing identities requires explicit export/clear. Android backup is disabled. Release disallows cleartext; debug permits only emulator/loopback hosts. Local SQLite itself is not encrypted. Consumer SSO/recovery, managed secret rotation, production TLS termination, backups, abuse controls beyond ingestion limits, and Play distribution are operational work, not verified security claims.
 

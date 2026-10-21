@@ -1,6 +1,6 @@
 # Data model
 
-Last reviewed: **2026-10-17**. These are actual schemas; intended product semantics are in [Concept](CONCEPT.md). [API](API.md) owns wire contracts.
+Last reviewed: **2026-10-21**. These are actual schemas; intended product semantics are in [Concept](CONCEPT.md). [API](API.md) owns wire contracts.
 
 ## Current Room implementation
 
@@ -16,7 +16,7 @@ Last reviewed: **2026-10-17**. These are actual schemas; intended product semant
 | UserRule / rules | UUID, description, conditions/action JSON, enabled, explicitlyApproved |
 | OutboxOperation / outbox | Stable UUID, entity/note dependency IDs, method/path/immutable payload; retry count, next-attempt epoch milliseconds, safe error, queued/failed/conflict status, monotonic ordering time |
 | IdeaSlot / idea_slots | Local calendar day primary key and selected record UUID |
-| Meta / meta | Owner, incremental cursor, connection/provider status, timings, daily triage deferrals, individual development results and approval markers |
+| Meta / meta | Owner, incremental cursor, connection/provider status, timings, daily note/task triage slots/seen/snooze values, individual development results and approval markers |
 
 Room relationships are enforced by repository transactions and source IDs; foreign keys are not declared on these local entities. PostgreSQL uses foreign keys. Do not add destructive deletion or change provenance without a migration and both-side integrity tests.
 
@@ -39,6 +39,8 @@ The User/Job/Change relationships are backend-only; the others also describe log
 
 ## Temporal semantics
 
+2026-10-21 increment (**implemented; repository tests passed**): Tasks has paginated Today (including earlier unresolved execution days), Upcoming, Someday, All, Completed and Archived queries. Execution date takes priority over a deadline for these discovery buckets; deadlines remain separately displayed. Today focus predicates are unchanged. Old unresolved tasks return in at most three stable daily slots, stored in Meta (`task-review:DAY`, `task-seen:ID`, `task-snooze:ID`); Later snoozes review for seven days without changing a deadline. Idea candidates sort by least-recently shown slot date, then creation/UUID. Conversion creates a new raw note/task with `fields.developedFrom`; splitting uses `fields.splitFrom`. No entity columns change: Room stays v3, prior migrations remain registered.
+
 - Instants: startAt, endAt, dueAt, remindAt, completedAt and creation/update fields use fixed millisecond UTC ISO strings, e.g. 2026-10-15T13:30:00.000Z. Offset inputs normalize before storage; fixed width supports indexed lexical comparisons.
 - Days: plannedFor is execution date; dueDate is a date-only deadline; deferredUntil is idea eligibility. These use YYYY-MM-DD. dueDate and dueAt are mutually exclusive.
 - timezone preserves IANA capture/record context. Display and daily queries use the current device timezone; backend relative dates resolve against capture time in the note's timezone.
@@ -46,10 +48,16 @@ The User/Job/Change relationships are backend-only; the others also describe log
 - Today includes pending records with starts in the day or ongoing spans crossing its start; pending tasks also qualify by plannedFor/dueDate or dueAt within the day. Schedule membership is evaluated separately, preventing a deadline from becoming a meeting. Untimed qualifying tasks appear in Anytime. Overdue-only tasks are not automatically added.
 - Record start/end never imply an invented duration. A deadline does not create an external calendar event.
 - Completion sets a separate instant and state; undo clears it. Done Today filters by completion instant, rather than planned date.
-- Idea selection persists the oldest eligible idea (creation, then UUID) on first availability that day. No empty slot is written before an idea exists. Later defers until tomorrow and retains today's selected slot, so another idea does not replace it.
+- Idea selection persists the least recently shown eligible idea, using MAX(day) from previous slots, then creation/UUID as deterministic tie-breakers. Unseen ideas sort first. No empty slot is written before an idea exists. Later defers until tomorrow and retains today's selected slot, so another idea does not replace it.
 - Reminder timestamps and recurrence strings are retained data only. Alarm delivery and occurrence expansion are not implemented.
 
 Exact predicates: [DayPolicy](../android/app/src/main/java/app/planner/domain/DayPolicy.kt), [DAO](../android/app/src/main/java/app/planner/core/database/PlannerDatabase.kt).
+
+## Local preferences and discovery
+
+DataStore adds `cloudConsent=cloud-notes-v1`, `privateCapture`, `appearance` (system/light/dark) and `weekStart` (sunday/monday). Missing, unknown or legacy consent fails closed to private. These do not alter existing raw-note privacy flags or queued operations. Clear local data also clears consent and returns capture to private.
+
+Tasks filters page 50 rows with stable pin/date/creation/UUID ordering. All unfinished tasks remain reachable independent of Today’s 200-row day limit. Completed/archived views use the same records table. Ideas search title/details through a bound SQL LIKE query with 50-row paging; LIKE is ASCII case-insensitive and preserves SQLite’s case-sensitive behavior for non-ASCII characters. Conversion does not remove the source idea from this query. Linked tasks default to private; UI passes the consent-gated current capture choice, and an original private note can never be escalated to cloud by conversion/splitting. Profile metrics are SQL aggregates; collections join each record’s pinned type version.
 
 ## Integrity and versioning requirements
 

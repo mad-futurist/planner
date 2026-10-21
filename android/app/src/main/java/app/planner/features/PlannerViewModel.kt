@@ -2,6 +2,7 @@ package app.planner.features
 
 import androidx.lifecycle.*
 import app.planner.core.Preferences
+import app.planner.core.CapturePrivacy
 import app.planner.core.database.*
 import app.planner.core.model.*
 import app.planner.data.PlannerRepository
@@ -14,7 +15,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 @HiltViewModel
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class PlannerViewModel @Inject constructor(val repository: PlannerRepository, val preferences: Preferences, val sync: SyncEngine) : ViewModel() {
     private val dao = repository.dao
     val draft = MutableStateFlow("")
@@ -25,6 +26,11 @@ class PlannerViewModel @Inject constructor(val repository: PlannerRepository, va
     val saving = MutableStateFlow(false)
     val message = MutableStateFlow<String?>(null)
     val selectedDate = MutableStateFlow(LocalDate.now())
+    val taskFilter = MutableStateFlow("today")
+    val taskPage = MutableStateFlow(0)
+    val ideaSearch = MutableStateFlow("")
+    val ideaPage = MutableStateFlow(0)
+    val cloudExplanation = MutableStateFlow(false)
     val page = MutableStateFlow(0)
     val localReads = MutableStateFlow<Map<String, String>>(emptyMap())
     private val reload = MutableStateFlow(0)
@@ -40,7 +46,12 @@ class PlannerViewModel @Inject constructor(val repository: PlannerRepository, va
     val todayItems = observe("today", emptyList<Record>()) { today.flatMapLatest { day -> dayBounds(day, ZoneId.systemDefault()).let { dao.day(it.day, it.start, it.end) } } }
     val tomorrowItems = observe("tomorrow", emptyList<Record>()) { today.flatMapLatest { day -> dayBounds(day.plusDays(1), ZoneId.systemDefault()).let { dao.day(it.day, it.start, it.end) } } }
     val completed = observe("completed", emptyList<Record>()) { today.flatMapLatest { day -> dayBounds(day, ZoneId.systemDefault()).let { dao.completed(it.start, it.end) } } }
-    val ideas = observe("ideas", emptyList<Record>()) { dao.ideas() }
+    val ideas = observe("ideas", emptyList<Record>()) { combine(ideaSearch.debounce(180),ideaPage) { query,page->query to page }.flatMapLatest { (query,page)->dao.ideas(50,page*50,query) } }
+    val tasks = observe("tasks", emptyList<Record>()) { combine(taskFilter, taskPage, today) { filter, page, day -> Triple(filter, page, day) }.flatMapLatest { (filter, page, day) -> dao.tasks(filter, day.toString(), dayBounds(day, ZoneId.systemDefault()).end, offset = page * 50) } }
+    val taskCounts = observe("taskCounts", emptyMap<String, Int>()) { today.flatMapLatest { day -> dao.taskCounts(day.toString(), dayBounds(day, ZoneId.systemDefault()).end) }.map { it.associate { count -> count.status to count.count } } }
+    val profile = observe("profile", ProfileSummary()) { dao.profile() }
+    val collections = observe("collections", emptyList<CollectionCount>()) { dao.collections() }
+    val taskReview = observe("taskReview", emptyList<Record>()) { today.flatMapLatest { day -> dao.reviewCandidates(day.toString(), dayBounds(day, ZoneId.systemDefault()).start, app.planner.core.isoInstant(day.minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant())).map { repository.reviewTasks(day) } } }
     val triage = observe("triage", emptyList<RawNote>()) { dao.triage() }
     val types = observe("types", emptyList<TypeDefinition>()) { dao.types() }
     val metadata = observe("metadata", emptyMap<String, String>()) { dao.observeMeta().map { rows -> rows.associate { it.key to it.value } } }
@@ -56,7 +67,7 @@ class PlannerViewModel @Inject constructor(val repository: PlannerRepository, va
             catch (e: CancellationException) { throw e } catch (_: Exception) { message.value = "Couldn't restore the draft. New captures stay private until preferences are readable." }
         }
         viewModelScope.launch {
-            preferences.values.map { it["privateCapture"] == "true" }.distinctUntilChanged().catch { error -> if (error is CancellationException) throw error; emit(true) }.collect { privateCapture.value = it }
+            preferences.values.map { CapturePrivacy.isPrivate(it) }.distinctUntilChanged().catch { error -> if (error is CancellationException) throw error; emit(true) }.collect { privateCapture.value = it }
         }
         viewModelScope.launch {
             reload.flatMapLatest { combine(dao.ideas(), today) { _, date -> date }.map { repository.selectedIdea(it) }.onStart { localReads.update { it + ("idea" to "loading") } }.onEach { selected -> idea.value = selected; localReads.update { it + ("idea" to "ready") } }.catch { error -> if (error is CancellationException) throw error; idea.value = null; localReads.update { it + ("idea" to "error") } } }.collect()
@@ -82,7 +93,7 @@ class PlannerViewModel @Inject constructor(val repository: PlannerRepository, va
         action {
             try {
                 val started = System.nanoTime()
-                repository.capture(text, private, manualKind = manualKind, plannedFor = if (manualKind == "task") today.value.toString() else null)
+                repository.capture(text, private, manualKind = if(manualKind == "task_unscheduled") "task" else manualKind, plannedFor = if (manualKind == "task") today.value.toString() else null)
                 if (draft.value == text) setDraft("")
                 captureKind.value = null
                 page.value = 0
@@ -98,7 +109,12 @@ class PlannerViewModel @Inject constructor(val repository: PlannerRepository, va
         if (currentZone != observedZone) { observedZone = currentZone; reloadLocalQueries() }
     }
     fun reloadLocalQueries() { reload.value += 1 }
-    fun setPrivacy(private: Boolean) { privateCapture.value = private; action { preferences.set("privateCapture", private.toString()) } }
+    fun setPrivacy(private: Boolean) = action {
+        if (!private && preferences.values.first()["cloudConsent"] != CapturePrivacy.CONSENT_VERSION) cloudExplanation.value = true
+        else { preferences.capturePrivacy(private); privateCapture.value = private }
+    }
+    fun allowCloud() = action { preferences.capturePrivacy(false, informedConsent = true); privateCapture.value = false; cloudExplanation.value = false }
+    fun filterTasks(value: String) { taskPage.value = 0; taskFilter.value = value }
     fun finish(record: Record) = action { repository.complete(record); undoId.value = record.id; message.value = "Marked done" }
     fun undo() = action { undoId.value?.let { id -> dao.recordById(id)?.let { repository.complete(it, true) } }; undoId.value = null }
 }

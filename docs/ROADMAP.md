@@ -1,10 +1,10 @@
 # Roadmap
 
-Last reviewed: **2026-10-17**. Implementation is delivered in the current checkout; acceptance is scoped, with live-provider/device gates still open. [Features](FEATURES.md) owns statuses and evidence.
+Last reviewed: **2026-10-21**. Implementation is delivered in the current checkout; acceptance is scoped, with live-provider/device gates still open. [Features](FEATURES.md) owns statuses and evidence.
 
 ## Completed work and current boundary
 
-The 2026-10-14 baseline had README/LICENSE/.gitignore and project instructions, with no app/backend. Documentation and reference pictures were established first. The later full MVP brief authorized development. Android, backend, migrations, real provider adapter, sync, all six primary routes and opt-in floating capture now exist and run. Original screen concepts remain unchanged and separately labeled.
+The 2026-10-14 baseline had README/LICENSE/.gitignore and project instructions, with no app/backend. Documentation and reference pictures were established first. The later full MVP brief authorized development. Android, backend, migrations, real provider adapter, sync, all eight primary/secondary routes and opt-in floating capture now exist and run. Original screen concepts remain unchanged and separately labeled.
 
 ## Milestones
 
@@ -14,7 +14,7 @@ The 2026-10-14 baseline had README/LICENSE/.gitignore and project instructions, 
 | B — Offline capture | Verified | Local note/outbox transaction, original text, Journal/manual organization, persisted drafts; offline force-stop/reopen and recreation tests pass |
 | C — Backend | Verified | FastAPI/auth, SQLAlchemy/Alembic/PostgreSQL, durable jobs, replaceable real HTTP provider; 31 tests and Docker/fresh migration pass; live model quality remains an M2 gate |
 | D — End-to-end sync | Verified | Ordered idempotent outbox, WorkManager/foreground refresh, transactional cursor, conflicts/corrections; real Android/backend compatibility passes with AI unconfigured |
-| E — Today and organizer | Implemented | Actual Room sections and interactions, Calendar/Ideas/Review/Settings/editors; key UI/repository and fixture checks pass; full primitive/picker/export matrix remains |
+| E — Today and organizer | Implemented | Actual Room sections and interactions, Calendar/Tasks/Ideas/Profile/Review/Settings/editors; key UI/repository and fixture checks pass; full primitive/picker/export matrix remains |
 | F — Floating capture | Implemented | Opt-in permission, specialUse lifecycle, shared capture, gestures/draft/IME/Back/rotation/revocation; API 36 emulator checks; physical/OEM/store gate open |
 | G — Reliability/polish | In Progress | Migrations, version guards, durable failure states, bounded work, TLS/privacy boundaries, tests and handoff docs; representative performance/accessibility/live-provider gates open |
 
@@ -25,7 +25,13 @@ Acceptance groups:
 - **M3 functional Room Today: Implemented**, with scoped automated/visual verification. Larger device/UX acceptance remains explicit.
 - Floating capture is delivered on the tested API 36 configuration; no universal Android/OEM availability or Play approval is claimed.
 
+## 2026-10-21 correction milestone
+
+Delivered: paginated Tasks including undated/earlier/archive recovery; real Profile summaries; bounded persistent old-task review; multiday idea rotation; preserved idea-to-task provenance/search; informed cloud consent; strict provider schema negotiation and bare-hour validation; reusable reference-led design, all routes and refined native overlay. Bundled fonts/licenses, runtime comparisons and component goldens are included. No runtime UI framework or toolchain churn was introduced.
+
 ## Pending acceptance tasks
+
+2026-10-21 functional corrections and reference-led UI are implemented; scoped visual/device verification is recorded in [Features](FEATURES.md) and [Visual audit](VISUAL_AUDIT.md). Room schema, backend DTOs and the existing outbox are preserved. Live inference remains blocked by absent credentials rather than a fabricated pass.
 
 1. Configure a compatible real provider and run [live smoke](TESTING.md#live-provider-smoke-test): EN/FR/RU multi-intent/time semantics, editing/restart, delayed correction precedence, idea development/approval.
 2. Extend notification/export/clear checks beyond API 36; test export failures/large datasets, all generic field primitives, native DST picker and archive/restore. Notification capture, parsed export and clear cancel/confirmation already passed on the emulator.
@@ -40,4 +46,4 @@ Each implementation change updates its owning doc and relevant Features/Roadmap 
 
 ## Beyond MVP
 
-Timed reminder scheduling/exact-alarm policy, recurrence occurrence generation, external calendars, Search/full backlog, voice/images, advanced appearance, cloud backup/import, fine-tuning, vector retrieval and automatic type discovery are not delivered. Avoid adding inactive controls for these.
+Timed reminder scheduling/exact-alarm policy, recurrence occurrence generation, external calendars, global Search/project management, voice/images, advanced appearance, cloud backup/import, fine-tuning, vector retrieval and automatic type discovery are not delivered. Avoid adding inactive controls for these.

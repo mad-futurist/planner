@@ -57,9 +57,13 @@ TypeDTO includes UUID/schemaVersion/name/baseKind, up to 32 primitive field defi
 
 Extraction is schemaVersion=1 with up to 12 proposals and ambiguity reasons. Each proposal includes kind/title/fields, optional custom type/temporal values, and original-text evidence. Temporal validation checks both dates and actual clock times; unsupported expressions or repeated local times require review. History records riskLevel validated_low/review_required rather than a confidence probability. Development returns 3–5 nonblank steps, each at most 1,000 characters.
 
+Bare-hour evidence such as “Thursday at 14”, “jeudi à 14” or “четверг в 14” can validate 14:00. Quantities, partial year matches, malformed minutes and unsupported dot-separated clocks cannot authorize an invented hour/minute; they remain review cases.
+
 ASGI bodies are capped at 131,072 bytes. Provider requests cap at 128 KiB; oversized context fails durably. Context contains up to 50 latest enabled types, 20 approved rules (contains strings up to 200 characters), and five correction examples. Provider responses cap at 128,000 bytes and generated output at 4,096 tokens; configured timeout defaults to 30 seconds. Ingestion allows 60 new notes per owner per rolling minute based on server received_at; retry of an existing operation/note is deduplicated before that limit.
 
 ## Error and job handling
+
+2026-10-21 provider increment (**In Progress; live inference blocked without credentials**): `LLM_RESPONSE_FORMAT=auto` attempts strict closed JSON Schema, then retries once in JSON-object mode only for an explicit unsupported `response_format` HTTP 400/422. `json_schema` disables fallback; `json_object` explicitly selects legacy mode. Provider-only fields/evidence use bounded key/value lists, decoded and validated into unchanged extraction v1 DTOs. Truncation/refusal, malformed/duplicate fields, authorization failures and ordinary invalid output never trigger fallback. Both paths retain Pydantic, evidence/date/clock/DST and registry validation. Strict format requirements: [official OpenAI documentation](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=chat).
 
 HTTP error bodies use FastAPI detail; validation errors contain field-specific entries. UI displays safe messages and retains local work.
 

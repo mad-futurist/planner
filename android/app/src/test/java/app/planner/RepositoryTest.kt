@@ -158,6 +158,111 @@ class RepositoryTest {
             } finally { upgraded.close(); context.deleteDatabase(name) }
         }
     }
+    @Test fun undatedAndEarlierTasksRemainDiscoverableAndArchiveIsSeparate() = runBlocking {
+        val date = LocalDate.of(2026, 10, 21); val bounds = dayBounds(date, ZoneId.of("UTC"))
+        suspend fun task(title: String, planned: String? = null): Record = repo.dao.recordsForNote(repo.capture(title, true, manualKind = "task", plannedFor = planned).id).single()
+        val undated = task("Unscheduled")
+        val earlier = task("Earlier", "2026-10-01")
+        val future = task("Future", "2026-10-22")
+        val archived = task("Archived"); repo.edit(archived.copy(state = "archived"))
+        assertEquals(listOf(undated.id), repo.dao.tasks("someday", bounds.day, bounds.end).first().map { it.id })
+        assertEquals(listOf(earlier.id), repo.dao.tasks("today", bounds.day, bounds.end).first().map { it.id })
+        assertEquals(listOf(future.id), repo.dao.tasks("upcoming", bounds.day, bounds.end).first().map { it.id })
+        assertEquals(3, repo.dao.tasks("all", bounds.day, bounds.end).first().size)
+        assertEquals(listOf(archived.id), repo.dao.tasks("archived", bounds.day, bounds.end).first().map { it.id })
+        assertFalse(isVisibleToday(undated, date, ZoneId.of("UTC")))
+        assertFalse(isVisibleToday(earlier, date, ZoneId.of("UTC")))
+    }
+    @Test fun taskDiscoveryPagesBeyondTheTodayBoundWithoutDroppingRecords() = runBlocking {
+        repeat(106) { repo.capture("Unscheduled $it", true, manualKind = "task") }
+        val day = dayBounds(LocalDate.now(), ZoneId.systemDefault())
+        val ids = (0..2).flatMap { repo.dao.tasks("someday", day.day, day.end, offset = it * 50).first().map { it.id } }
+        assertEquals(106, ids.toSet().size)
+        assertEquals(106, repo.dao.taskCounts(day.day, day.end).first().single().count)
+    }
+    @Test fun overdueInstantUsesLocalDayBoundaryAndCompletionIsExcluded() = runBlocking {
+        val bounds = dayBounds(LocalDate.of(2026, 10, 21), ZoneId.of("Europe/Paris"))
+        val note = repo.capture("Deadline", true, manualKind = "task")
+        val task = repo.dao.recordsForNote(note.id).single().copy(dueAt = "2026-10-21T22:15:00.000Z")
+        repo.edit(task)
+        assertEquals(1, repo.dao.tasks("upcoming", bounds.day, bounds.end).first().size)
+        repo.complete(task)
+        assertTrue(repo.dao.tasks("all", bounds.day, bounds.end).first().isEmpty())
+        assertEquals(1, repo.dao.tasks("completed", bounds.day, bounds.end).first().size)
+    }
+    @Test fun ideaRotationIsStableAcrossDaysAndSkipsArchivedAlternatives() = runBlocking {
+        repeat(3) { repo.capture("Idea $it", true, manualKind = "idea") }
+        val date = LocalDate.of(2026, 10, 21)
+        val first = repo.selectedIdea(date)!!; repo.later(first, date)
+        assertNull(repo.selectedIdea(date))
+        val second = repo.selectedIdea(date.plusDays(1))!!
+        assertEquals(second.id, repo.selectedIdea(date.plusDays(1))!!.id)
+        val third = repo.selectedIdea(date.plusDays(2))!!
+        assertEquals(3, setOf(first.id, second.id, third.id).size)
+        assertEquals(first.id, repo.selectedIdea(date.plusDays(3))!!.id)
+        repo.edit(repo.dao.recordById(second.id)!!.copy(state = "archived"))
+        assertNotEquals(second.id, repo.selectedIdea(date.plusDays(4))!!.id)
+        val corrected = repo.selectedIdea(date.plusDays(4))!!
+        repo.edit(corrected.copy(baseKind = "task"))
+        assertNull(repo.selectedIdea(date.plusDays(4)))
+    }
+    @Test fun conversionPreservesIdeaAndQueuesProvenanceWithNewCloudCapture() = runBlocking {
+        val note = repo.capture("Original idea", false, manualKind = "idea")
+        val idea = repo.dao.recordsForNote(note.id).single()
+        val task = repo.linkedTask(idea, private = false)
+        assertEquals(idea, repo.dao.recordById(idea.id))
+        assertEquals(idea.id, repo.dao.ideas(query = "Original idea").first().single().id)
+        assertEquals("Original idea", repo.dao.noteById(note.id)!!.originalContent)
+        assertNotEquals(note.id, task.sourceNoteId)
+        assertEquals(idea.id, com.google.gson.JsonParser.parseString(task.fieldsJson).asJsonObject.get("developedFrom").asString)
+        val operation = repo.dao.operationsForEntity(task.sourceNoteId).single()
+        assertTrue(operation.payload.contains("developedFrom"))
+        val before = repo.dao.noteCount()
+        assertTrue(runCatching { repo.linkedTask(idea, " ") }.isFailure)
+        assertEquals(before, repo.dao.noteCount())
+    }
+    @Test fun linkedActionsFailClosedToPrivateEvenWhenTheirSourceWasCloudAllowed() = runBlocking {
+        val cloud = repo.capture("Previously shared idea", false, manualKind = "idea")
+        val idea = repo.dao.recordsForNote(cloud.id).single()
+        val privateTask = repo.linkedTask(idea, "A new private next step")
+        assertEquals("LOCAL_ONLY", repo.dao.noteById(privateTask.sourceNoteId)?.privacyMode)
+        assertEquals(0, repo.dao.pendingForNote(privateTask.sourceNoteId))
+        val local = repo.capture("Private idea", true, manualKind = "idea")
+        val localTask = repo.linkedTask(repo.dao.recordsForNote(local.id).single(), private = false)
+        assertEquals("LOCAL_ONLY", repo.dao.noteById(localTask.sourceNoteId)?.privacyMode)
+    }
+    @Test fun oldTaskReviewIsBoundedPersistedAndSnoozeDoesNotInventDates() = runBlocking {
+        val day = LocalDate.of(2026, 10, 21)
+        repeat(5) {
+            val note = repo.capture("Old task $it", true, manualKind = "task")
+            val task = repo.dao.recordsForNote(note.id).single()
+            repo.dao.record(task.copy(createdAt = "2026-09-01T00:00:00.000Z", updatedAt = "2026-09-01T00:00:00.000Z"))
+        }
+        val initial = repo.reviewTasks(day)
+        assertEquals(3, initial.size)
+        assertEquals(initial.map { it.id }, repo.reviewTasks(day).map { it.id })
+        repo.snoozeTask(initial.first(), day)
+        assertEquals(2, repo.reviewTasks(day).size)
+        assertNull(repo.dao.recordById(initial.first().id)!!.dueDate)
+        assertFalse(repo.reviewTasks(day.plusDays(1)).any { it.id == initial.first().id })
+        assertTrue(repo.reviewTasks(day.plusDays(7)).any { it.id == initial.first().id })
+    }
+    @Test fun absentLegacyOrRevokedCloudConsentIsAlwaysPrivate() {
+        val privacy = app.planner.core.CapturePrivacy
+        assertTrue(privacy.isPrivate(emptyMap()))
+        assertTrue(privacy.isPrivate(mapOf("privateCapture" to "false")))
+        assertFalse(privacy.isPrivate(mapOf("privateCapture" to "false", "cloudConsent" to privacy.CONSENT_VERSION)))
+        assertTrue(privacy.isPrivate(mapOf("privateCapture" to "true", "cloudConsent" to privacy.CONSENT_VERSION)))
+    }
+    @Test fun profileCountsActualSavedRecordsIncludingPreservedIdeas() = runBlocking {
+        assertEquals(ProfileSummary(), repo.dao.profile().first())
+        val note = repo.capture("Keep this idea", true, manualKind = "idea")
+        val idea = repo.dao.recordsForNote(note.id).single()
+        val task = repo.linkedTask(idea)
+        assertEquals(ProfileSummary(notes = 2, ideas = 1, tasks = 1), repo.dao.profile().first())
+        repo.complete(task)
+        assertEquals(ProfileSummary(notes = 2, completed = 1, ideas = 1), repo.dao.profile().first())
+    }
     @Test fun developmentApprovalRejectsStaleResultsAndCreatesTasksOnce() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val engine = app.planner.sync.SyncEngine(context, repo, app.planner.core.Preferences(context), app.planner.core.network.TokenStore(context))

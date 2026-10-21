@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Literal
 
 
 class Settings(BaseSettings):
@@ -8,6 +9,7 @@ class Settings(BaseSettings):
     llm_model: str = ""
     llm_base_url: str = "https://api.openai.com/v1"
     llm_timeout_seconds: float = 30
+    llm_response_format: Literal["auto", "json_schema", "json_object"] = "auto"
     worker_concurrency: int = 2
     max_job_attempts: int = 5
 

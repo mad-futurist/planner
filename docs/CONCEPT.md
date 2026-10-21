@@ -1,6 +1,6 @@
 # Product concept
 
-Last reviewed: **2026-10-17**. This document owns **intended behavior**. [Features](FEATURES.md) distinguishes implementation from executed verification.
+Last reviewed: **2026-10-21**. This document owns **intended behavior**. [Features](FEATURES.md) distinguishes implementation from executed verification.
 
 ## Vision
 
@@ -25,7 +25,7 @@ The interface answers “What matters now?” and “Where do I put the next tho
 
 ### Capture and organize
 
-Write in the main composer or floating panel; choose Private when desired. Save raw text and eligible outbox work in one Room transaction. Confirm after commit and allow the next thought immediately. Cloud-eligible notes synchronize and undergo background interpretation. Pending, failed, ambiguous, and unconfigured processing remain separate from successful local saving. Manual organization remains usable offline.
+Write in the main composer or floating panel; keep the private default or explicitly consent to Cloud AI for future captures. Save raw text and eligible outbox work in one Room transaction. Confirm after commit and allow the next thought immediately. Cloud-eligible notes synchronize and undergo background interpretation. Pending, failed, ambiguous, and unconfigured processing remain separate from successful local saving. Manual organization remains usable offline.
 
 Examples: “Call the doctor tomorrow” is an untimed task; “Finish the report by Friday” has a deadline; “Meet Nicolas Thursday at 14:00 and prepare questions by Wednesday” may produce multiple records. English, French, and Russian are supported extraction inputs; live quality still needs [provider acceptance](TESTING.md#live-provider-smoke-test).
 
@@ -37,9 +37,13 @@ Journal exposes original text, timestamp, processing status, and interpretations
 
 Today contains scheduled commitments, a two-item initial Anytime focus pool, a quiet tomorrow preview, one stable saved idea, and an actual completed-task recap. It does not surface a red overdue backlog. Date navigation in Calendar exposes scheduling, planning, and deadline meanings. See [temporal semantics](DATA_MODEL.md#temporal-semantics) for the implemented inclusion policy.
 
+### Find an unfinished task
+
+Tasks keeps every unfinished task discoverable through paginated Today & earlier, Upcoming, Someday and All views. Undated tasks never acquire an artificial deadline. Archived and completed tasks have separate recovery views. Today remains a small focus surface. Up to three older unresolved tasks can return in a stable daily Review set; Today offers one quiet link. Today, Later, Smaller action and Let go are explicit choices.
+
 ### Develop an idea
 
-Explicitly request 3–5 proposed next steps; select and approve tasks before creation. Later defers the saved idea until tomorrow and leaves today's slot empty. Selection stays stable across reopening. Missing configuration, offline service, invalid output, and stale results must offer recovery without fabricated suggestions.
+Explicitly request 3–5 proposed next steps; select and approve tasks before creation. Later defers the saved idea until tomorrow and leaves today's slot empty. Daily selection prefers the least recently shown eligible idea and stays stable across reopening. Make a task creates a linked action and preserves the original idea; approved AI development remains a separate flow. Missing configuration, offline service, invalid output, and stale results must offer recovery without fabricated suggestions.
 
 ### Capture over another app
 
@@ -47,12 +51,14 @@ Enable Floating quick capture in Settings, grant Android's overlay permission, a
 
 ## Intended scope
 
-MVP: Android Today, Journal, day Calendar, Ideas, Review, Settings, editable records, persistent capture, floating capture, real FastAPI/provider integration, durable jobs/sync, versioned types, corrections, and approved simple rules.
+MVP: Android Today, day Calendar, Tasks, Ideas, Profile, Journal, Review, Settings, editable records, persistent capture, floating capture, real FastAPI/provider integration, durable jobs/sync, versioned types, corrections, and approved simple rules.
 
-Outside MVP: external calendar writes, fine-tuning, embeddings infrastructure, automatic type discovery, media/voice capture, Search, a full backlog, advanced appearance settings, cloud backup/import, and analytics. Timed reminders and recurrence expansion are **not delivered**: timestamps/rules can be stored without claiming notification delivery or generated occurrences.
+Outside MVP: external calendar writes, fine-tuning, embeddings infrastructure, automatic type discovery, media/voice capture, global Search, project/backlog management, cloud backup/import, and analytics. Timed reminders and recurrence expansion are **not delivered**: timestamps/rules can be stored without claiming notification delivery or generated occurrences.
 
 ## Current discrepancies
 
-The full MVP request superseded the earlier documentation-only scope and main-screen-only design iteration; the calm color direction remains adopted ([ADR-011](DECISIONS.md#adr-011-current-implementation-and-calmer-today-direction)). Real app/backend code now exists and builds. The provider adapter is implemented, but no API key/model was supplied, so live extraction/development acceptance is unexecuted. Physical-device, store-policy, accessibility, and representative performance gates remain in [Roadmap](ROADMAP.md).
+The 2026-10-21 brief supersedes the simplified visual treatment in ADR-011. Supplied screenshots now guide typography, mint/sand/apricot/lavender colors, card composition, original vector accents and navigation ([ADR-016](DECISIONS.md#adr-016-reference-led-ui-and-complete-task-discovery)). Intended parity does not authorize fake identities, inactive controls, invented AI activity or screen-content blur. Actual captures/comparisons are in [Visual audit](VISUAL_AUDIT.md).
+
+The real provider adapter supports strict schema requests with a validated compatibility fallback. No key/model is configured: live extraction/development remains unverified. Physical-device, store-policy, accessibility and representative performance gates remain in [Roadmap](ROADMAP.md).
 
 Related: [Screens](SCREENS.md), [Architecture](ARCHITECTURE.md), [Features](FEATURES.md).

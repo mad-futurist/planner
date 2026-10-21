@@ -12,6 +12,7 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.flow.first
 
 @Singleton
 class PlannerRepository @Inject constructor(val database: PlannerDatabase, val gson: Gson) {
@@ -86,9 +87,53 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
     suspend fun selectedIdea(date: LocalDate): Record? = database.withTransaction {
         val day = date.toString()
         val slot = dao.ideaSlot(day) ?: dao.ideaCandidate(day)?.let { IdeaSlot(day, it.id).also { chosen -> dao.slot(chosen) } } ?: return@withTransaction null
-        slot.recordId?.let { dao.recordById(it) }?.takeIf { it.state == "pending" && (it.deferredUntil == null || it.deferredUntil <= day) }
+        slot.recordId?.let { dao.recordById(it) }?.takeIf { it.baseKind == "idea" && it.state == "pending" && (it.deferredUntil == null || it.deferredUntil <= day) }
     }
     suspend fun later(record: Record, date: LocalDate) = edit(record.copy(deferredUntil = date.plusDays(1).toString()))
+
+    /** Keep one daily set stable. Snoozes and completion hide a slot without silently replacing it. */
+    suspend fun reviewTasks(date: LocalDate): List<Record> = database.withTransaction {
+        val key = "task-review:$date"
+        val saved = dao.metadata(key)
+        val ids = if (saved != null) JsonParser.parseString(saved.value).asJsonArray.map { it.asString } else {
+            val bounds = dayBounds(date, ZoneId.systemDefault())
+            val candidates = dao.reviewCandidates(date.toString(), bounds.start, isoInstant(date.minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant())).first()
+            if (candidates.isNotEmpty()) {
+                dao.meta(Meta(key, gson.toJson(candidates.map { it.id })))
+                candidates.forEach { dao.meta(Meta("task-seen:${it.id}", date.toString())) }
+            }
+            candidates.map { it.id }
+        }
+        val bounds = dayBounds(date, ZoneId.systemDefault())
+        val day = date.toString()
+        val cutoff = isoInstant(date.minusDays(7).atStartOfDay(ZoneId.systemDefault()).toInstant())
+        ids.mapNotNull { dao.recordById(it) }.filter {
+            it.state == "pending" && it.updatedAt < cutoff && (it.plannedFor ?: it.dueDate ?: "") < day &&
+                (it.startAt ?: it.dueAt ?: "") < bounds.start && (dao.metadata("task-snooze:${it.id}")?.value ?: "") <= day &&
+                !isVisibleToday(it, date, ZoneId.systemDefault())
+        }
+    }
+
+    suspend fun snoozeTask(record: Record, date: LocalDate) {
+        dao.meta(Meta("task-snooze:${record.id}", date.plusDays(7).toString()))
+    }
+
+    /** New raw capture + new confirmed record; the originating idea/task is never rewritten. */
+    suspend fun linkedTask(origin: Record, title: String = origin.title, plannedFor: String? = null, private: Boolean = true): Record = database.withTransaction {
+        require(title.isNotBlank() && title.length <= 1000) { "Enter an action of up to 1,000 characters." }
+        val current = dao.recordById(origin.id) ?: error("The original item is no longer available.")
+        require(current.state == "pending" && current.baseKind in setOf("idea", "task")) { "Restore this item before creating an action." }
+        val note = dao.noteById(current.sourceNoteId) ?: error("The original note is unavailable.")
+        val (newNote, planned) = CaptureNote.plan(title, private || note.privacyMode == "LOCAL_ONLY", "APP", "task", plannedFor)
+        val task = planned!!.copy(fieldsJson = JsonObject().apply { addProperty(if (current.baseKind == "idea") "developedFrom" else "splitFrom", current.id) }.toString())
+        dao.note(newNote); dao.record(task)
+        if (newNote.privacyMode != "LOCAL_ONLY") {
+            val payload = gson.toJsonTree(newNote).asJsonObject.apply { add("records", JsonArray().apply { add(recordJson(task)) }) }
+            queueOperation(OutboxOperation(entityId = newNote.id, noteId = newNote.id, path = "notes", payload = payload.toString()))
+        }
+        runCatching { requestSync() }
+        task
+    }
 
     suspend fun manualInterpretation(note: RawNote, kind: String, title: String, plannedFor: String?) {
         require(title.isNotBlank() && title.length <= 1000) { "Enter a title of up to 1,000 characters." }

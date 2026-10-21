@@ -80,10 +80,14 @@ def semantic_review(extraction: Extraction, content: str, created_at: str, timez
                 continue
             if field.endswith("At"):
                 clocks = set()
-                for match in re.finditer(r"\b(\d{1,2})(?:[:h](\d{2}))?\s*(am|pm|h\b|heures?\b|час\w*)?", evidence.casefold()):
+                for match in re.finditer(r"\b(\d{1,2})(?:[:h](\d{2}))?\s*(am|pm|h\b|heures?\b|час\w*)?(?![\d:h]|\.\d)", evidence.casefold()):
                     hour, minute, suffix = match.groups()
                     if minute is None and suffix is None:
-                        continue
+                        # Bare hours are valid only after an explicit language-specific
+                        # time introducer; a date, quantity or task number is not a clock.
+                        prefix = evidence[max(0, match.start() - 10):match.start()].casefold()
+                        if re.search(r"(?:\bat\s+|\bà\s+|\bв\s+)$", prefix) is None:
+                            continue
                     hour, minute = int(hour), int(minute or 0)
                     if suffix in {"am", "pm"}:
                         if not 1 <= hour <= 12:

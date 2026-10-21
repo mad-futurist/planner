@@ -26,6 +26,13 @@ class Preferences @Inject constructor(@ApplicationContext private val context: C
     init { watchDraft() }
     fun saveOverlayDraft(text: String) { overlayDraft.value = text }
     fun withLatest(action: (Map<String, String>) -> Unit) { scope.launch { runCatching { action(values.first()) } } }
+    suspend fun capturePrivacy(private: Boolean, informedConsent: Boolean = false) {
+        context.plannerPreferences.edit {
+            require(private || informedConsent || it[stringPreferencesKey("cloudConsent")] == CapturePrivacy.CONSENT_VERSION) { "Cloud AI needs your explicit permission first." }
+            if (informedConsent) it[stringPreferencesKey("cloudConsent")] = CapturePrivacy.CONSENT_VERSION
+            it[stringPreferencesKey("privateCapture")] = private.toString()
+        }
+    }
     suspend fun set(key: String, value: String) {
         if (key == "overlayDraft") overlayDraft.value = value
         context.plannerPreferences.edit { if (key != "overlayDraft" || overlayDraft.value == value) it[stringPreferencesKey(key)] = value }

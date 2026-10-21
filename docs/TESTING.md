@@ -1,8 +1,18 @@
 # Testing and verification
 
-Last reviewed: **2026-10-17 (Europe/Paris)**. Backend/build/unit/manual evidence dates from October 15; the final Android acceptance run dates from October 17. Scope and feature statuses: [Features](FEATURES.md). Run on a disposable emulator; instrumentation adds QA notes, and the explicit preview fixture replaces local app data.
+Last reviewed: **2026-10-21 (Europe/Paris)**. The correction increment is reported first; October 15/17 results remain historical below. Scope and feature statuses: [Features](FEATURES.md). Run on a disposable emulator; instrumentation adds QA notes, and the explicit preview fixture replaces local app data.
 
 ## Executed results
+
+2026-10-21 baseline: Android debug and original **15 unit tests passed**; backend **30 passed/1 PostgreSQL skip** while the local database service was stopped. Restoring that service enabled the PostgreSQL fixture.
+
+Current correction evidence: **24 Android repository/domain tests passed**, zero failures/skips, including original 1/2→3 migration preservation; **48 backend tests passed**, zero skips, including actual PostgreSQL claims. Debug/unsigned release build and lint pass: **0 errors, 7 warnings**. The current host is Studio 2026.2.2/JBR 25.0.4; bytecode targets Java 17.
+
+**10 device acceptance tests passed** on the separate API 36 Planner_Visual_QA emulator, including private save/recreation, all eight routes, completion/Undo, manual interpretation, actual enrolled HTTP sync/rejected-edit recovery/provenance, consent cancellation/allow, undated task/archive recovery, grouped settings/cancel, smaller-action review and preserved idea search/source editing. The initial navigation run caught Profile incorrectly restoring a secondary page; it passed after correction. No existing user emulator data was cleared.
+
+The explicit full runtime fixture/audit passed at both 1080×2400 / font 1.0 and 945×2100 / font 1.4 (all required screen captures plus native overlay save to Room). The empty/private-first-use fixture also passed. **Two component golden comparisons passed** after visual review, separately from their recording run. Small-screen/font-scale results are recorded in [Visual audit](VISUAL_AUDIT.md). Live provider remains blocked: current health/config reports `aiConfigured=false`; transport fixtures and schema requests are not live inference.
+
+Historical October 15/17 checks (not a replacement for the current results above):
 
 | Check | Actual result / environment |
 | --- | --- |
@@ -55,6 +65,29 @@ adb shell am start -n app.planner/.MainActivity
 
 The preview clears local notes/credentials/connection and seeds manual private records solely in androidTest. Capture screenshots after the actual Today UI appears; caption them as fixtures. No test provider or sample seeding is included in the production app.
 
+### Current visual and component checks
+
+Use a **disposable** API 36 emulator. The preview fixture clears its local Room data, endpoint and credentials; it must not run on a personal device/dataset. This session used `Planner_Visual_QA` on `emulator-5556`; check the AVD identity before selecting that serial.
+
+```powershell
+$taskAdb="$env:LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe"
+$taskQa='emulator-5556'
+& $taskAdb -s $taskQa emu avd name
+& $taskAdb -s $taskQa install -r android/app/build/outputs/apk/debug/app-debug.apk
+& $taskAdb -s $taskQa install -r android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+& $taskAdb -s $taskQa shell appops set app.planner SYSTEM_ALERT_WINDOW allow
+& $taskAdb -s $taskQa shell am start -W -n app.planner/.MainActivity
+& $taskAdb -s $taskQa shell am instrument -w -e class app.planner.PreviewFixtureTest -e preview true -e audit true app.planner.test/androidx.test.runner.AndroidJUnitRunner
+& $taskAdb -s $taskQa pull /sdcard/Android/data/app.planner/files/visual-audit docs/assets/runtime/2026-10-21/
+& $taskAdb -s $taskQa shell am instrument -w -e class app.planner.DesignSystemScreenshotTest app.planner.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+The first command must identify the disposable QA AVD. The audit expects `OK (1 test)`; goldens expect `OK (2 tests)`. The adb process exit code alone is insufficient: inspect runner output for failures/crashes. The fixture records private manual data only, verifies an actual overlay save and disables its service afterward. Use `-e empty true` with `preview=true` for the private first-use state.
+
+Component goldens are in `android/app/src/androidTest/assets/goldens`. They pin the API 36 / density 420 / font scale 1.0 / GMT environment. For an intentional design change, record with `-e recordGoldens true`, pull `.../files/goldens`, visually inspect both themes, then rebuild the test APK and run normal comparison. A failed comparison must not update its own baseline. Current tolerance: at most 0.5% pixels with any channel differing by more than 16. The goldens are cropped fixed components, not reference-image equality tests.
+
+For responsive capture, set `wm size 945x2100` and `settings put system font_scale 1.4` on the disposable device, run the audit, pull into a separate directory, then **always restore** `font_scale 1.0` and `wm size reset`. These overrides never touched the user's existing emulator.
+
 Documentation:
 ```powershell
 uv run --project backend python tools/check_docs.py
@@ -83,8 +116,8 @@ Tests do not establish secure-window suppression on every OEM, exact process-sur
 
 **Unexecuted procedure**; use a disposable enrolled account and non-sensitive examples. Configure compatible key/model through [Running](RUNNING.md), recreate API/worker and verify aiConfigured=true. That flag alone is insufficient.
 
-1. Capture “Meet Nicolas tomorrow at 14:00 and prepare questions by today”; verify local saving first, then a real stored event and separate task, dates resolved from capture timezone, original text preserved.
-2. Repeat French “Rendez-vous avec Nicolas demain à 14h00” and Russian “Встреча с Николя завтра в 14:00”; inspect correct local clock/day and Unicode.
+1. In Profile → Settings → AI organization & connection, enroll using the local server URL/invitation. Tap the composer privacy row, read the explanation, and explicitly allow Cloud AI for new notes. Capture “Meet Nicolas tomorrow at 14:00 and prepare questions by today”; verify local saving first, then a real stored event and separate task, dates resolved from capture timezone, original text preserved.
+2. Also capture “Meet Thursday at 14”, “Rendez-vous jeudi à 14” and “Встреча в четверг в 14”; require local 14:00 with original evidence, no invented duration. Repeat French “Rendez-vous avec Nicolas demain à 14h00” and Russian “Встреча с Николя завтра в 14:00”; inspect correct local clock/day and Unicode.
 3. Capture “Call the doctor tomorrow”; expect an untimed task, no invented appointment hour/duration. Capture an ambiguous “next Friday” expression; verify review instead of guessing.
 4. Edit kind/title/date while extraction is in flight; verify delayed output cannot overwrite correction. Restart app/API/worker, then confirm records/corrections and ordered outbox remain.
 5. Verify Today/Calendar inclusion, complete/undo and daily recap while online/offline.
@@ -100,3 +133,11 @@ Tests do not establish secure-window suppression on every OEM, exact process-sur
 - Extended multi-device conflicts/network outages and production HTTPS/backups/signing/credential recovery.
 
 Related: [Roadmap](ROADMAP.md), [API](API.md), [Screens](SCREENS.md).
+
+## Verification incidents and scope
+
+The new device tests initially exposed Profile restoring a secondary destination, and a test attempted navigation before an asynchronously saved dialog had closed. Profile navigation was corrected; the test now waits for visible navigation after save/IME dismissal. Visual comparison caught and corrected variable-font weight, heavy shadows and a clipped filter count at 140% type.
+
+One immediate post-install fixture launch reported `Process crashed` without a Java app crash trace. A normal cold Activity launch succeeded, and subsequent complete fixture, acceptance and golden runs passed. The fixture now stops leftover QA overlay state before reseeding. This observation is retained rather than counted as a pass; no physical-device or prolonged stability guarantee is inferred.
+
+Current build/lint checks ran on the final Android sources. Backend/API/worker images were rebuilt with the provider/date corrections; local health remains database ok and `aiConfigured=false`. Live-provider smoke is still unexecuted, with its exact procedure above. Original reference hashes, runtime/golden PNG validity and documentation links are checked by `tools/check_docs.py`.

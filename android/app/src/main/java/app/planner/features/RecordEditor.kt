@@ -16,7 +16,7 @@ import com.google.gson.*
 import java.time.LocalDate
 
 @Composable
-internal fun RecordEditor(vm: PlannerViewModel, record: Record, close: () -> Unit) {
+internal fun RecordEditor(vm: PlannerViewModel, record: Record, openRelated: ((String) -> Unit)? = null, close: () -> Unit) {
     var title by rememberSaveable(record.id) { mutableStateOf(record.title) }
     var kind by rememberSaveable(record.id) { mutableStateOf(record.baseKind) }
     var planned by rememberSaveable(record.id) { mutableStateOf(record.plannedFor) }
@@ -36,10 +36,14 @@ internal fun RecordEditor(vm: PlannerViewModel, record: Record, close: () -> Uni
     var error by remember { mutableStateOf<String?>(null) }
     val note by produceState<app.planner.core.model.RawNote?>(null, record.sourceNoteId) { value = vm.repository.dao.noteById(record.sourceNoteId) }
     val specs = definition?.let { JsonParser.parseString(it.fieldDefinitions).asJsonObject } ?: JsonObject()
-    val keys = (specs.keySet() + fields.value.keys).distinct()
+    val provenanceKeys = setOf("developedFrom", "splitFrom", "suggestionJobId")
+    val keys = (specs.keySet() + fields.value.keys).distinct().filterNot { it in provenanceKeys }
+    val originId = (originalFields.get("developedFrom") ?: originalFields.get("splitFrom"))?.takeIf { it.isJsonPrimitive }?.asString
+    val origin by produceState<Record?>(null, originId) { value = originId?.let { vm.repository.dao.recordById(it) } }
     AlertDialog(onDismissRequest = close, title = { Text("Details") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             note?.let { Text("Original note", style = MaterialTheme.typography.labelSmall); Text(it.originalContent, style = MaterialTheme.typography.bodySmall) }
+            if (origin != null && openRelated != null) TextButton({ openRelated(origin!!.id) }) { Text("From ${origin!!.baseKind}: ${origin!!.title}", maxLines = 2) }
             OutlinedTextField(title, { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth())
             KindPicker(kind) { kind = it; customTypeId = null; typeVersion = null }
             Box {

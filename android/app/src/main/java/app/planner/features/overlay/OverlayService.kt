@@ -18,6 +18,8 @@ import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.graphics.toArgb
 import app.planner.core.Preferences
+import app.planner.core.CapturePrivacy
+import app.planner.core.designsystem.Glyph
 import app.planner.core.designsystem.Palette
 import app.planner.data.PlannerRepository
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,6 +31,9 @@ import kotlin.math.abs
 
 @AndroidEntryPoint
 class OverlayService : Service() {
+    private class CaptureBubble(context: Context) : ImageButton(context) {
+        override fun performClick(): Boolean = super.performClick()
+    }
     @Inject lateinit var repository: PlannerRepository
     @Inject lateinit var preferences: Preferences
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate + CoroutineExceptionHandler { _, _ ->
@@ -44,6 +49,13 @@ class OverlayService : Service() {
     private var positionX = 1f
     private var positionY = 0.04f
     private var closing = false
+    private var overlayAppearance = "system"
+    private fun darkPanel() = overlayAppearance == "dark" || (overlayAppearance != "light" && resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES)
+    private fun paper() = if(darkPanel()) Color.rgb(23,36,31) else Palette.Ivory.toArgb()
+    private fun ink() = if(darkPanel()) Color.rgb(234,243,237) else Palette.Charcoal.toArgb()
+    private fun mint() = if(darkPanel()) Color.rgb(36,67,55) else Palette.Mint.toArgb()
+    private fun secondaryInk() = if(darkPanel()) Color.rgb(177,196,187) else Palette.Secondary.toArgb()
+    private fun accent() = if(darkPanel()) Color.rgb(168,216,195) else Palette.Teal.toArgb()
     private var backDispatcher: android.window.OnBackInvokedDispatcher? = null
     private var backCallback: android.window.OnBackInvokedCallback? = null
     private val screenEvents = object : BroadcastReceiver() {
@@ -68,8 +80,8 @@ class OverlayService : Service() {
     private fun rounded(color: Int, radius: Int = 24) = GradientDrawable().apply { setColor(color); cornerRadius = dp(radius).toFloat() }
     private fun panelButton(label: String, primary: Boolean = false) = Button(this).apply {
         text = label; isAllCaps = false; textSize = 16f; minWidth = 0; minHeight = 0
-        setTextColor(if (primary) Color.WHITE else Palette.Teal.toArgb())
-        background = rounded(if (primary) Palette.Teal.toArgb() else Palette.Mint.toArgb(), 24)
+        setTextColor(if (primary) Color.WHITE else accent())
+        background = rounded(if (primary) Palette.Teal.toArgb() else mint(), 24)
         setPadding(dp(12), 0, dp(12), 0)
     }
 
@@ -82,6 +94,7 @@ class OverlayService : Service() {
         getSystemService(AppOpsManager::class.java).startWatchingMode(AppOpsManager.OPSTR_SYSTEM_ALERT_WINDOW, packageName, permissionListener)
         scope.launch {
             val saved = preferences.values.first()
+            overlayAppearance = saved["appearance"] ?: "system"
             positionX = saved["overlayX"]?.toFloatOrNull() ?: 1f; positionY = saved["overlayY"]?.toFloatOrNull() ?: 0.04f
             if (saved["overlay"] == "true" && Settings.canDrawOverlays(this@OverlayService)) {
                 running.value = true; getSystemService(android.app.NotificationManager::class.java).cancel(101); if (unlocked()) showBubble()
@@ -89,7 +102,7 @@ class OverlayService : Service() {
         }
         scope.launch {
             OverlayManager.appVisible.collect { visible ->
-                if (visible) { persistDraft(); removeWindows() } else if (running.value && unlocked()) showBubble()
+                if (visible) { persistDraft(); removeWindows() } else if (running.value && unlocked()) { overlayAppearance = preferences.values.first()["appearance"] ?: "system"; showBubble() }
             }
         }
     }
@@ -109,9 +122,9 @@ class OverlayService : Service() {
             x = if (positionX < 0.5f) dp(8) else width - size - dp(8)
             y = (top + positionY * (height - top - size - dp(32))).toInt().coerceIn(top, (height - size - dp(32)).coerceAtLeast(top))
         }
-        val view = Button(this).apply {
-            text = "+"; textSize = 28f; minWidth = 0; minHeight = 0; setPadding(0, 0, 0, 0)
-            setTextColor(Color.WHITE); background = rounded(Palette.Teal.toArgb(), 28); elevation = dp(6).toFloat(); contentDescription = "Quick capture"
+        val view = CaptureBubble(this).apply {
+            setImageDrawable(OverlayGlyphDrawable(Glyph.Sparkles,Color.WHITE)); setPadding(dp(16),dp(16),dp(16),dp(16))
+            background = rounded(Palette.Teal.toArgb(), 28); elevation = dp(6).toFloat(); contentDescription = "Quick capture"
             setOnClickListener { openPanel() }
         }
         var startRawX = 0f; var startRawY = 0f; var initialX = 0; var initialY = 0; var moved = false
@@ -147,10 +160,16 @@ class OverlayService : Service() {
         bubble?.let { try { windows.removeViewImmediate(it) } catch (_: RuntimeException) {} }; bubble = null
         val (width, height, top) = bounds()
         val panelWidth = minOf(width - dp(24), dp(360))
-        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(12), dp(16), dp(12)); background = rounded(Palette.Ivory.toArgb()); elevation = dp(10).toFloat() }
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(10), dp(16), dp(12)); background = rounded(paper(),28); elevation = dp(10).toFloat() }
+        root.addView(View(this).apply { background=rounded(Color.rgb(199,204,200),4) },LinearLayout.LayoutParams(dp(42),dp(3)).apply { gravity=Gravity.CENTER_HORIZONTAL; bottomMargin=dp(8) })
         val header = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
-        header.addView(TextView(this).apply { text = "Quick capture"; textSize = 21f; setTextColor(Palette.Charcoal.toArgb()) }, LinearLayout.LayoutParams(0, dp(56), 1f))
-        header.addView(panelButton("×").apply { contentDescription = "Close quick capture"; setOnClickListener { closePanel() } }, LinearLayout.LayoutParams(dp(56), dp(56)))
+        header.addView(ImageView(this).apply {setImageDrawable(OverlayGlyphDrawable(Glyph.Sparkles,Palette.Teal.toArgb()));setPadding(dp(10),dp(10),dp(10),dp(10));background=rounded(mint(),22)},LinearLayout.LayoutParams(dp(40),dp(40)))
+        header.addView(LinearLayout(this).apply {
+            orientation=LinearLayout.VERTICAL;setPadding(dp(10),dp(5),0,0)
+            addView(TextView(this@OverlayService).apply {setText(app.planner.R.string.quick_capture_title);textSize=19f;setTypeface(resources.getFont(app.planner.R.font.dm_sans),android.graphics.Typeface.BOLD);setTextColor(ink())})
+            addView(TextView(this@OverlayService).apply {setText(app.planner.R.string.quick_capture_subtitle);textSize=12f;setTextColor(secondaryInk())})
+        },LinearLayout.LayoutParams(0,dp(58),1f))
+        header.addView(panelButton("×").apply { contentDescription = "Close quick capture"; setOnClickListener { closePanel() } }, LinearLayout.LayoutParams(dp(48), dp(48)))
         root.addView(header)
         var saving = false
         var sendControl: Button? = null
@@ -161,9 +180,10 @@ class OverlayService : Service() {
             }
         }.apply {
             hint = "Write anything…"; contentDescription = "Quick capture note"; textSize = 18f; minLines = 3; maxLines = 6; gravity = Gravity.TOP
-            setTextColor(Palette.Charcoal.toArgb()); setHintTextColor(Palette.Secondary.toArgb())
+            setTextColor(ink()); setHintTextColor(secondaryInk())
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-            filters = arrayOf(InputFilter.LengthFilter(20_000)); setPadding(dp(12), dp(12), dp(12), dp(12)); background = rounded(Palette.Mint.toArgb(), 16)
+            typeface=resources.getFont(app.planner.R.font.dm_sans)
+            filters = arrayOf(InputFilter.LengthFilter(20_000)); setPadding(dp(16), dp(16), dp(16), dp(16)); background = rounded(mint(), 18)
             addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { preferences.saveOverlayDraft(s?.toString().orEmpty()); sendControl?.isEnabled = !saving && !s.isNullOrBlank() }
@@ -171,11 +191,11 @@ class OverlayService : Service() {
             })
         }
         root.addView(input, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(160)))
-        val privateChoice = CheckBox(this).apply { text = "Keep on this device"; contentDescription = "Keep quick capture private"; isChecked = true; setTextColor(Palette.Charcoal.toArgb()); buttonTintList = android.content.res.ColorStateList.valueOf(Palette.Teal.toArgb()) }
+        val privateChoice = CheckBox(this).apply { setText(app.planner.R.string.quick_capture_private); contentDescription = "Keep quick capture private"; isChecked = true; setTextColor(ink()); buttonTintList = android.content.res.ColorStateList.valueOf(accent()) }
         root.addView(privateChoice, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(48)))
         val footer = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
-        footer.addView(TextView(this).apply { text = "Saved locally first"; textSize = 13f; setTextColor(Palette.Secondary.toArgb()) }, LinearLayout.LayoutParams(0, dp(56), 1f))
-        val send = panelButton("Save", primary = true).apply { contentDescription = "Save quick capture"; isEnabled = false }.also { sendControl = it }
+        footer.addView(TextView(this).apply { setText(app.planner.R.string.quick_capture_trust); textSize = 13f; setTextColor(secondaryInk()) }, LinearLayout.LayoutParams(0, dp(56), 1f))
+        val send = panelButton("↑", primary = true).apply {textSize=28f; contentDescription = "Save quick capture"; isEnabled = false }.also { sendControl = it }
         send.setOnClickListener {
             val capturedText = input.text.toString()
             if (capturedText.isBlank()) return@setOnClickListener
@@ -190,9 +210,9 @@ class OverlayService : Service() {
                 } catch (e: CancellationException) { throw e } catch (_: Exception) { Toast.makeText(this@OverlayService, "Couldn't save. Your draft is still here.", Toast.LENGTH_LONG).show() } finally { saving = false; send.isEnabled = input.text.isNotBlank() }
             }
         }
-        footer.addView(send, LinearLayout.LayoutParams(dp(96), dp(56))); root.addView(footer)
+        footer.addView(send, LinearLayout.LayoutParams(dp(52), dp(52))); root.addView(footer)
         val scroll = ScrollView(this).apply { addView(root); isFillViewport = false }
-        val params = WindowManager.LayoutParams(panelWidth, minOf(dp(368), height - top - dp(32)), WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT).apply {
+        val params = WindowManager.LayoutParams(panelWidth, minOf(dp(380), height - top - dp(32)), WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY, WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT).apply {
             if (Build.VERSION.SDK_INT >= 30) setFitInsetsTypes(0)
             gravity = Gravity.TOP or Gravity.START; x = (width - panelWidth) / 2; y = top + dp(8); softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE
         }
@@ -205,8 +225,13 @@ class OverlayService : Service() {
             }
             scope.launch {
                 val saved = preferences.values.first()
-                input.setText(saved["overlayDraft"].orEmpty()); input.setSelection(input.length()); privateChoice.isChecked = saved["privateCapture"] == "true"
-                privateChoice.setOnCheckedChangeListener { _, checked -> scope.launch { preferences.set("privateCapture", checked.toString()) } }
+                input.setText(saved["overlayDraft"].orEmpty()); input.setSelection(input.length()); privateChoice.isChecked = CapturePrivacy.isPrivate(saved)
+                privateChoice.setOnCheckedChangeListener { _, checked ->
+                    if(!checked && saved["cloudConsent"]!=CapturePrivacy.CONSENT_VERSION) {
+                        privateChoice.isChecked=true
+                        Toast.makeText(this@OverlayService,"Allow cloud AI from Planner's capture privacy control first. This note stays private.",Toast.LENGTH_LONG).show()
+                    } else scope.launch { preferences.capturePrivacy(checked) }
+                }
                 input.requestFocus(); input.postDelayed({ if (Build.VERSION.SDK_INT >= 30) input.windowInsetsController?.show(WindowInsets.Type.ime()) else (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(input, 0) }, 150)
             }
         } catch (_: RuntimeException) { stopSelf() }

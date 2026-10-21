@@ -1,6 +1,6 @@
 # Features and implementation status
 
-Last reviewed: **2026-10-17**. Code owns implemented behavior; [Concept](CONCEPT.md) owns intent. Status describes the evidence scope below, never universal device/provider coverage.
+Last reviewed: **2026-10-21**. Code owns implemented behavior; [Concept](CONCEPT.md) owns intent. Status describes the evidence scope below, never universal device/provider coverage.
 
 ## Status contract
 
@@ -12,6 +12,8 @@ Last reviewed: **2026-10-17**. Code owns implemented behavior; [Concept](CONCEPT
 Documentation is part of Done. Do not advance status from a picture, specification, or unexecuted command.
 
 ## Inventory
+
+2026-10-21 correction/redesign increment is delivered with scoped verification; scoped screenshot/device evidence is recorded below. Baseline failures/skips and superseded results remain historical. [Visual audit](VISUAL_AUDIT.md) owns visual comparisons.
 
 | ID | Feature | Status | Evidence / remaining scope |
 | --- | --- | --- | --- |
@@ -37,15 +39,23 @@ Documentation is part of Done. Do not advance status from a picture, specificati
 | F20 | Versioned Type Registry and generic fields | Implemented | Backend adding/versioning type regression and retained records; generic Android editor compiles; all primitive controls device matrix pending |
 | F21 | Relevant correction examples and approved simple rules | Verified | Bounded retrieval, approved-owner rule/isolation tests; event rules still require temporal validation; personalization quality is unmeasured |
 | F22 | Privacy, real identity and protected credentials | Verified | Private no-outbox tests; authorization/cross-owner/revocation checks; real Keystore enrollment; debug/release network config and backup exclusion checked; production hardening remains |
-| F23 | Accessibility, responsiveness and performance | In Progress | Lifecycle queries, insets, keys, bounds, labels, dark tokens and timing diagnostic implemented; representative latency/memory/font/TalkBack/delayed-AI matrix unexecuted |
+| F23 | Accessibility, responsiveness and performance | In Progress | Lifecycle queries, insets, keys, bounds, labels, dark tokens and timing diagnostic implemented; 140% font/360 dp rendering and dark goldens pass; representative latency/memory/TalkBack/delayed-AI matrix remains open |
+| F24 | Complete task discovery, date-free views and recovery | Verified | Repository paging/earlier/undated tests; API 36 Someday → completion/Undo → Archived → Restore and recreation |
+| F25 | Local/connected Profile and actual aggregates | Verified | Empty/real count repository test; actual API 36 Profile render and primary/secondary navigation; type-collection aggregation compiles |
+| F26 | Persistent least-recently-shown idea rotation | Verified | Multiday deterministic repository regression, Later/Archive and kind-correction eligibility guards; Today render |
+| F27 | Non-destructive idea conversion/provenance | Verified | Atomic repository preservation/search regression and actual HTTP linked-task sync; source-link/editing and preserved idea search passed on API 36 |
+| F28 | Explicit informed cloud consent/private default | Verified | Fail-closed policy test and API 36 cancellation/private-no-outbox/explicit cloud capture acceptance; overlay consent guard implemented |
+| F29 | Reference-led reusable UI and navigation | Verified | All required actual emulator captures reviewed against references, corrected fonts/navigation/shadows/week dots; light/dark component goldens pass; small/font-scale scope is in Visual audit |
+| F30 | Bounded old-task return and triage | Verified | Stable three-slot review/snooze repository regression and API 36 Smaller action → linked task, original retained |
+| F31 | Searchable paginated saved ideas | Verified | Bound title/details query, 50-row paging, repository search and actual API 36 search → convert → source link → edit |
 
-Standalone Tasks, Search, media/voice, external calendars, timed reminder delivery, recurrence expansion, cloud backup/import, fine-tuning and embeddings remain **Planned/outside delivered MVP**. Stored reminder/recurrence fields do not establish delivery.
+Global Search, media/voice, external calendars, timed reminder delivery, recurrence expansion, cloud backup/import, fine-tuning and embeddings remain **Planned/outside delivered MVP**. Stored reminder/recurrence fields do not establish delivery.
 
 ## Verification ledger
 
 Historical documentation baseline (2026-10-14): eight owning docs plus README; 98 local references/26 heading fragments, five picture embeds, unchanged-image hashes and whitespace audit passed. This established documentation only; initial application statuses were Planned.
 
-Current executed evidence (2026-10-15, Europe/Paris):
+Historical executed evidence (2026-10-15, Europe/Paris):
 
 - Android debug and unsigned release assemble successfully. Full debug lint passed with **0 errors, 10 warnings** (tooling/target updates, English literals and style suggestions); the overlay compatibility resize hint also produces a compiler deprecation warning.
 - **15 Android repository/domain tests**, zero failures/skips: atomic/private capture, disk recreation, DST/time separation, completion/undo/dedup, stable idea, jitter, outbox ordering, stale AI/editor guards, scheduler failure, Room 1/2→3 migration preservation, and once-only/stale development approval.
@@ -59,3 +69,7 @@ Resolved failures are part of development history: unused tooling pulled an unav
 Latest reproducible commands/results and remaining manual gates: [Testing](TESTING.md). Real-provider integration, physical devices, Play eligibility and measured midrange performance have **not** been verified. Documentation/link audits establish no additional runtime guarantees.
 
 Final handoff audit (2026-10-17): 168 local references, 31 heading fragments, eight PNGs and five original-image hashes passed; source whitespace passed across 73 files. Final Android acceptance XML reports five tests, zero failures/errors/skips. An expired invitation during the session gap was replaced for the successful run.
+
+## 2026-10-21 correction evidence
+
+Android repository/domain suite: **24 passed**, zero failures/skips, including prior 1/2→3 migration preservation and all new query/rotation/provenance/review/privacy/count regressions. Device acceptance initially caught Profile tab restoring a secondary destination; after correction **10 passed** on the separate API 36 Planner_Visual_QA emulator, including real current Docker/PostgreSQL sync with AI unconfigured. Smaller-action provenance and preserved idea search/source-link editing also passed. Strict/fallback/provider failure and multilingual bare-hour fixtures bring backend coverage to **48 passed/0 skipped**. Both fixed light/dark component screenshot comparisons passed. Debug/release build and lint pass; latest lint has **0 errors, 7 warnings**. Live key/model flags are false; no live inference success is claimed.

@@ -40,7 +40,7 @@ for document in [ROOT / "README.md", *sorted((ROOT / "docs").rglob("*.md"))]:
         if line.rstrip() != line:
             errors.append(f"{document.relative_to(ROOT)}:{line_no}: trailing whitespace")
 
-for picture in (ROOT / "docs/assets/screens").glob("*.png"):
+for picture in [*(ROOT / "docs/assets").rglob("*.png"), *(ROOT / "android/app/src/androidTest/assets/goldens").glob("*.png")]:
     data = picture.read_bytes()
     if data[:8] != b"\x89PNG\r\n\x1a\n" or min(struct.unpack(">II", data[16:24])) <= 0:
         errors.append(f"Invalid PNG: {picture.name}")

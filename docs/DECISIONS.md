@@ -189,3 +189,19 @@ A failed record PATCH can block a newer corrected edit behind its immutable reje
 Initial manual capture emits the note change before its records; paginated replica reads can observe a parent before derived data even when the page ends mid-capture. Correction-context retrieval excludes zero-overlap examples; one unrelated correction is not a universal preference.
 
 Rejected: endlessly retrying a known-invalid frozen payload; silently replacing server values; deleting unrelated commands while coalescing edits; publishing records before their original note. Source: [SyncEngine](../android/app/src/main/java/app/planner/sync/SyncEngine.kt), [Settings](../android/app/src/main/java/app/planner/features/SettingsScreen.kt), [backend routes](../backend/app/api/routes.py), [worker](../backend/app/jobs/worker.py).
+
+## ADR-016: Reference-led UI and complete task discovery
+
+Date: 2026-10-21. Status: **Accepted and implemented; verification scoped in Testing**. Supersedes ADR-011's simplified visual treatment; its history remains above.
+
+The new user brief makes the five original screenshots the visual target. Adopt their serif/sans typography, mint/sand/apricot/lavender palette, rounded geometry, original vector landscape accents and consistent Today/Calendar/Tasks/Ideas/Profile navigation. Do not fabricate identities, counts, provider activity or inactive media/settings controls. Preserve Room, data and synchronization infrastructure.
+
+Add paginated task discovery and bounded old-task return instead of filling Today with a backlog. Persist daily idea selection with rotation across eligible alternatives. Idea-to-task conversion creates a linked task, preserving the original. Private capture remains the default; cloud upload needs an informed explicit choice. Query/Meta changes should reuse schema v3 unless a persisted entity actually changes.
+
+Rejected: screenshot image backgrounds, a new database, random idea selection on every opening, artificial deadlines, silent cloud opt-in, arbitrary toolchain downgrades and a large UI framework. The installed Studio is now 2026.2.2; the existing AGP 9.4.1/Gradle 9.6.0 debug/unit baseline passes. Live-provider acceptance remains blocked without credentials; deterministic fixtures do not substitute for it.
+
+Component research: [Design system](DESIGN_SYSTEM.md). Verification: [Testing](TESTING.md), [Visual audit](VISUAL_AUDIT.md).
+
+Implementation choices: native Compose/Material controls and original Canvas paths, bundled OFL Playfair Display/DM Sans, and native instrumentation goldens avoid a new runtime framework or an unvalidated screenshot Gradle plugin. See the candidate/license assessment in Design system. Cloud consent and capture mode commit together; legacy cloud preference alone no longer authorizes new captures. Profile tab returns to its root rather than restoring a secondary Journal/Settings destination. The expanded Tasks/Ideas lists page at 50 rows; the original Today focus cap stays intact.
+
+Linked manual actions use the active new-capture privacy choice and fail closed to private by default; private sources remain private even if cloud mode is selected. This prevents newly written smaller-action text from inheriting a formerly shared source's upload permission. Existing cloud records retain their original synchronization contract.
