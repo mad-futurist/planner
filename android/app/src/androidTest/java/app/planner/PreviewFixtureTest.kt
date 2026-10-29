@@ -1,24 +1,23 @@
 package app.planner
 
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.graphics.Bitmap
+import android.os.Bundle
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
-import app.planner.core.model.*
-import app.planner.core.isoInstant
-import app.planner.sync.SyncDependencies
+import app.planner.domain.model.IdeaSlot
+import app.planner.domain.model.Record
+import app.planner.domain.time.isoInstant
+import app.planner.infrastructure.overlay.OverlayManager
+import app.planner.infrastructure.sync.SyncDependencies
 import dagger.hilt.android.EntryPointAccessors
-import java.time.*
 import java.io.File
-import android.graphics.Bitmap
-import android.view.accessibility.AccessibilityNodeInfo
-import android.accessibilityservice.AccessibilityServiceInfo
-import android.os.Bundle
-import app.planner.features.overlay.*
+import java.time.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.withLock
 import org.junit.*
-import androidx.lifecycle.ViewModelProvider
-import app.planner.features.PlannerViewModel
 
 /** Explicit QA-only dataset for runtime screenshots; never called by the production app. */
 class PreviewFixtureTest {
@@ -109,13 +108,20 @@ class PreviewFixtureTest {
             nativeNode("Save quick capture")!!.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             ui.waitUntil(10_000) {runBlocking {repo.dao.notePage(50,0).any {it.originalContent=="A thought from another app" && it.source=="OVERLAY" && it.privacyMode=="LOCAL_ONLY"}}}
             // Validate the configured factory independently of Android's validated-network gate.
-            val factoryProbe = androidx.work.OneTimeWorkRequestBuilder<app.planner.sync.SyncWorker>().build()
+            val factoryProbe = androidx.work.OneTimeWorkRequestBuilder<app.planner.infrastructure.sync.SyncWorker>().build()
             val workManager = androidx.work.WorkManager.getInstance(ui.activity)
             workManager.enqueue(factoryProbe)
             ui.waitUntil(30_000) {
                 workManager.getWorkInfoById(factoryProbe.id).get()?.state?.isFinished == true
             }
             org.junit.Assert.assertEquals(androidx.work.WorkInfo.State.SUCCEEDED, workManager.getWorkInfoById(factoryProbe.id).get()?.state)
+            // Simulate a work spec saved by the previous APK before the package move.
+            val legacyProbe = androidx.work.OneTimeWorkRequestBuilder<app.planner.infrastructure.sync.SyncWorker>().build()
+            legacyProbe.workSpec.workerClassName = "app.planner.sync.SyncWorker"
+            workManager.enqueue(legacyProbe)
+            ui.waitUntil(30_000) { workManager.getWorkInfoById(legacyProbe.id).get()?.state?.isFinished == true }
+            org.junit.Assert.assertEquals(androidx.work.WorkInfo.State.SUCCEEDED, workManager.getWorkInfoById(legacyProbe.id).get()?.state)
+
             runBlocking {deps.preferences().set("overlay","false")}; OverlayManager.stop(ui.activity)
         }
     }

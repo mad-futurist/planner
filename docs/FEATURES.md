@@ -17,6 +17,7 @@ Documentation is part of Done. Do not advance status from a picture, specificati
 
 | ID | Feature | Status | Evidence / remaining scope |
 | --- | --- | --- | --- |
+| F41 | Canonical Android packages and feature ownership | Verified | Canonical layers, feature Routes/UiState/components and port/usecase/model ownership enforced; 187 backend / 43 JVM / 25 API 37 scenarios, builds/lint pass. SQL histories unchanged; actual legacy worker spec executes. [Package tree](ANDROID_PACKAGES.md) |
 | F40 | Four-layer architecture and compact capture UI | Verified | Four logical layers, feature MVVM/immutable state, stateless navigation/content, constructor-injected workers and shared capture/approval; 179 backend / 43 JVM / 26 API 37 scenarios; debug/release/lint and inward import checks pass. Compatibility and remaining public/device gates: [migration record](ARCHITECTURE_MIGRATION.md) |
 | F01 | Android foundation, layers, tokens and navigation | Verified | Debug/release builds, lint and API 36 launch/routes; the historical source review identified MVVM gaps; their migration and current acceptance are tracked by F40; release signing not configured |
 | F02 | Local-first app capture and persistence | Verified | Repository atomic/private/disk tests, offline force-stop/reopen and instrumented UI capture/recreation |

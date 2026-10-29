@@ -1,13 +1,12 @@
 package app.planner
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.platform.app.InstrumentationRegistry
-import app.planner.core.database.*
-import app.planner.core.model.*
-import app.planner.domain.dayBounds
-import app.planner.sync.SyncDependencies
+import app.planner.domain.model.Meta
+import app.planner.domain.policy.dayBounds
+import app.planner.infrastructure.sync.SyncDependencies
 import dagger.hilt.android.EntryPointAccessors
 import java.time.*
 import java.util.UUID
@@ -22,7 +21,7 @@ class AppAcceptanceTest {
     private val repository get() = dependencies.repository()
     @Before fun prepareIndependentCaptureState() {
         runBlocking { dependencies.preferences().capturePrivacy(true) }
-        val shell = androidx.lifecycle.ViewModelProvider(ui.activity)[app.planner.features.PlannerViewModel::class.java]
+        val shell = androidx.lifecycle.ViewModelProvider(ui.activity)[app.planner.presentation.shell.PlannerViewModel::class.java]
         ui.waitUntil(10_000) { shell.uiState.value.settings["privateCapture"] == "true" }
         shell.uiState.value.message?.let { shell.dismissMessage(it.id) }
         ui.onNodeWithTag("capture").performTextClearance()
@@ -75,7 +74,7 @@ class AppAcceptanceTest {
         runBlocking { repository.edit(task.copy(pinned = true)) }
         navigate("Today")
         val initialBounds = dayBounds(date, ZoneId.systemDefault())
-        val focusCount = runBlocking { repository.dao.day(initialBounds.day, initialBounds.start, initialBounds.end).first().count { it.baseKind == "task" && !app.planner.domain.isScheduledOnDay(it, date, ZoneId.systemDefault()) } }
+        val focusCount = runBlocking { repository.dao.day(initialBounds.day, initialBounds.start, initialBounds.end).first().count { it.baseKind == "task" && !app.planner.domain.policy.isScheduledOnDay(it, date, ZoneId.systemDefault()) } }
         if (focusCount > 2) {
             ui.onNodeWithTag("today-list").performScrollToNode(hasTestTag("anytime-more"))
             ui.onNodeWithTag("anytime-more").performClick()
@@ -185,7 +184,7 @@ class AppAcceptanceTest {
         assertEquals(0,runBlocking {repository.dao.pendingForNote(note.id)})
         ui.onNodeWithTag("privacy").performClick()
         ui.onNodeWithTag("allow-cloud").performClick()
-        ui.waitUntil(5_000) {runBlocking {prefs.values.first()["cloudConsent"]==app.planner.core.CapturePrivacy.CONSENT_VERSION}}
+        ui.waitUntil(5_000) {runBlocking {prefs.values.first()["cloudConsent"]==app.planner.domain.policy.CapturePrivacy.CONSENT_VERSION}}
         val cloud="Consented capture ${UUID.randomUUID()}"
         originalOnly()
         ui.onNodeWithTag("capture").performTextInput(cloud);ui.onNodeWithTag("send").performClick()
@@ -270,7 +269,13 @@ class AppAcceptanceTest {
         assertEquals("idea",runBlocking {repository.dao.recordById(idea.id)?.baseKind})
         navigate("Tasks");ui.onNodeWithTag("filter-someday").performClick()
         ui.onNodeWithTag("tasks-list").performScrollToNode(hasText(title))
+        // Dismiss transient conversion feedback through its accessible action before touching the row.
+        if (ui.onAllNodesWithText("Task created").fetchSemanticsNodes().isNotEmpty()) {
+            val dismissible = ui.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.Dismiss))
+            if (dismissible.fetchSemanticsNodes().isNotEmpty()) dismissible.onFirst().performSemanticsAction(SemanticsActions.Dismiss) { it() }
+        }
         ui.onNodeWithContentDescription("Details $title").performClick()
+        ui.waitUntil(10_000) { ui.onAllNodesWithText("From idea: $title").fetchSemanticsNodes().isNotEmpty() }
         ui.onNodeWithText("From idea: $title").performScrollTo().performClick()
         ui.waitUntil(8_000) {ui.onAllNodesWithText("Kind: Idea").fetchSemanticsNodes().isNotEmpty()}
         ui.onNode(hasSetTextAction() and hasText(title)).performTextClearance()

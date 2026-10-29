@@ -114,3 +114,13 @@ Explicitly document any discrepancy between them.
 - Current Room schema is v4. Do not apply the obsolete v3 instruction from the supplied refactor brief.
 - Source-compatible aliases/CLI paths are documented exceptions, not permission to reintroduce outward business-layer dependencies.
 - Record performed checks and remaining gates honestly; do not infer test completion from compilation or historical screenshots.
+
+
+### Android source ownership
+
+- Use canonical app.planner.domain/application/infrastructure/presentation packages matching directories; no flat features/core/data/sync roots.
+- Application files belong in port, usecase or model. Do not create pass-through use cases just to mirror a screen or a base kind.
+- Presentation files belong to their feature, common, design, navigation or shell. Feature Routes own Hilt ViewModel collection; the graph registers Routes.
+- Split real screen sections into feature components; shared tokens and UI primitives belong in presentation/design.
+- Preserve stored worker class-name compatibility when moving workers. Changing a Room class package must preserve schema identities and move historical exports intact.
+- Read docs/ANDROID_PACKAGES.md for the full tree and scoped platform boundary.

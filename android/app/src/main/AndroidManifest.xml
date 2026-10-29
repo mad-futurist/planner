@@ -18,7 +18,7 @@
             </intent-filter>
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <service android:name=".features.overlay.OverlayService" android:exported="false" android:foregroundServiceType="specialUse">
+        <service android:name=".infrastructure.overlay.OverlayService" android:exported="false" android:foregroundServiceType="specialUse">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="User-enabled floating note capture over ordinary apps while unlocked; user stops it in Settings; no other-app content is read." />
         </service>
     </application>

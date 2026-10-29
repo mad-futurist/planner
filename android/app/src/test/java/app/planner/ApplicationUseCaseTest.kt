@@ -1,9 +1,20 @@
 package app.planner
 
-import app.planner.application.*
-import app.planner.domain.*
-import app.planner.domain.model.*
-import app.planner.features.UiFeedback
+import app.planner.application.model.DevelopmentSnapshot
+import app.planner.application.port.CaptureStore
+import app.planner.application.port.DevelopmentApprovalPort
+import app.planner.application.port.DevelopmentWriter
+import app.planner.application.usecase.ApproveDevelopment
+import app.planner.application.usecase.CaptureUseCase
+import app.planner.domain.interpretation.CaptureDoubt
+import app.planner.domain.interpretation.CapturePreview
+import app.planner.domain.interpretation.PreviewRecord
+import app.planner.domain.model.RawNote
+import app.planner.domain.model.Record
+import app.planner.domain.policy.CaptureContext
+import app.planner.domain.policy.CapturePlan
+import app.planner.domain.policy.LocalCapturePlan
+import app.planner.presentation.common.UiFeedback
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test

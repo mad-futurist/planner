@@ -2,12 +2,12 @@ package app.planner
 
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import app.planner.sync.SyncDependencies
+import app.planner.infrastructure.sync.SyncDependencies
 import dagger.hilt.android.EntryPointAccessors
 import java.time.*
 import java.util.UUID
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.*
 import org.junit.Assert.*
 
@@ -130,25 +130,22 @@ class CaptureClarificationAcceptanceTest {
         }
         ui.waitUntil(10_000) { ui.onAllNodesWithText("Save event").fetchSemanticsNodes().isNotEmpty() }
         ui.onNodeWithTag("apply-clarification").performClick()
-        ui.waitUntil(10_000) { runBlocking { repo.dao.notePage(100, 0).any { it.content == text && it.id !in before } } }
+        val note = savedNote(text, before)
         runBlocking {
-            val note = repo.dao.notePage(100, 0).first { it.content == text && it.id !in before }
             val record = repo.dao.recordsForNote(note.id).single()
             assertEquals(text, note.originalContent)
             assertEquals("event", record.baseKind)
             assertEquals(target.atTime(16, 0).atZone(ZoneId.systemDefault()).toInstant(), Instant.parse(record.startAt))
-            val bounds = app.planner.domain.dayBounds(target, ZoneId.systemDefault())
+            val bounds = app.planner.domain.policy.dayBounds(target, ZoneId.systemDefault())
             assertTrue(repo.dao.day(bounds.day, bounds.start, bounds.end).first().any { it.id == record.id })
         }
-        val vm = androidx.lifecycle.ViewModelProvider(ui.activity)[app.planner.features.PlannerViewModel::class.java]
+        val vm = androidx.lifecycle.ViewModelProvider(ui.activity)[app.planner.presentation.shell.PlannerViewModel::class.java]
         assertEquals(target, vm.uiState.value.selection.selectedDate)
         ui.waitUntil(10_000) { ui.onAllNodesWithTag("apply-clarification").fetchSemanticsNodes().isEmpty() }
         ui.activityRule.scenario.onActivity { it.window.insetsController?.hide(android.view.WindowInsets.Type.ime()) }
         ui.waitUntil(10_000) { ui.onAllNodesWithText("Calendar").fetchSemanticsNodes().isNotEmpty() }
         ui.onNodeWithText("Calendar").performClick()
-        val calendarTitle = hasText(text) and hasAnyAncestor(hasTestTag("calendar-list"))
-        ui.waitUntil(10_000) { ui.onAllNodes(calendarTitle).fetchSemanticsNodes().isNotEmpty() }
-        ui.onAllNodes(calendarTitle)[0].assertIsDisplayed()
+        visibleSavedCard(note, "calendar-list")
         ui.waitUntil(15_000) { ui.activity.hasWindowFocus() }
         screenshot("dentist-at-16-saved-calendar")
     }
@@ -156,11 +153,11 @@ class CaptureClarificationAcceptanceTest {
         ui.activityRule.scenario.onActivity { it.window.insetsController?.hide(android.view.WindowInsets.Type.ime()) }
         ui.waitUntil(10_000) { ui.onAllNodesWithText("Calendar").fetchSemanticsNodes().isNotEmpty() }
     }
-    private fun savedNote(text: String, before: Set<String>): app.planner.core.model.RawNote {
+    private fun savedNote(text: String, before: Set<String>): app.planner.domain.model.RawNote {
         ui.waitUntil(10_000) { runBlocking { repo.dao.notePage(100, 0).any { it.content == text && it.id !in before } } }
         return runBlocking { repo.dao.notePage(100, 0).first { it.content == text && it.id !in before } }
     }
-    private fun visibleSavedCard(note: app.planner.core.model.RawNote, list: String) {
+    private fun visibleSavedCard(note: app.planner.domain.model.RawNote, list: String) {
         val record = runBlocking { repo.dao.recordsForNote(note.id).single() }
         val tag = when (record.baseKind) { "task" -> "task-${record.id}"; "idea" -> "idea-${record.id}"; else -> "schedule-${record.id}" }
         ui.waitUntil(15_000) {
@@ -197,7 +194,7 @@ class CaptureClarificationAcceptanceTest {
         ui.onNodeWithText("Choose where this belongs").assertDoesNotExist()
         ui.onNodeWithTag("change-preview-kind").assertDoesNotExist()
         ui.onNodeWithTag("preview-ai").assertDoesNotExist()
-        ui.waitUntil(10_000) { androidx.lifecycle.ViewModelProvider(ui.activity)[app.planner.features.PlannerViewModel::class.java].uiState.value.message == null }
+        ui.waitUntil(10_000) { androidx.lifecycle.ViewModelProvider(ui.activity)[app.planner.presentation.shell.PlannerViewModel::class.java].uiState.value.message == null }
         screenshot("compact-capture-actions")
         ui.onNodeWithTag("send").performClick()
         ui.waitUntil(10_000) { ui.onAllNodesWithTag("submit-intent-someday").fetchSemanticsNodes().isNotEmpty() }
@@ -273,10 +270,8 @@ class CaptureClarificationAcceptanceTest {
         }
         hideKeyboard()
         ui.onNodeWithText("Tasks").performClick()
-        val taskTitle = hasText(text) and hasAnyAncestor(hasTestTag("tasks-list"))
-        ui.waitUntil(10_000) { ui.onAllNodes(taskTitle).fetchSemanticsNodes().isNotEmpty() }
-        ui.onAllNodes(taskTitle)[0].assertIsDisplayed()
-        val vm = androidx.lifecycle.ViewModelProvider(ui.activity)[app.planner.features.PlannerViewModel::class.java]
+        visibleSavedCard(note, "tasks-list")
+        val vm = androidx.lifecycle.ViewModelProvider(ui.activity)[app.planner.presentation.shell.PlannerViewModel::class.java]
         assertEquals("someday", vm.uiState.value.selection.taskFilter)
         ui.waitUntil(15_000) { ui.activity.hasWindowFocus() }
         screenshot("private-default-task-in-tasks")
@@ -298,9 +293,7 @@ class CaptureClarificationAcceptanceTest {
         ui.onNodeWithTag("apply-clarification").assertDoesNotExist()
         hideKeyboard()
         ui.onNodeWithText("Calendar").performClick()
-        val calendarTitle = hasText(text) and hasAnyAncestor(hasTestTag("calendar-list"))
-        ui.waitUntil(10_000) { ui.onAllNodes(calendarTitle).fetchSemanticsNodes().isNotEmpty() }
-        ui.onAllNodes(calendarTitle)[0].assertIsDisplayed()
+        visibleSavedCard(note, "calendar-list")
         ui.waitUntil(15_000) { ui.activity.hasWindowFocus() }
         screenshot("private-default-event-in-calendar")
     }

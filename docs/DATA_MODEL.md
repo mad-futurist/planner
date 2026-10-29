@@ -4,7 +4,7 @@ Last reviewed: **2026-10-28**. These are actual schemas; intended product semant
 
 ## Current Room implementation
 
-[Room entities](../android/app/src/main/java/app/planner/core/database/entities/Entities.kt) define nine persisted entities. [Domain models](../android/app/src/main/java/app/planner/domain/model/Models.kt) are separate framework-free values with [explicit mappings](../android/app/src/main/java/app/planner/core/database/Mappers.kt). [Storage DAO](../android/app/src/main/java/app/planner/core/database/PlannerDatabase.kt) owns SQL queries and the schema is **version 4**. Android keeps one dataset per installation; a global owner UUID in Meta scopes that dataset. It does not accept arbitrary per-row client user IDs. Connecting another owner requires explicit export/clear.
+[Room entities](../android/app/src/main/java/app/planner/infrastructure/database/PlannerDatabase.kt) define nine persisted entities. [Domain models](../android/app/src/main/java/app/planner/domain/model/Record.kt) are separate framework-free values with [explicit mappings](../android/app/src/main/java/app/planner/infrastructure/database/mapper/DatabaseMappers.kt). [Storage DAO](../android/app/src/main/java/app/planner/infrastructure/database/dao/StorageDao.kt) owns SQL queries and the schema is **version 4**. Android keeps one dataset per installation; a global owner UUID in Meta scopes that dataset. It does not accept arbitrary per-row client user IDs. Connecting another owner requires explicit export/clear.
 
 | Entity/table | Stored responsibility |
 | --- | --- |
@@ -55,7 +55,7 @@ The User/Job/Change relationships are backend-only; the others also describe log
 - Idea selection persists the least recently shown eligible idea, using MAX(day) from previous slots, then creation/UUID as deterministic tie-breakers. Unseen ideas sort first. No empty slot is written before an idea exists. Later defers until tomorrow and retains today's selected slot, so another idea does not replace it.
 - Reminder timestamps and recurrence strings are retained data only. Alarm delivery and occurrence expansion are not implemented.
 
-Exact predicates: [DayPolicy](../android/app/src/main/java/app/planner/domain/DayPolicy.kt), [DAO](../android/app/src/main/java/app/planner/core/database/PlannerDatabase.kt).
+Exact predicates: [DayPolicy](../android/app/src/main/java/app/planner/domain/policy/DayPolicy.kt), [DAO](../android/app/src/main/java/app/planner/infrastructure/database/dao/StorageDao.kt).
 
 ## Local preferences and discovery
 
@@ -97,7 +97,7 @@ Room indices cover note creation/processing, source-note lookup, kind/state/plan
 | Alembic e04c9f512a83 | Public account credentials, verification/reset tokens, Google flows/identities, auth rate counters and worker heartbeats |
 | Alembic f26a81d705bc | Owner-scoped learning_samples journal; user contribution consent/time and operator-only synthetic provenance flag; existing users default off |
 
-Exports: [Room schema v4](../android/app/schemas/app.planner.core.database.PlannerDatabase/4.json). Upgrade code: [Room migrations](../android/app/src/main/java/app/planner/core/database/Migrations.kt), [Alembic revisions](../backend/alembic/versions/a15a67f338ba_initial.py). Normal upgrades never use destructive resets. The development-job downgrade deliberately refuses to discard revisions; restore a pre-upgrade backup instead. Executed migration results: [Testing](TESTING.md#executed-results).
+Exports: [Room schema v4](../android/app/schemas/app.planner.infrastructure.database.PlannerDatabase/4.json). Upgrade code: [Room migrations](../android/app/src/main/java/app/planner/infrastructure/database/Migrations.kt), [Alembic revisions](../backend/alembic/versions/a15a67f338ba_initial.py). Normal upgrades never use destructive resets. The development-job downgrade deliberately refuses to discard revisions; restore a pre-upgrade backup instead. Executed migration results: [Testing](TESTING.md#executed-results).
 
 ## Clarifications, reconciliation and public accounts
 
@@ -133,3 +133,6 @@ erDiagram
 ```
 
 Only owner is a physical foreign key. Logical input/history IDs may outlive a disposable synthetic QA account; synthetic rows become ownerless before that account is deleted. Real account deletion erases its samples. Contribution consent defaults false and is checked at export time; it is independent of cloud capture consent. Room remains v4 and no private notes/drafts are uploaded. Full label semantics, API and retention/split caveats: [Dataset](DATASET.md).
+
+
+The October 29 package reorganization changes the Room class qualified name and exported-schema folder only. All four historical JSON schemas are moved without content changes; v4 identity, SQLite name planner.db, table/index/column definitions and 1→2→3→4 migrations remain unchanged. No version bump or destructive fallback is needed. Domain records remain unified and Type Registry driven; package organization does not create separate Task/Event tables.

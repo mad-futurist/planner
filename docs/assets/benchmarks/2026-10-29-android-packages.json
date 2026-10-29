@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "verifiedAtUTC": "2026-10-29T09:37:55.466755+00:00",
+  "scope": "Canonical Android packages and feature ownership; no backend business/API changes",
+  "source": {
+    "domainFiles": 17,
+    "applicationFiles": 13,
+    "infrastructureFiles": 36,
+    "presentationFiles": 105,
+    "stableRootEntryPoints": [
+      "MainActivity",
+      "PlannerApp"
+    ],
+    "legacySourceRootsRemoved": [
+      "features",
+      "core",
+      "data",
+      "sync",
+      "navigation"
+    ]
+  },
+  "backend": {
+    "passed": 187,
+    "skipped": 0,
+    "postgresqlEnabled": true,
+    "seconds": 167.27,
+    "newArchitectureRegressionCases": 8
+  },
+  "android": {
+    "unitPassed": 43,
+    "debugBuild": "passed",
+    "releaseBuild": "passed, unsigned",
+    "testApk": "passed",
+    "finalBuild": "BUILD SUCCESSFUL in 9m32s",
+    "lintErrors": 0,
+    "lintWarnings": 9
+  },
+  "room": {
+    "version": 4,
+    "database": "planner.db",
+    "historicalSchemaJsonUnchanged": true,
+    "identities": {
+      "1": "5954e52ba15cc889f70df79f004e3c51",
+      "2": "5954e52ba15cc889f70df79f004e3c51",
+      "3": "49ab66327a99433142c145adc1cf6993",
+      "4": "8b2848b79bfec69319d56bae673935af"
+    },
+    "destructiveMigration": false
+  },
+  "device": {
+    "avd": "Planner_Clarification_QA",
+    "api": 37,
+    "fixturePassed": 1,
+    "fixtureChecks": [
+      "8 routes",
+      "light/dark rendering",
+      "private native overlay save",
+      "new worker name SUCCEEDED",
+      "legacy persisted worker name SUCCEEDED"
+    ],
+    "initialCombinedCases": 24,
+    "initialPassed": 22,
+    "initialFailed": 2,
+    "focusedRetryPassed": 4,
+    "distinctPassingCases": 25,
+    "failuresResolved": [
+      "source-link editor load/transient feedback synchronization",
+      "exact-UUID scrolling before lazy-list assertions"
+    ],
+    "paidProviderCallsRequested": false,
+    "mainDeviceUpdate": "Not performed: emulator-5554 unavailable; only guarded QA emulator updated."
+  },
+  "remainingGates": [
+    "public deployment/signing",
+    "live SMTP/Google",
+    "physical/OEM coverage",
+    "representative performance/accessibility"
+  ]
+}

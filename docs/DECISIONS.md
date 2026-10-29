@@ -154,7 +154,7 @@ Use a user-started specialUse foreground service with the explicit cross-app cap
 
 Use native WindowManager views for overlay focus/keyboard handling while sharing Room capture and design colors. A scrollable panel supports small/rotated displays. Conflate draft writes in application scope; flush explicit close; permission/process termination does not guarantee the last unsent keystrokes. Notification capture is opt-in and opens the app's real composer. Background specialUse eligibility and Google Play declaration review require distribution/device validation; no store approval is claimed.
 
-Source: [Android foreground service types](https://developer.android.com/develop/background-work/services/fgs/service-types), [Android 15 start restrictions](https://developer.android.com/about/versions/15/behavior-changes-15). Implementation: [overlay package](../android/app/src/main/java/app/planner/features/overlay/OverlayService.kt).
+Source: [Android foreground service types](https://developer.android.com/develop/background-work/services/fgs/service-types), [Android 15 start restrictions](https://developer.android.com/about/versions/15/behavior-changes-15). Implementation: [overlay package](../android/app/src/main/java/app/planner/infrastructure/overlay/OverlayService.kt).
 
 ## Future entry format
 
@@ -188,7 +188,7 @@ A failed record PATCH can block a newer corrected edit behind its immutable reje
 
 Initial manual capture emits the note change before its records; paginated replica reads can observe a parent before derived data even when the page ends mid-capture. Correction-context retrieval excludes zero-overlap examples; one unrelated correction is not a universal preference.
 
-Rejected: endlessly retrying a known-invalid frozen payload; silently replacing server values; deleting unrelated commands while coalescing edits; publishing records before their original note. Source: [SyncEngine](../android/app/src/main/java/app/planner/sync/SyncEngine.kt), [Settings](../android/app/src/main/java/app/planner/features/SettingsScreen.kt), [backend routes](../backend/app/api/routes.py), [worker](../backend/app/jobs/worker.py).
+Rejected: endlessly retrying a known-invalid frozen payload; silently replacing server values; deleting unrelated commands while coalescing edits; publishing records before their original note. Source: [SyncEngine](../android/app/src/main/java/app/planner/infrastructure/sync/SyncEngine.kt), [Settings](../android/app/src/main/java/app/planner/presentation/settings/SettingsScreen.kt), [backend routes](../backend/app/api/routes.py), [worker](../backend/app/jobs/worker.py).
 
 ## ADR-016: Reference-led UI and complete task discovery
 
@@ -308,3 +308,12 @@ UX: remove explanatory/debug composer labels and duplicate type controls. Keep s
 
 
 ADR-025 implementation details: route constants and callback navigation are centralized; SyncWorker uses a constructor-injected factory configured by PlannerApp. Modal forms have opening-scoped generations and independently saved expected versions. The SQL adapter retains generated feed keys across autoflush, while plain command mapping preserves nested supplied-field metadata for existing idempotency digests. These preserve lifecycle/concurrency/transport behavior without database resets or schema downgrades.
+
+
+## ADR-026: Canonical packages with feature-owned presentation
+
+Date: 2026-10-29. Status: implemented and locally verified; 187 backend / 43 JVM / 25 API 37 scenarios; debug/release/lint pass. Source: the user requested a clear physical hierarchy after the earlier logical-layer refactor left a flat features package.
+
+Use domain/{model,policy,interpretation,time}, application/{port,model,usecase}, infrastructure adapters and presentation organized by feature. Keep one existing Gradle module. Each screen owns its Route/Screen/ViewModel/UiState; navigation registers Routes. Extract genuine visual sections and shared components, without adding pass-through use cases or four duplicate repositories/entities for registry base kinds.
+
+Remove old source aliases instead of preserving parallel package trees. Preserve Android entry-point/application IDs, SQL contract, DataStore/channel/work names and original notes. Move Room schema histories intact with the new class package and verify identical identity hashes. Map the old persisted worker name in the new factory and exercise it through an actual work spec. OverlayService's nonexported manifest component moves with its platform package. Settings' native permission/service binding is a narrow route exception, not screen infrastructure access. Enforce package/path/owner rules in CI, including negative tests.

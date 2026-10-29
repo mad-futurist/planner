@@ -1,10 +1,10 @@
 package app.planner
 
 import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
-import app.planner.sync.SyncScheduler
-import app.planner.sync.PlannerWorkerFactory
 import androidx.work.Configuration
+import app.planner.infrastructure.sync.PlannerWorkerFactory
+import app.planner.infrastructure.sync.SyncScheduler
+import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
 @HiltAndroidApp

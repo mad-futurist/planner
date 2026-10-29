@@ -1,6 +1,6 @@
 # Architecture
 
-Last reviewed: **2026-10-28**. This describes the migration implementation. Current acceptance results and unresolved work are recorded in [Architecture migration](ARCHITECTURE_MIGRATION.md) and [Testing](TESTING.md). Product intent remains in [Concept](CONCEPT.md).
+Last reviewed: **2026-10-29**. This describes the migration implementation. Current acceptance results and unresolved work are recorded in [Architecture migration](ARCHITECTURE_MIGRATION.md) and [Testing](TESTING.md). Product intent remains in [Concept](CONCEPT.md).
 
 ## Four logical layers in two monoliths
 
@@ -18,26 +18,28 @@ flowchart BT
   BA --> BD[Pure Python domain]
 ```
 
-These arrows are **source dependencies**. Runtime calls from an application port to its configured adapter go in the other direction. Hilt AppModule and Python bootstrap/main are composition roots.
+These arrows are **source dependencies**. Runtime calls from an application port to its configured adapter go in the other direction. Hilt infrastructure/di/AppModule and Python bootstrap/main are composition roots.
 
 ## Android source map
 
 | Layer | Sources and responsibility |
 | --- | --- |
-| Domain | `domain/model/Models.kt`, `domain/CaptureNote.kt`, `domain/DayPolicy.kt`, `domain/CaptureInterpreter.kt`, `domain/Time.kt`: framework-free models, capture/temporal/completion policy and local interpretation |
-| Application | `application/OrganizerPorts.kt`, `CaptureUseCase.kt`, `ApproveDevelopment.kt`, `CloudGateway.kt`: bounded query/command ports, shared capture and development approval policy |
-| Infrastructure | `data/PlannerRepository.kt`, `RoomOrganizerQueries.kt`, `RoomDevelopmentApproval.kt`, `ServiceAdapters.kt`; `core/database`, `core/network`, `core/Preferences.kt`; `sync`: storage transactions, explicit mappings, transport, credentials and scheduling |
-| Presentation | `features/*ViewModel.kt`, feature screen files, `CaptureBar.kt`, `CaptureClarification.kt`, `PlannerUI.kt`, `PlannerNavHost.kt`; `core/designsystem`: immutable state, UI commands, formatting, pickers, navigation and stateless content |
-| Native platform adapter | `features/overlay`: real foreground service/window/permission/notification implementation at its manifest-compatible location; saving invokes the same CaptureUseCase as Compose |
-| Composition | `core/AppModule.kt`, Android entry points: bind application ports to adapters |
+| Domain | `domain/model`, `domain/policy`, `domain/interpretation`, `domain/time`: framework-free values and policies. Record remains a registry-driven task/event/idea/information value; no duplicate kind-specific persistence models were invented. |
+| Application | `application/port`, `application/model`, `application/usecase`: query/command/external ports, plain results, shared capture and development approval. No pass-through use case or repository per base kind. |
+| Infrastructure | `infrastructure/database/{dao,entity,mapper}`, `repository`, `remote`, `sync`, `preferences`, `security`, `serialization`: storage, transport and platform implementations. |
+| Presentation | `presentation/{capture,today,calendar,tasks,ideas,profile,journal,review,settings,record,interpretation,development}`: each feature owns Route/Screen/ViewModel/UiState and its local components. `presentation/common`, `design`, `navigation`, `shell` are explicitly shared. |
+| Native platform adapter | `infrastructure/overlay`: real service/windows/notification. `presentation/settings/platform/OverlaySettingsRoute.kt` binds permissions/lifecycle to controls through a narrow documented native boundary. |
+| Composition | `MainActivity`, `PlannerApp`, `infrastructure/di/AppModule.kt`; root package contains only the two Android entry points. |
 
-Room-annotated storage objects are in `core/database/entities/Entities.kt`. Bidirectional mappings are explicit in `core/database/Mappers.kt`. The infrastructure-only mapped DAO wraps StorageDao; it is never supplied to Compose or ViewModels. `core/model/Models.kt` contains source compatibility aliases to domain models, not Room entities.
+Complete source tree, port inventory and feature extension rules: [Android packages](ANDROID_PACKAGES.md). The previous flat features/core/data/sync arrangement is removed. Models, ports, state and components are actual separate packages/files; the dependency checker verifies package/directory consistency and ownership.
+
+Storage objects are in `infrastructure/database/entity`; explicit conversions in `infrastructure/database/mapper/DatabaseMappers.kt`; SQL in `database/dao/StorageDao.kt`. `PlannerDatabase` stays the schema owner, while the mapped `PlannerDao` is infrastructure-only. Obsolete core model/time aliases are removed; tests and callers use canonical types.
 
 **Room remains v4** with migrations 1→2→3→4 and exported schema. Table/column/index names and the SQLite contract are retained. Moving annotations is not a new schema migration, reset or downgrade.
 
 ## Feature MVVM and UI components
 
-Each organizer destination has a feature ViewModel and immutable UiState: Today, Calendar, Tasks, Ideas, Profile, Journal, Review and Settings. Capture, details, manual interpretation and development have their own state owners. PlannerViewModel is the activity shell, not an owner of every screen's data. Navigation obtains destination ViewModels with Hilt's Compose factory. Stable route constants live in `navigation/PlannerRoutes.kt`; screen content receives `ScreenNavigation` callbacks, never a NavController. Controllers remain in route/composition bindings.
+Each organizer destination has a feature ViewModel and immutable UiState: Today, Calendar, Tasks, Ideas, Profile, Journal, Review and Settings. Capture, details, manual interpretation and development have their own state owners. PlannerViewModel is the activity shell, not an owner of every screen's data. Each feature Route obtains its ViewModel with Hilt's Compose factory; the central graph only registers destinations and passes navigation callbacks. Stable route constants live in `presentation/navigation/PlannerRoutes.kt`; screen content receives `ScreenNavigation` callbacks, never a NavController. Controllers remain in route/composition bindings.
 
 ```mermaid
 flowchart LR
@@ -136,7 +138,7 @@ Strict provider schema negotiation, refusal/bounds/fallback rules, temporal grou
 
 ## Compatibility and remaining boundaries
 
-Logical layers do not require renaming every manifest/CLI/import path. Historical `core/model` aliases, `app/services.py`, `app/ai/context.py` and provider/security import paths remain documented compatibility surfaces. They are not application dependencies. Legacy SQL helper implementations are isolated under infrastructure for operator/learning integrations; current HTTP and worker application workflows do not use them as business services.
+Logical layers do not require renaming every manifest/CLI/import path. Backend `app/services.py`, `app/ai/context.py` and provider/security import paths remain documented compatibility surfaces. Android has canonical physical packages; the worker factory accepts the legacy persisted worker name. They are not application dependencies. Legacy SQL helper implementations are isolated under infrastructure for operator/learning integrations; current HTTP and worker application workflows do not use them as business services.
 
 Readiness/database probes are composed in main; existing deployment/configuration behavior is retained. Native overlay permission/lifecycle and activity-result I/O remain platform adapters. JSON form formatting in UI is distinct from domain record/temporal invariants. Package checks enforce inward imports and reject direct DAO/service access from screen/ViewModel code. They complement behavioral tests, not prove all semantic layering properties.
 
@@ -188,3 +190,10 @@ sequenceDiagram
 For an Android feature, first reuse a domain policy and bounded application port; add a use case only when it owns a workflow. Implement atomic storage/outbox behavior in its adapter. Add immutable feature UiState and ViewModel methods, then stateless content with typed callbacks. Register routes centrally and reuse design-system components. Both capture surfaces call CaptureUseCase rather than duplicating its policy.
 
 For a backend feature, validate wire data at the API edge and map it into plain application values. Put ownership, transaction and idempotency decisions in the application workflow; add a bounded UoW query or external port when necessary. Implement SQL/provider details in infrastructure and bind in bootstrap. Keep provider I/O outside transactions. Test policy with fake ports and persistence/lease behavior with real database regressions; run the architecture checker and update owning docs.
+
+
+## Physical package organization — 2026-10-29
+
+Logical boundary checks on October 28 did not enforce feature ownership, leaving too many files in one features package. ADR-026 closes that organizational gap. TodayScreen now composes Tomorrow, Schedule, Anytime, IdeaOfDay and DoneToday LazyListScope sections, preserving keys and lifted expansion state. Design components have individual files. Other screens retain feature-local components where they own actual reusable UI.
+
+Room schema exports move to the new PlannerDatabase qualified-name directory; schema versions, SQL identities, database name and migrations are unchanged. Existing WorkManager specs may name app.planner.sync.SyncWorker: the new factory maps both old and new names to the injected implementation. New specs use infrastructure.sync.SyncWorker; unique-work names/backoff/network constraints stay unchanged. The nonexported overlay component is updated in the manifest; Activity/deep-link identity, DataStore keys and notification channels remain stable.

@@ -4,7 +4,7 @@ Last reviewed: **2026-10-28**. The supplied images are visual targets under [ADR
 
 ## Current navigation and interactions
 
-[PlannerUI](../android/app/src/main/java/app/planner/features/PlannerUI.kt) owns the persistent composer and consistent Today / Calendar / Tasks / Ideas / Profile navigation. Saved primary navigation entries restore useful route/list state. Profile links Journal, Review and Settings. Secondary headers have Back. Keyboard visibility hides primary navigation while keeping capture above IME/system insets. No chat, month grid or analytics view exists.
+[PlannerUI](../android/app/src/main/java/app/planner/presentation/shell/PlannerUI.kt) owns the persistent composer and consistent Today / Calendar / Tasks / Ideas / Profile navigation. Saved primary navigation entries restore useful route/list state. Profile links Journal, Review and Settings. Secondary headers have Back. Keyboard visibility hides primary navigation while keeping capture above IME/system insets. No chat, month grid or analytics view exists.
 
 The plus menu chooses Automatic on device (Private) / Note for AI (Cloud), Original note only, Task for today, Task without a date, Idea, Event or Information. Choosing a type is optional. Default private Send now saves a complete local interpretation as records, preserving the original separately; a displayed preview is not merely discarded. Original note only deliberately saves no records. The private composer control says Private. Text saves after one Room transaction; raw input is independent of interpretation. Main/overlay inputs cap at 20,000 characters; in-flight saves prevent duplicate submission and retain newer typing. Drafts persist through DataStore. Local save confirmation never implies successful AI.
 
@@ -60,7 +60,7 @@ Google opens the system browser and returns through app.planner://auth. A pendin
 
 ## Today
 
-[Organizer screens](../android/app/src/main/java/app/planner/features/OrganizerScreens.kt) uses the real device date/locale. Apricot sunrise preview shows the earliest tomorrow commitment and real remaining count. Schedule uses chronological timeline cards; Anytime initially shows two selected untimed tasks, then an explicit +N expansion. Deadlines never become invented meetings. Star/checkbox controls complete with Undo; card/details opens editing.
+[Organizer screens](../android/app/src/main/java/app/planner/presentation/today/TodayScreen.kt) uses the real device date/locale. Apricot sunrise preview shows the earliest tomorrow commitment and real remaining count. Schedule uses chronological timeline cards; Anytime initially shows two selected untimed tasks, then an explicit +N expansion. Deadlines never become invented meetings. Star/checkbox controls complete with Undo; card/details opens editing.
 
 Idea of the day uses a persisted daily slot with least-recently-shown eligible rotation. The lavender card supports Details, Develop and Later. Later leaves today’s slot empty, with alternatives considered on subsequent days. Done today uses actual completion instants and expands into restorable tasks. One quiet Worth revisiting link can lead to at most three older unresolved tasks in Review; it does not add them to the focus pool. Temporal predicates: [Data model](DATA_MODEL.md#temporal-semantics).
 
@@ -92,7 +92,7 @@ Develop keeps the existing durable AI job flow. Private ideas remain private and
 
 ## Record details
 
-[RecordEditor](../android/app/src/main/java/app/planner/features/RecordEditor.kt) exposes original note, title, kind, versioned type/generic fields, separate planned day/deadline/start/end and pin/archive/restore/complete. Provenance IDs stay out of generic user fields and appear as a source link. Reminder editing is explicitly stored-only. Native time editing rejects DST gaps and asks which repeated occurrence to use. Save retains validation and persistence errors inline; Cancel discards unsaved values. Reopening first loads the current snapshot. A restored draft retains its original expected version; concurrent changes require reopening instead of overwriting the newer record. Loading failures offer Retry/Close without exposing a stale form. Immediate pin/archive/complete acts on saved values; save form edits first.
+[RecordEditor](../android/app/src/main/java/app/planner/presentation/record/RecordEditor.kt) exposes original note, title, kind, versioned type/generic fields, separate planned day/deadline/start/end and pin/archive/restore/complete. Provenance IDs stay out of generic user fields and appear as a source link. Reminder editing is explicitly stored-only. Native time editing rejects DST gaps and asks which repeated occurrence to use. Save retains validation and persistence errors inline; Cancel discards unsaved values. Reopening first loads the current snapshot. A restored draft retains its original expected version; concurrent changes require reopening instead of overwriting the newer record. Loading failures offer Retry/Close without exposing a stale form. Immediate pin/archive/complete acts on saved values; save form edits first.
 
 ## Settings
 
@@ -163,3 +163,8 @@ Current synthetic API 37 capture: [compact contextual actions](assets/screens/20
 
 
 The migration fixture captures all eight routes on the dedicated API 37 QA emulator: [Today](assets/screens/2026-10-28-refactor/visual-audit/today-top.png), [Calendar](assets/screens/2026-10-28-refactor/visual-audit/calendar.png), [Tasks](assets/screens/2026-10-28-refactor/visual-audit/tasks.png), [Ideas](assets/screens/2026-10-28-refactor/visual-audit/ideas.png), [Profile](assets/screens/2026-10-28-refactor/visual-audit/profile.png), [Journal](assets/screens/2026-10-28-refactor/visual-audit/journal.png), [Review](assets/screens/2026-10-28-refactor/visual-audit/review.png), [Settings](assets/screens/2026-10-28-refactor/visual-audit/settings.png), [dark Today](assets/screens/2026-10-28-refactor/visual-audit/today-dark.png) and [native quick capture](assets/screens/2026-10-28-refactor/visual-audit/quick-capture.png). These contain synthetic fixtures and may include transient local-save receipts; they are runtime evidence, not reference mockups.
+
+
+### Feature package ownership — 2026-10-29
+
+Each feature now owns its Route, immutable UiState, ViewModel, Actions and screen content. The graph registers Routes without constructing feature ViewModels. Today sections are in presentation/today/components; navigation and bottom bar in presentation/navigation; theme/components/formatters/illustrations in presentation/design; modal details/interpretation/development own their route sessions. Native overlay permission binding is in settings/platform and is supplied as a slot to SettingsScreen. This reorganization preserves UI copy, gestures, tags, list keys and saved-state behavior; verification is tracked separately from earlier screenshots.

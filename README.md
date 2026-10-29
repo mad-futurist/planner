@@ -20,7 +20,7 @@ Complete SDK/environment, host/emulator networking, same-owner enrollment/renewa
 
 ## Verification
 
-Architecture migration debug/release builds and lint pass (0 errors / 9 warnings); device acceptance is recorded in the migration record. Verification includes **43 Android unit tests and 179 backend tests**, with real PostgreSQL regressions. **26 distinct API 37 capture, organizer/editor, overlay/worker and HTTP scenarios passed**; scope and remaining gates are in the migration record. Contextual tentative-action choices, default private task/event Send, exact dentist at 16 date selection and prior API 36/component screenshots are scoped in [Testing](docs/TESTING.md). Offline save/reopen, real HTTP sync without AI configuration and API 36 overlay behavior were exercised.
+The canonical Android package organization is verified: **187 backend tests, 43 Android JVM tests and 25 distinct API 37 scenarios passed**. Debug/test/release APK builds pass; lint has **0 errors / 9 warnings**. See the [physical package map](docs/ANDROID_PACKAGES.md) and [Testing](docs/TESTING.md) for scope, corrected attempts, Room/worker compatibility and remaining gates. Earlier real-HTTP/model checks retain their own dated evidence; this package-only follow-up did not request new paid inference.
 
 The [passive dataset journal](docs/DATASET.md) preserves server inputs, model proposals, outcomes and user changes with separate provenance. The pre-refactor PostgreSQL metadata snapshot recorded **4,631 synthetic observations and 423 distinct input texts**; the earlier real-provider journal smoke passed **19/19**. Generated variants are not model-quality evidence. Local-only notes remain local; service-wide contribution requires separate consent, off by default. No training starts automatically.
 
@@ -38,6 +38,7 @@ Public deployment, live SMTP/Google, physical devices, broader live-provider acc
 | --- | --- |
 | [Concept](docs/CONCEPT.md) | Product vision, principles, intended flows and scope |
 | [Architecture](docs/ARCHITECTURE.md) | Actual packages, dependencies, layers and data flow |
+| [Android packages](docs/ANDROID_PACKAGES.md) | Physical layers, feature ownership, complete source tree and extension rules |
 | [Dependencies](docs/DEPENDENCIES.md) | Enforced inward imports, composition roots and compatibility exceptions |
 | [Architecture migration](docs/ARCHITECTURE_MIGRATION.md) | Before/after structure, checks and remaining acceptance |
 | [Features](docs/FEATURES.md) | Planned / In Progress / Implemented / Verified status and evidence |

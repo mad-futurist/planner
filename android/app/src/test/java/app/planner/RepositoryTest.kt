@@ -3,14 +3,27 @@ package app.planner
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import app.planner.core.database.*
-import app.planner.core.model.*
-import app.planner.data.PlannerRepository
-import app.planner.domain.*
+import app.planner.domain.interpretation.CaptureInterpreter
+import app.planner.domain.interpretation.CaptureRules
+import app.planner.domain.model.Meta
+import app.planner.domain.model.OutboxOperation
+import app.planner.domain.model.ProfileSummary
+import app.planner.domain.model.Record
+import app.planner.domain.policy.CaptureContext
+import app.planner.domain.policy.dayBounds
+import app.planner.domain.policy.isScheduledOnDay
+import app.planner.domain.policy.isVisibleToday
+import app.planner.domain.policy.retryDelayMillis
+import app.planner.domain.policy.taskBucket
+import app.planner.infrastructure.database.MIGRATION_1_2
+import app.planner.infrastructure.database.MIGRATION_2_3
+import app.planner.infrastructure.database.MIGRATION_3_4
+import app.planner.infrastructure.database.PlannerDatabase
+import app.planner.infrastructure.repository.PlannerRepository
 import com.google.gson.Gson
 import java.time.*
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.runner.RunWith
@@ -217,7 +230,7 @@ class RepositoryTest {
         assertEquals("PATCH", db.dao().nextOperation(Long.MAX_VALUE)?.method)
     }
     @Test fun failedBackgroundSchedulingDoesNotTurnCommittedCaptureIntoFailure() = runBlocking {
-        repo = PlannerRepository(db, Gson(), app.planner.application.SyncRequest { error("Unavailable scheduler") })
+        repo = PlannerRepository(db, Gson(), app.planner.application.port.SyncRequest { error("Unavailable scheduler") })
         val saved = repo.capture("Durable without scheduler", false)
         assertEquals(saved.content, db.dao().noteById(saved.id)?.content)
         assertNotNull(db.dao().nextOperation(Long.MAX_VALUE))
@@ -247,7 +260,7 @@ class RepositoryTest {
         for (version in listOf(1, 2, 3)) {
             val name = "migration-$version.db"
             context.deleteDatabase(name)
-            val schema = com.google.gson.JsonParser.parseString(java.io.File("schemas/app.planner.core.database.PlannerDatabase/$version.json").readText()).asJsonObject.getAsJsonObject("database")
+            val schema = com.google.gson.JsonParser.parseString(java.io.File("schemas/app.planner.infrastructure.database.PlannerDatabase/$version.json").readText()).asJsonObject.getAsJsonObject("database")
             context.openOrCreateDatabase(name, Context.MODE_PRIVATE, null).use { legacy ->
                 for (entry in schema.getAsJsonArray("entities")) {
                     val entity = entry.asJsonObject
@@ -359,7 +372,7 @@ class RepositoryTest {
         assertTrue(repo.reviewTasks(day.plusDays(7)).any { it.id == initial.first().id })
     }
     @Test fun absentLegacyOrRevokedCloudConsentIsAlwaysPrivate() {
-        val privacy = app.planner.core.CapturePrivacy
+        val privacy = app.planner.domain.policy.CapturePrivacy
         assertTrue(privacy.isPrivate(emptyMap()))
         assertTrue(privacy.isPrivate(mapOf("privateCapture" to "false")))
         assertFalse(privacy.isPrivate(mapOf("privateCapture" to "false", "cloudConsent" to privacy.CONSENT_VERSION)))
@@ -376,7 +389,7 @@ class RepositoryTest {
     }
     @Test fun developmentApprovalRejectsStaleResultsAndCreatesTasksOnce() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val engine = app.planner.sync.SyncEngine(context, repo, app.planner.core.Preferences(context), app.planner.core.network.TokenStore(context))
+        val engine = app.planner.infrastructure.sync.SyncEngine(context, repo, app.planner.infrastructure.preferences.Preferences(context), app.planner.infrastructure.security.TokenStore(context))
         val note = repo.capture("Saved idea", false, manualKind = "idea")
         val idea = db.dao().recordsForNote(note.id).single()
         fun result(version: Int) = """{"id":"job-fixture","status":"complete","recordVersion":$version,"result":{"steps":["Contact school","Recruit tutors","Schedule a pilot"]}}"""

@@ -63,7 +63,7 @@ Benchmark CLI now persists every case by default, including errors and raw provi
 
 All revisions/predictions/edits of a real note share note:ID. Generated translations and variants share a template-family group. Known benchmark/smoke cases are marked exposedEvaluation and exported as regression, not as unseen test data. Other groups receive deterministic train/validation/test suggestions so one group cannot cross splits. This is a grouping aid, not proof of held-out independence: cross-note correction context, near duplicates and template overlap still require dataset review. No training/evaluation score is claimed from generated rows alone.
 
-Source: [models](../backend/app/persistence/models.py), [journal](../backend/app/learning.py), [operator tooling](../backend/app/dataset.py), [API](../backend/app/api/dataset.py), [migration](../backend/alembic/versions/f26a81d705bc_learning_dataset.py), [Settings control](../android/app/src/main/java/app/planner/features/DatasetControls.kt). Decision: ADR-021 in Decisions.
+Source: [models](../backend/app/persistence/models.py), [journal](../backend/app/learning.py), [operator tooling](../backend/app/dataset.py), [API](../backend/app/api/dataset.py), [migration](../backend/alembic/versions/f26a81d705bc_learning_dataset.py), [Settings control](../android/app/src/main/java/app/planner/presentation/settings/components/DatasetControls.kt). Decision: ADR-021 in Decisions.
 
 
 ## Architecture migration verification

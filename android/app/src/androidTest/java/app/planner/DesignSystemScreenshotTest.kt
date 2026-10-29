@@ -8,17 +8,22 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.unit.dp
 import androidx.test.platform.app.InstrumentationRegistry
-import app.planner.core.designsystem.*
-import app.planner.core.model.Record
-import org.junit.*
-import org.junit.Assert.*
+import app.planner.domain.model.Record
+import app.planner.presentation.design.components.Glyph
+import app.planner.presentation.design.components.IdeaCard
+import app.planner.presentation.design.components.ScheduleCard
+import app.planner.presentation.design.components.SectionHeader
+import app.planner.presentation.design.components.TaskCard
+import app.planner.presentation.design.theme.PlannerTheme
 import java.io.File
 import java.time.LocalDate
 import kotlin.math.abs
+import org.junit.*
+import org.junit.Assert.*
 
 /** Fixed records/dates, cropped to the component surface; no production database or clock. */
 class DesignSystemScreenshotTest {

@@ -71,3 +71,13 @@ Remaining architectural compromises are intentional: there is one Gradle module 
 - Full [verification record](assets/benchmarks/2026-10-28-architecture-verification.json), [local benchmark](assets/benchmarks/2026-10-28-architecture-local.json), commands and incidents in [Testing](TESTING.md).
 
 This completes the local architecture/refinement scope. Physical/OEM devices, real SMTP/Google, public deployment/signing, representative performance/TalkBack and broader model-quality acceptance remain open. The refactor does not certify those gates or claim an ANR/CPU fix.
+
+
+## 2026-10-29 physical source organization follow-up
+
+The October 28 increment established logical ports/state boundaries but left too many unrelated files in features. Its scoped acceptance did not verify package ownership. The user requested the physical hierarchy now documented in [Android packages](ANDROID_PACKAGES.md). This follow-up removes features/core/data/sync root packages, groups infrastructure by adapter responsibility, separates application port/usecase/model and gives every presentation feature a Route/Screen/ViewModel/UiState home. Today has real visual sections; navigation does not instantiate feature ViewModels.
+
+The Room class package/export directory moves, but all historical schema identities and SQL contracts are retained. WorkManager's stored old class name is mapped and has passed a real enqueue/execute regression. Native overlay moves with its nonexported manifest component; Activity, IDs, preference/credential/channel/work keys stay stable. Current focused/final results are owned by the October 29 section of Testing; earlier results above remain historical.
+
+
+Physical follow-up acceptance: **187 backend / 43 JVM / 25 distinct API 37 scenarios passed**. Debug/test/unsigned-release builds and final lint pass. All historical Room schema JSON contents are unchanged. The old persisted worker name was executed successfully, not just string-matched. Earlier runtime/lint failures and repaired test synchronization are preserved in Testing. Main-device update was skipped because that emulator was unavailable. [Verification report](assets/benchmarks/2026-10-29-android-packages.json).
