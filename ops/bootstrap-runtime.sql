@@ -1,0 +1,8 @@
+SELECT 'CREATE ROLE planner_runtime LOGIN' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'planner_runtime') \gexec
+ALTER ROLE planner_runtime PASSWORD :'runtime_password';
+GRANT CONNECT ON DATABASE planner TO planner_runtime;
+GRANT USAGE ON SCHEMA public TO planner_runtime;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO planner_runtime;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO planner_runtime;
+ALTER DEFAULT PRIVILEGES FOR ROLE planner IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO planner_runtime;
+ALTER DEFAULT PRIVILEGES FOR ROLE planner IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO planner_runtime;

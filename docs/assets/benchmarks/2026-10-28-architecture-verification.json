@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "verifiedAtUTC": "2026-10-29T08:11:22.230733+00:00",
+  "scope": "2026-10-28 architecture migration, completed 2026-10-29; local acceptance, not public production certification",
+  "backend": {
+    "passed": 179,
+    "skipped": 0,
+    "postgresqlEnabled": true,
+    "seconds": 61.78
+  },
+  "android": {
+    "unitPassed": 43,
+    "unitFailed": 0,
+    "debugBuild": "passed",
+    "releaseBuild": "passed, unsigned",
+    "lintErrors": 0,
+    "lintWarnings": 9,
+    "finalTestApkAndLint": "passed"
+  },
+  "device": {
+    "avd": "Planner_Clarification_QA",
+    "api": 37,
+    "captureScenarios": 13,
+    "organizerScenariosIncludingEditorRegressions": 11,
+    "routesOverlayWorkerFixture": 1,
+    "realHttpManualSync": 1,
+    "distinctPassingScenarios": 26,
+    "mainDeviceDataReset": false,
+    "timingScope": "Host paused overnight during final organizer/build run; reported wall times are not performance measurements.",
+    "mainDeviceUpdate": {
+      "avd": "Medium_Phone_API_37.0",
+      "installed": "adb install -r; existing data retained",
+      "coldLaunch": "initial am start -W timeout; not a latency pass",
+      "followup": "Status ok; activity resumed, visible and reportedDrawn=true; current process crash buffer empty"
+    }
+  },
+  "runtime": {
+    "dockerApiAndWorker": "rebuilt and running",
+    "health": "ok",
+    "readiness": "ready",
+    "applicationUid": 10001,
+    "alembicHead": "f26a81d705bc"
+  },
+  "compatibility": {
+    "roomVersion": 4,
+    "migrations": "1 -> 2 -> 3 -> 4 retained",
+    "api": "/api/v1 retained, nested idempotency defaults/presence parity tested",
+    "databaseReset": false
+  },
+  "benchmark": {
+    "localPassed": 43,
+    "calendarReadyEvents": 12,
+    "clarificationCases": 14,
+    "unsafeCalendarCases": 0,
+    "persistedToPostgresql": true,
+    "newPaidInferenceRequested": false
+  },
+  "remainingGates": [
+    "Live SMTP and Google OAuth",
+    "Public deployment and release signing",
+    "Physical/OEM device matrix",
+    "Representative performance and accessibility",
+    "Broader held-out/live-provider quality"
+  ]
+}

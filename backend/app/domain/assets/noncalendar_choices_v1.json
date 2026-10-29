@@ -1,0 +1,518 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-10-28T10:00:00.000Z",
+  "timezone": "Europe/Paris",
+  "scope": "Provisional action kinds with required user intent choice; not automatic commitments or a model-quality score",
+  "cases": [
+    {
+      "id": "en-action-exact",
+      "locale": "en",
+      "text": "maybe find ai course",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "en-action-find",
+      "locale": "en",
+      "text": "find an AI course",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-action-please",
+      "locale": "en",
+      "text": "please find an AI course",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-action-need",
+      "locale": "en",
+      "text": "I need to find an AI course",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-action-perhaps",
+      "locale": "en",
+      "text": "perhaps research AI courses",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "en-action-buy",
+      "locale": "en",
+      "text": "maybe buy a notebook",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "en-action-could",
+      "locale": "en",
+      "text": "I could compare AI courses",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "en-action-learn",
+      "locale": "en",
+      "text": "someday learn Python",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "fr-action-maybe",
+      "locale": "fr",
+      "text": "peut-être trouver un cours IA",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "fr-action-find",
+      "locale": "fr",
+      "text": "trouver un cours IA",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "fr-action-could",
+      "locale": "fr",
+      "text": "je pourrais chercher un cours IA",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "fr-action-read",
+      "locale": "fr",
+      "text": "peut-être lire ce livre",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "fr-action-learn",
+      "locale": "fr",
+      "text": "apprendre Python",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "ru-action-maybe",
+      "locale": "ru",
+      "text": "может найти курс по ИИ",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "ru-action-find",
+      "locale": "ru",
+      "text": "найти курс по ИИ",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "ru-action-possibly",
+      "locale": "ru",
+      "text": "возможно изучить Python",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "ru-action-someday",
+      "locale": "ru",
+      "text": "когда-нибудь пройти курс",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "ru-action-buy",
+      "locale": "ru",
+      "text": "может купить блокнот",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ]
+      ]
+    },
+    {
+      "id": "ru-action-check",
+      "locale": "ru",
+      "text": "проверить расписание курсов",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-info",
+      "locale": "en",
+      "text": "AI course information",
+      "kinds": [
+        "information"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-negative",
+      "locale": "en",
+      "text": "do not find a course",
+      "kinds": [
+        "information"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-maybe-negative",
+      "locale": "en",
+      "text": "maybe do not buy this",
+      "kinds": [
+        "information"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-noun",
+      "locale": "en",
+      "text": "my course notes",
+      "kinds": [
+        "information"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-idea",
+      "locale": "en",
+      "text": "idea: build an AI course",
+      "kinds": [
+        "idea"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "fr-info",
+      "locale": "fr",
+      "text": "Les notes du cours IA",
+      "kinds": [
+        "information"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "ru-info",
+      "locale": "ru",
+      "text": "Материалы курса по ИИ",
+      "kinds": [
+        "information"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-event-known-clock",
+      "locale": "en",
+      "text": "dentist at 16",
+      "kinds": [
+        "event"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [
+        "missing_date"
+      ],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-timed-action",
+      "locale": "en",
+      "text": "maybe find an AI course at 16",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [
+        "missing_date"
+      ],
+      "kindChoices": [
+        []
+      ]
+    },
+    {
+      "id": "en-dated-action",
+      "locale": "en",
+      "text": "maybe find an AI course tomorrow",
+      "kinds": [
+        "task"
+      ],
+      "calendar": [
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        []
+      ],
+      "plannedFor": "2026-10-29"
+    },
+    {
+      "id": "en-multi-choice",
+      "locale": "en",
+      "text": "maybe find ai course; buy milk",
+      "kinds": [
+        "task",
+        "task"
+      ],
+      "calendar": [
+        false,
+        false
+      ],
+      "doubts": [],
+      "kindChoices": [
+        [
+          "task_deadline",
+          "task_unscheduled",
+          "idea"
+        ],
+        []
+      ]
+    }
+  ]
+}

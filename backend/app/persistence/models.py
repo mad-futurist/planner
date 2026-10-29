@@ -4,12 +4,7 @@ from sqlalchemy import Boolean, ForeignKey, Index, Integer, JSON, String, Text, 
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
-def uid() -> str:
-    return str(uuid4())
-
-
-def now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+from app.domain.time import now, uid
 
 
 class Base(DeclarativeBase):
@@ -19,6 +14,12 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    email: Mapped[str | None] = mapped_column(String(320), unique=True)
+    password_hash: Mapped[str | None] = mapped_column(Text)
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    dataset_consent: Mapped[bool] = mapped_column(Boolean, default=False)
+    dataset_consent_at: Mapped[str | None] = mapped_column(String(40))
+    dataset_synthetic: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Invitation(Base):
@@ -54,6 +55,7 @@ class Note(Base):
     processing_status: Mapped[str] = mapped_column(String(24), default="pending")
     user_corrected: Mapped[bool] = mapped_column(Boolean, default=False)
     manual: Mapped[bool] = mapped_column(Boolean, default=False)
+    interpretation_hints: Mapped[dict] = mapped_column(JSON, default=dict)
 
 
 class Record(Base):
@@ -145,3 +147,69 @@ class Operation(Base):
     key: Mapped[str] = mapped_column(String(36), primary_key=True)
     digest: Mapped[str] = mapped_column(String(64))
     result: Mapped[dict] = mapped_column(JSON)
+
+
+class ProviderRequest(Base):
+    __tablename__ = "provider_requests"
+    __table_args__ = (Index("ix_provider_requests_owner_time", "user_id", "created_at"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    kind: Mapped[str] = mapped_column(String(16))
+    created_at: Mapped[str] = mapped_column(String(40), default=now)
+
+
+class AccountToken(Base):
+    __tablename__ = "account_tokens"
+    digest: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    purpose: Mapped[str] = mapped_column(String(16))
+    expires_at: Mapped[str] = mapped_column(String(40))
+    used: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class ExternalIdentity(Base):
+    __tablename__ = "external_identities"
+    issuer: Mapped[str] = mapped_column(String(200), primary_key=True)
+    subject: Mapped[str] = mapped_column(String(255), primary_key=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+
+
+class LoginFlow(Base):
+    __tablename__ = "login_flows"
+    state_digest: Mapped[str] = mapped_column(String(64), primary_key=True)
+    nonce: Mapped[str] = mapped_column(String(100))
+    challenge: Mapped[str] = mapped_column(String(100))
+    expires_at: Mapped[str] = mapped_column(String(40))
+    link_user_id: Mapped[str | None] = mapped_column(String(36))
+    user_id: Mapped[str | None] = mapped_column(String(36))
+    handoff_digest: Mapped[str | None] = mapped_column(String(64))
+    used: Mapped[bool] = mapped_column(Boolean, default=False)
+    callback_used: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class AuthRate(Base):
+    __tablename__ = "auth_rates"
+    bucket: Mapped[str] = mapped_column(String(64), primary_key=True)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    expires_at: Mapped[str] = mapped_column(String(40), index=True)
+
+
+class ServiceHeartbeat(Base):
+    __tablename__ = "service_heartbeats"
+    name: Mapped[str] = mapped_column(String(100), primary_key=True)
+    seen_at: Mapped[str] = mapped_column(String(40), index=True)
+
+
+class LearningSample(Base):
+    __tablename__ = "learning_samples"
+    __table_args__ = (Index("ix_learning_owner_created", "user_id", "created_at", "id"), Index("ix_learning_group", "group_key"))
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"))
+    event_key: Mapped[str] = mapped_column(String(200), unique=True)
+    group_key: Mapped[str] = mapped_column(String(160))
+    origin: Mapped[str] = mapped_column(String(24))
+    event_kind: Mapped[str] = mapped_column(String(32))
+    label_source: Mapped[str] = mapped_column(String(32))
+    schema_version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[str] = mapped_column(String(40), default=now)
+    data: Mapped[dict] = mapped_column(JSON)

@@ -1,10 +1,10 @@
 # Data model
 
-Last reviewed: **2026-10-21**. These are actual schemas; intended product semantics are in [Concept](CONCEPT.md). [API](API.md) owns wire contracts.
+Last reviewed: **2026-10-28**. These are actual schemas; intended product semantics are in [Concept](CONCEPT.md). [API](API.md) owns wire contracts.
 
 ## Current Room implementation
 
-[Models.kt](../android/app/src/main/java/app/planner/core/model/Models.kt) defines nine persisted entities. [DAO](../android/app/src/main/java/app/planner/core/database/PlannerDatabase.kt) owns queries and the schema is **version 3**. Android keeps one dataset per installation; a global owner UUID in Meta scopes that dataset. It does not accept arbitrary per-row client user IDs. Connecting another owner requires explicit export/clear.
+[Room entities](../android/app/src/main/java/app/planner/core/database/entities/Entities.kt) define nine persisted entities. [Domain models](../android/app/src/main/java/app/planner/domain/model/Models.kt) are separate framework-free values with [explicit mappings](../android/app/src/main/java/app/planner/core/database/Mappers.kt). [Storage DAO](../android/app/src/main/java/app/planner/core/database/PlannerDatabase.kt) owns SQL queries and the schema is **version 4**. Android keeps one dataset per installation; a global owner UUID in Meta scopes that dataset. It does not accept arbitrary per-row client user IDs. Connecting another owner requires explicit export/clear.
 
 | Entity/table | Stored responsibility |
 | --- | --- |
@@ -19,6 +19,10 @@ Last reviewed: **2026-10-21**. These are actual schemas; intended product semant
 | Meta / meta | Owner, incremental cursor, connection/provider status, timings, daily note/task triage slots/seen/snooze values, individual development results and approval markers |
 
 Room relationships are enforced by repository transactions and source IDs; foreign keys are not declared on these local entities. PostgreSQL uses foreign keys. Do not add destructive deletion or change provenance without a migration and both-side integrity tests.
+
+Private automatic main-composer capture uses the existing history table with modelVersion=local-rules-v1 and schemaVersion=1. Original note, all resolved records and the local proposal commit atomically; machine-derived records are initially unconfirmed and remain editable. Private data has no outbox operation. Explicit original-only captures have no records. For a task with an explicit deadline day and clock, deterministic application stores dueAt and clears scheduled startAt/dueDate; it does not turn the deadline into an appointment. No Room migration is needed; schema remains v4.
+
+Tentative local preview records may carry kindChoices as optional metadata; they cannot be automatically persisted until resolved. A selected Task + deadline is an explicitly confirmed manual task with dueDate, no plannedFor/startAt; Someday is a confirmed undated task; Idea is a confirmed idea. Deadline/type selection is transient ViewModel state until capture, and raw text editing clears the selected deadline. Existing raw text, record fields and temporal hint schema are unchanged. Original proposal history is retained by automatic local capture; manual-choice capture retains original text and final explicit record, without collecting a per-keystroke draft timeline.
 
 ## Relationships
 
@@ -85,10 +89,47 @@ Room indices cover note creation/processing, source-note lookup, kind/state/plan
 | --- | --- |
 | Room 1→2 | Normalize queryable instants with SQLite strftime; preserve original text, records and outbox |
 | Room 2→3 | Add three ordered/dependency outbox indices; no row replacement |
+| Room 3→4 | Add notes.interpretationHintsJson with default {}; reset incoming cursor to 0 for safe replay of historical feed gaps; preserve notes, records and outbox |
 | Alembic a15a67f338ba | Frozen initial backend tables/indices |
 | Alembic b72c114e390a | Development-job unique identity includes record revision; historical results remain |
 | Alembic c81fa728ac09 | Add/index server ingestion time; historical rows backfill their previous capture time |
+| Alembic d93b8e401f72 | Note clarification JSON and persistent per-owner provider request accounting |
+| Alembic e04c9f512a83 | Public account credentials, verification/reset tokens, Google flows/identities, auth rate counters and worker heartbeats |
+| Alembic f26a81d705bc | Owner-scoped learning_samples journal; user contribution consent/time and operator-only synthetic provenance flag; existing users default off |
 
-Exports: [Room schema versions](../android/app/schemas/app.planner.core.database.PlannerDatabase/3.json). Upgrade code: [Room migrations](../android/app/src/main/java/app/planner/core/database/Migrations.kt), [Alembic revisions](../backend/alembic/versions/a15a67f338ba_initial.py). Normal upgrades never use destructive resets. The development-job downgrade deliberately refuses to discard revisions; restore a pre-upgrade backup instead. Executed migration results: [Testing](TESTING.md#executed-results).
+Exports: [Room schema v4](../android/app/schemas/app.planner.core.database.PlannerDatabase/4.json). Upgrade code: [Room migrations](../android/app/src/main/java/app/planner/core/database/Migrations.kt), [Alembic revisions](../backend/alembic/versions/a15a67f338ba_initial.py). Normal upgrades never use destructive resets. The development-job downgrade deliberately refuses to discard revisions; restore a pre-upgrade backup instead. Executed migration results: [Testing](TESTING.md#executed-results).
+
+## Clarifications, reconciliation and public accounts
+
+RawNote now stores interpretationHintsJson separately from originalContent. Wire notes expose interpretationHints as an object with schemaVersion=1 and up to 24 clarifications. Each clarification identifies an exact UTF-16 start/end span and unchanged text, a date/time/datetime/literal kind and the corresponding selected values. Editing a draft invalidates its choices; server raw-content PATCH clears old hints. A date-only choice never supplies a clock time. Invalid or repeated DST local times remain unresolved. DataStore persists draft text and hints together; passwords are never persisted there.
+
+Meta keys incoming:note:ID and incoming:record:ID retain the latest deferred remote snapshot. Incoming snapshots and feed cursor commit together, including while local operations block merging. Only reconciliation removes a deferred snapshot after successful application; an older acknowledgment must not erase a newer processing status at the same raw-note version. Reconciliation rotates through bounded 100-row pages using inboxScan so blocked rows do not starve later rows.
+
+Backend User has normalized email, verified state and optional Argon2id password hash. Email verification/reset credentials and Google handoff credentials are hashed, expiring and single-use. Google identities bind issuer/subject to one owner; matching email alone does not link accounts. Google flows retain nonce, app PKCE challenge, expiry and optional linking owner. Rate counters contain keyed hashes, rather than raw email/IP identifiers. ProviderRequest accounts for actual managed calls per owner/UTC day. ServiceHeartbeat establishes worker liveness independently of provider requests.
+
+```mermaid
+erDiagram
+    User ||--o{ Device : sessions
+    User ||--o{ EmailToken : verification_and_reset
+    User ||--o{ GoogleIdentity : explicit_identity
+    User ||--o{ ProviderRequest : daily_accounting
+    User ||--o{ GoogleFlow : optional_link_owner
+```
+
+Account deletion removes that owner's active server business/auth data after password and typed confirmation. Local notes are retained and new capture returns to private. Existing operator invitations remain supported. Backup retention is external to active-account deletion; operators must define retention and expiry before public launch.
 
 Related: [Architecture](ARCHITECTURE.md), [API](API.md), [Decisions](DECISIONS.md).
+
+## Passive dataset journal
+
+LearningSample stores immutable event_key/group_key, owner (nullable only for synthetic data), origin, event kind, label source, schema version, timestamp and versioned JSON data. Input snapshots are independent of current RawNote/Record values. Predictions include model/prompt/schema provenance, bounded provider traces, validation status and actual record state after processing; corrections retain before/after, JSON-pointer diffs and interpretation links. User actions such as completion/undo are not semantic labels. Old input revisions that cannot be reconstructed are explicitly unavailable.
+
+```mermaid
+erDiagram
+    User ||--o{ LearningSample : account_scoped_history
+    RawNote ||--o{ LearningSample : logical_note_group
+    InterpretationHistory ||--o{ LearningSample : logical_provenance
+    UserCorrection ||--o{ LearningSample : before_after_diff
+```
+
+Only owner is a physical foreign key. Logical input/history IDs may outlive a disposable synthetic QA account; synthetic rows become ownerless before that account is deleted. Real account deletion erases its samples. Contribution consent defaults false and is checked at export time; it is independent of cloud capture consent. Room remains v4 and no private notes/drafts are uploaded. Full label semantics, API and retention/split caveats: [Dataset](DATASET.md).

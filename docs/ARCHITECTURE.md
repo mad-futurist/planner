@@ -1,80 +1,190 @@
 # Architecture
 
-Last reviewed: **2026-10-21**. Actual source structure and behavior are described below. Verification and remaining gates: [Features](FEATURES.md), [Testing](TESTING.md).
+Last reviewed: **2026-10-28**. This describes the migration implementation. Current acceptance results and unresolved work are recorded in [Architecture migration](ARCHITECTURE_MIGRATION.md) and [Testing](TESTING.md). Product intent remains in [Concept](CONCEPT.md).
 
-## Modules and dependencies
+## Four logical layers in two monoliths
 
-One Android app module keeps package boundaries without speculative build modules. Kotlin, Compose/Material 3, MVVM, Hilt, Room, DataStore, Retrofit/OkHttp, WorkManager, and Navigation Compose are used. [Gradle build](../android/app/build.gradle.kts) pins versions; [root build](../android/build.gradle.kts) pins plugins and the official wrapper pins Gradle 9.6.0 with a distribution checksum. AGP 9.4.1, Kotlin/Compose compiler 2.4.21, KSP 2.3.12; compile SDK 37, target 36, minimum 26; Gradle passed earlier checks on Java 21 and current checks on JBR 25.0.4; bytecode targets Java 17. Material 3 1.4.0 avoids an unpublished dependency pulled by unused preview tooling.
+Android remains one Gradle app; backend remains one Python service with a separate durable worker. No new deployment services or speculative Gradle modules were introduced.
 
-Backend is a Python 3.12 modular monolith with a separately run worker sharing PostgreSQL. FastAPI, Pydantic v2, SQLAlchemy 2, Alembic, httpx, and psycopg are resolved in [uv.lock](../backend/uv.lock). [Docker Compose](../docker-compose.yml) defines database, one-shot migration, API, and durable worker. No in-memory FastAPI background queue, Redis, Kafka, or microservices.
+```mermaid
+flowchart BT
+  Presentation[Android Compose and ViewModels] --> A[Android application ports and use cases]
+  RoomAdapter[Room adapters] --> A
+  RemoteAdapter[HTTP and platform adapters] --> A
+  A --> D[Pure Kotlin domain]
+  API[FastAPI resource routers] --> BA[Python application services and ports]
+  SQL[SQLAlchemy UoW and queries] --> BA
+  Provider[Provider SMTP Google adapters] --> BA
+  BA --> BD[Pure Python domain]
+```
 
-The installed IDE is Android Studio 2026.2.2. Studio Quail 4 (2026.1.4) or newer supporting AGP 9.4 is required for IDE sync; the earlier 2025.2.1 installation supported only AGP 8.13. Keep the pinned toolchain; no downgrade was made. The current bundled JBR runs the wrapper; Java 17 remains the output target. See [Running](RUNNING.md).
+These arrows are **source dependencies**. Runtime calls from an application port to its configured adapter go in the other direction. Hilt AppModule and Python bootstrap/main are composition roots.
 
-Presentation now uses a shared [design system](DESIGN_SYSTEM.md), a navigation/composer shell, [organizer screens](../android/app/src/main/java/app/planner/features/OrganizerScreens.kt), and separate [record dialogs](../android/app/src/main/java/app/planner/features/RecordDialogs.kt). No new runtime UI dependency was introduced. Fonts and licenses are bundled for offline rendering. Task/idea lists page 50 rows; count/profile queries aggregate in Room rather than counting the visible page. Daily review/rotation reuse existing Meta/IdeaSlot tables; schema stays v3.
+## Android source map
 
-## Source map
-
-| Area | Actual responsibility/source |
+| Layer | Sources and responsibility |
 | --- | --- |
-| Android entry/wiring | [PlannerApp](../android/app/src/main/java/app/planner/PlannerApp.kt), [MainActivity](../android/app/src/main/java/app/planner/MainActivity.kt), [AppModule](../android/app/src/main/java/app/planner/core/AppModule.kt) |
-| Shared immutable models | [Models](../android/app/src/main/java/app/planner/core/model/Models.kt); Room annotations avoid duplicate trivial mappings |
-| Domain | [CaptureNote](../android/app/src/main/java/app/planner/domain/CaptureNote.kt), [DayPolicy](../android/app/src/main/java/app/planner/domain/DayPolicy.kt): planning/validation, completion, temporal membership, retry policy; no HTTP or SQL |
-| Local data | [PlannerDatabase/DAO](../android/app/src/main/java/app/planner/core/database/PlannerDatabase.kt), [PlannerRepository](../android/app/src/main/java/app/planner/data/PlannerRepository.kt), [migrations](../android/app/src/main/java/app/planner/core/database/Migrations.kt) |
-| Presentation | [PlannerViewModel](../android/app/src/main/java/app/planner/features/PlannerViewModel.kt), [PlannerUI](../android/app/src/main/java/app/planner/features/PlannerUI.kt), [RecordEditor](../android/app/src/main/java/app/planner/features/RecordEditor.kt), [Settings](../android/app/src/main/java/app/planner/features/SettingsScreen.kt) |
-| Android sync/security | [SyncEngine](../android/app/src/main/java/app/planner/sync/SyncEngine.kt), [SyncWorker](../android/app/src/main/java/app/planner/sync/SyncWorker.kt), [TokenStore](../android/app/src/main/java/app/planner/core/network/TokenStore.kt), [Preferences](../android/app/src/main/java/app/planner/core/Preferences.kt) |
-| Overlay | [OverlayService](../android/app/src/main/java/app/planner/features/overlay/OverlayService.kt), [OverlayControls](../android/app/src/main/java/app/planner/features/overlay/OverlayControls.kt), [CaptureNotification](../android/app/src/main/java/app/planner/features/overlay/CaptureNotification.kt) |
-| Backend API/application | [main](../backend/app/main.py), [routes](../backend/app/api/routes.py), [schemas](../backend/app/schemas.py), [services](../backend/app/services.py) |
-| Backend domain/provider | [validation](../backend/app/domain/validation.py), [provider interface/HTTP adapter](../backend/app/ai/provider.py) |
-| Persistence/jobs/identity | [models](../backend/app/persistence/models.py), [database](../backend/app/persistence/database.py), [worker](../backend/app/jobs/worker.py), [identity](../backend/app/security/identity.py) |
+| Domain | `domain/model/Models.kt`, `domain/CaptureNote.kt`, `domain/DayPolicy.kt`, `domain/CaptureInterpreter.kt`, `domain/Time.kt`: framework-free models, capture/temporal/completion policy and local interpretation |
+| Application | `application/OrganizerPorts.kt`, `CaptureUseCase.kt`, `ApproveDevelopment.kt`, `CloudGateway.kt`: bounded query/command ports, shared capture and development approval policy |
+| Infrastructure | `data/PlannerRepository.kt`, `RoomOrganizerQueries.kt`, `RoomDevelopmentApproval.kt`, `ServiceAdapters.kt`; `core/database`, `core/network`, `core/Preferences.kt`; `sync`: storage transactions, explicit mappings, transport, credentials and scheduling |
+| Presentation | `features/*ViewModel.kt`, feature screen files, `CaptureBar.kt`, `CaptureClarification.kt`, `PlannerUI.kt`, `PlannerNavHost.kt`; `core/designsystem`: immutable state, UI commands, formatting, pickers, navigation and stateless content |
+| Native platform adapter | `features/overlay`: real foreground service/window/permission/notification implementation at its manifest-compatible location; saving invokes the same CaptureUseCase as Compose |
+| Composition | `core/AppModule.kt`, Android entry points: bind application ports to adapters |
 
-## Capture and interpretation data flow
+Room-annotated storage objects are in `core/database/entities/Entities.kt`. Bidirectional mappings are explicit in `core/database/Mappers.kt`. The infrastructure-only mapped DAO wraps StorageDao; it is never supplied to Compose or ViewModels. `core/model/Models.kt` contains source compatibility aliases to domain models, not Room entities.
+
+**Room remains v4** with migrations 1→2→3→4 and exported schema. Table/column/index names and the SQLite contract are retained. Moving annotations is not a new schema migration, reset or downgrade.
+
+## Feature MVVM and UI components
+
+Each organizer destination has a feature ViewModel and immutable UiState: Today, Calendar, Tasks, Ideas, Profile, Journal, Review and Settings. Capture, details, manual interpretation and development have their own state owners. PlannerViewModel is the activity shell, not an owner of every screen's data. Navigation obtains destination ViewModels with Hilt's Compose factory. Stable route constants live in `navigation/PlannerRoutes.kt`; screen content receives `ScreenNavigation` callbacks, never a NavController. Controllers remain in route/composition bindings.
 
 ```mermaid
 flowchart LR
-    UI[Compose or overlay] --> Domain[Capture planning]
-    Domain --> Repo[Repository transaction]
-    Repo --> Room[(Room: notes, records, outbox)]
-    Room -->|Flow and StateFlow| UI
-    Room --> Sync[WorkManager or foreground sync]
-    Sync -->|Enrolled bearer, HTTPS| API[FastAPI]
-    API --> PG[(PostgreSQL: notes, jobs, changes)]
-    PG --> Worker[Leased worker]
-    Worker --> Provider[Replaceable HTTP provider]
-    Provider --> Validation[Schema and semantic validation]
-    Validation --> PG
-    PG -->|Incremental changes via API| Sync
-    Sync -->|Merge and cursor transaction| Room
+  UI[Stateless screen or dialog] -->|typed callback| VM[Feature ViewModel]
+  VM -->|command| UseCase[Application capability]
+  UseCase -->|port| Adapter[Room or remote adapter]
+  Adapter --> Room[(Room)]
+  Room -->|mapped Flow| VM
+  VM -->|immutable UiState| UI
 ```
 
-1. Local transaction stores immutable original text and, for eligible captures, stable outbox payload/ID. Manual capture also creates a confirmed record. Private notes create no upload operation.
-2. Room queries drive UI state; DataStore drives preference state. Remote JSON never becomes a competing business-data source. Post-commit scheduling failure cannot turn a saved capture into a reported save failure.
-3. Sync serializes through a repository mutex, sends parents before dependent edits, persists retry/conflict state, then applies changed records and cursor atomically. [API](API.md#synchronization-protocol) owns the exact protocol.
-4. API authorizes, applies idempotency, and commits note/job/change state. Per-user advisory locks serialize feed writers so allocated sequence order follows commit order.
-5. Workers claim leased jobs; provider calls happen outside database transactions. At most 50 latest enabled types, 20 approved rules, and five lexical correction examples from 50 candidates inform extraction; provider requests cap at 128 KiB. Pydantic and semantic checks determine valid/review/stale results. History survives rejection.
-6. Version checks and confirmed/pending correction guards protect edits. Explicit approval creates development tasks locally and only once for that persisted result.
+Mutable flows are private/protected; screen content receives state and callbacks. There is no public repository/preferences/sync object and no arbitrary vm.action business lambda. Loading/error/empty states and local retry are owned by the feature. Journal child records and week counters are loaded outside Compose. Native pickers and browser/document launchers remain UI concerns.
 
-## Lifecycle, bounds, and failure handling
+WorkspaceSelection coordinates presentation date/filter/search/page choices. The shell persists these through SavedStateHandle and refreshes device day/timezone. It does not cache business records. UiFeedback publishes the message and undo target together; dismissing an old snackbar cannot erase a newer undo action. Manual interpretation guards duplicate submission synchronously and retains the note on failure. Modal openings have generation-scoped state: cached forms and completion signals cannot close or populate a new session. Loading and retry stay in the modal; save failures remain inline. Saved editor drafts retain their original expected record version across Activity recreation, so reloading a newer snapshot cannot authorize stale form data.
 
-Room suspend queries and Retrofit run away from the UI thread. UI subscribes with lifecycle-aware collectors; obsolete date/page queries cancel through flatMapLatest. Journal pages contain 50 notes; Today queries cap records at 200; Tasks/Ideas use 50-row paging; sync sends at most 50 operations and pulls at most ten 100-change pages per run. Export streams keyset pages. Metadata observation excludes accumulated job results, which are observed per selected idea. Stable LazyColumn keys prevent row identity churn.
+```mermaid
+flowchart TD
+  Activity --> Shell[PlannerUI / scaffold]
+  Shell --> Composer[CaptureBar]
+  Composer --> Preview[Contextual actions and underlines]
+  Shell --> Nav[PlannerNavHost]
+  Shell --> Bottom[Stateless PlannerBottomNavigation]
+  Nav --> Today
+  Nav --> Calendar
+  Nav --> Tasks
+  Nav --> Ideas
+  Nav --> Profile
+  Nav --> Journal
+  Nav --> Review
+  Nav --> Settings
+  Shell --> Dialogs[Details interpretation development clarification]
+```
 
-WorkManager provides connectivity-aware one-time work plus 15-minute periodic refresh; it is not an exact scheduler. Foreground polling runs while STARTED, every eight seconds after the previous run. Transport retry limit is eight; AI retry limit defaults to five with exponential jitter. Worker concurrency defaults to two and is clamped to 1–8. Leases expire after two minutes and protect application of obsolete results. Temporary database failures retry without logging SQL parameters or private text. HTTP request bodies cap at 128 KiB; response/schema bounds are documented in [API](API.md).
+Stable route strings remain today/calendar/tasks/ideas/profile/journal/triage/settings. `triage` still represents Review. Lists retain their existing bounds, stable IDs, privacy semantics and dates. Design tokens/fonts/illustrations are reused.
 
-Latency diagnostics record the last local capture duration without content. The under-150-ms target, scrolling smoothness, and prolonged-use memory budget remain **unverified on representative hardware**. Large datasets beyond the 200-record view limits need pagination before increasing those bounds.
+## Capture and correction flow
 
-## Overlay boundary
+```mermaid
+sequenceDiagram
+  participant Input as Compose / native overlay
+  participant VM as Capture state owner
+  participant App as CaptureUseCase
+  participant Domain as CaptureNote / interpreter
+  participant Store as Room capture adapter
+  participant DB as Room
+  Input->>VM: Input / explicit choice / Send
+  VM->>Domain: Fresh analysis and user hints
+  alt Structured input still ambiguous
+    VM-->>Input: Date/time or Deadline/Someday/Idea actions
+  else Complete local or explicit capture
+    VM->>App: Capture command with original text
+    App->>Domain: Build validated capture plan
+    App->>Store: Persist plan
+    Store->>DB: Transaction: raw note + records + history/eligible outbox
+    DB-->>VM: Mapped local projections
+    VM-->>Input: Commit feedback and destination selection
+  end
+```
 
-User-started specialUse foreground service owns WindowManager views, a low-importance notification, listeners, and a cancellable scope. It starts/restores from a visible Activity and returns START_NOT_STICKY. Actual permission, unlock state, and app visibility gate windows. Native views provide IME/Back handling and share repository capture/design colors. A debounced application-scope draft stream survives service cleanup; explicit close flushes it. API 33+ uses an overlay-priority Back callback; older versions use pre-IME Back handling. Legacy ADJUST_RESIZE remains a compatibility hint for these native overlay windows; modern IME visibility uses WindowInsetsController on API 30+.
+Private default Send applies a complete local proposal. Private notes create no outbox/provider request. Original-only and native overlay capture remain raw. Cloud automatic capture queues original text for provider interpretation. Explicit hints remain versioned and independent of original text. Pending submission resumes after clarification and user edits invalidate stale preview work.
 
-The bubble hides inside Planner, on screen-off/lock, and during its own permission flow. AppOps revocation stops the service. Rotation removes/repositions windows and preserves the draft. No AccessibilityService, clipboard monitoring, other-app reading, boot receiver, or resurrection promise. Android secure windows suppress overlays; Play review and OEM behavior require separate validation ([ADR-013](DECISIONS.md#adr-013-opt-in-overlay-and-notification-lifecycle)).
+CaptureUseCase is shared by the main composer and overlay. CaptureStore owns atomic persistence and post-commit scheduling. ApproveDevelopment owns current-result/version/allowed-step policy through a transactional port; its Room adapter retains the approved-job marker and creates linked tasks atomically. Sync no longer owns approval policy.
 
-## Provider structured output boundary
+Corrections retain optimistic version checks, confirmation guards, original text and local/cloud provenance. Parent-first outbox ordering, serialized sync, bounded rotating deferred snapshots and atomic feed-cursor merging remain. Network responses never become a separate UI source of truth. WorkManager constructs SyncWorker through a Hilt-injected PlannerWorkerFactory with an explicit SyncEngine constructor parameter. PlannerApp supplies Configuration.Provider; the manifest removes only WorkManager's default initializer metadata. Production workers do not look services up through Hilt entry points.
 
-The HTTP adapter defaults to strict closed JSON Schema. [Provider wire schema](../backend/app/ai/structured.py) adapts open fields/evidence maps to bounded key/value arrays; decoding restores unchanged extraction v1 before Pydantic and semantic validation. Automatic fallback occurs once only after an explicit unsupported-format HTTP 400/422. Refusal, truncation, bad output and auth errors do not downgrade. Request/response bounds and durable job/version guards remain. [API](API.md#error-and-job-handling) owns negotiation details.
+## Backend source map and execution
 
-## Security boundary
+| Layer | Sources and responsibility |
+| --- | --- |
+| Domain | `app/domain/entities.py`, `contracts.py`, `records.py`, `validation.py`, `capture_preview.py`, `time.py`: plain snapshots, invariants and temporal evidence policies; no FastAPI/Pydantic/SQLAlchemy/httpx imports |
+| Application | `app/application/organizer.py`, `accounts.py`, `device_identity.py`, `dataset.py`, `process_job.py`, `mutations.py`, `ai_context.py`, `values.py`, `ports.py`: commands, ownership/version/idempotency policies, provider orchestration and transaction boundaries |
+| Infrastructure | `app/infrastructure/persistence/unit_of_work.py`, provider/security gateways; existing `persistence`, `ai/provider.py`, `security`, quota/learning/operations modules: SQL, crypto, mail, Google, wire validation and observation persistence |
+| Interface | `app/api`: FastAPI DTOs, dependency binding, request/form parsing and response/error translation; API workflows use plain commands mapped at the boundary |
+| Runtime/composition | `app/bootstrap.py`, `main.py`, `jobs/worker.py`: wiring, ASGI runtime and worker claim/heartbeat/loop lifecycle |
 
-New captures are private unless the persisted consent version and explicit cloud mode both allow transmission. Consent and mode are written in one DataStore edit. The main composer explains server/provider transmission; native overlay cannot enable cloud without recorded consent. Previously eligible queued notes retain their original choice.
+```mermaid
+flowchart LR
+  Request[HTTP DTO] --> Map[Boundary command mapping]
+  Map --> App[Application service]
+  App --> UOW[UnitOfWork port]
+  UOW --> SQL[SQL adapter]
+  SQL --> PG[(PostgreSQL)]
+  App --> ProviderPort[AI provider port]
+  ProviderPort --> HTTP[Provider adapter]
+  PG --> Lease[Runtime leased claim]
+  Lease --> Process[ProcessJob application workflow]
+  Process --> UOW
+  Process --> ProviderPort
+```
 
-Operator-issued invitations enroll independent random device tokens; Android encrypts its token with Keystore AES-GCM, while PostgreSQL stores hashes. A local dataset has one persisted owner; changing identities requires explicit export/clear. Android backup is disabled. Release disallows cleartext; debug permits only emulator/loopback hosts. Local SQLite itself is not encrypted. Consumer SSO/recovery, managed secret rotation, production TLS termination, backups, abuse controls beyond ingestion limits, and Play distribution are operational work, not verified security claims.
+Untrusted HTTP/provider JSON is validated by the existing strict Pydantic contracts. Application values are plain dataclasses; record invariants also validate internally assembled task actions. ORM objects are mapped to plain snapshots; the UoW tracks changes and generated feed sequences without overwriting database-assigned keys. Repository methods retain bounded queries and SQL locking. UoW commit/rollback is explicit in application workflows.
 
-Related: [Data model](DATA_MODEL.md), [Decisions](DECISIONS.md), [Running](RUNNING.md).
+The worker runtime retains SKIP LOCKED claims, lease tokens, attempt accounting, concurrency limits and heartbeat. ProcessJob performs context assembly, external provider calls and deterministic application. Provider I/O occurs after the input UoW closes and before opening the result UoW. Both success and failure lock owner before re-reading/locking the current job and checking its lease. Stale inputs, confirmed corrections and obsolete leases remain protected.
+
+Strict provider schema negotiation, refusal/bounds/fallback rules, temporal grounding, approved rules and replaceable provider integration are retained. Observation recording remains owner-scoped and atomic with accepted business changes. Contribution consent remains separate and off by default. No training is triggered.
+
+## Compatibility and remaining boundaries
+
+Logical layers do not require renaming every manifest/CLI/import path. Historical `core/model` aliases, `app/services.py`, `app/ai/context.py` and provider/security import paths remain documented compatibility surfaces. They are not application dependencies. Legacy SQL helper implementations are isolated under infrastructure for operator/learning integrations; current HTTP and worker application workflows do not use them as business services.
+
+Readiness/database probes are composed in main; existing deployment/configuration behavior is retained. Native overlay permission/lifecycle and activity-result I/O remain platform adapters. JSON form formatting in UI is distinct from domain record/temporal invariants. Package checks enforce inward imports and reject direct DAO/service access from screen/ViewModel code. They complement behavioral tests, not prove all semantic layering properties.
+
+[Migration record](ARCHITECTURE_MIGRATION.md) owns actual verification, implementation compromises and unfinished acceptance. No source-file move alone proves lower CPU use, ANR resolution, production readiness or provider accuracy.
+
+
+<a id="overlay-boundary"></a>
+<a id="2026-10-28-mvvm-source-review"></a>
+## Historical review references
+
+The pre-migration MVVM/overlay review is superseded by the implementation above. Its findings, original evidence and regression scope are retained in [Testing](TESTING.md), ADR-025 and [Architecture migration](ARCHITECTURE_MIGRATION.md). Native overlay remains a platform adapter, with capture through the shared application use case.
+
+
+## End-to-end capture and synchronization
+
+```mermaid
+sequenceDiagram
+  participant UI as Capture / feature UI
+  participant Room as Room / outbox
+  participant Sync as SyncEngine / WorkManager
+  participant API as FastAPI / application
+  participant PG as PostgreSQL / jobs
+  participant AI as Provider adapter
+  UI->>Room: Atomic original + local records + eligible outbox
+  Room-->>UI: Immutable mapped projections
+  opt Explicit cloud eligibility and consent
+    Sync->>Room: Read ordered durable operations
+    Sync->>API: API v1 authenticated/idempotent mutations
+    API->>PG: UoW commit original and eligible job
+    PG->>AI: Leased worker calls provider outside DB transactions
+    AI-->>PG: Validated result applied with version and lease fencing
+    Sync->>API: Incremental changes
+    API-->>Sync: Versioned snapshots / cursor
+    Sync->>Room: Atomic guarded merge and cursor advance
+    Room-->>UI: Updated projections
+  end
+```
+
+## Extending a feature
+
+| Layer | Public boundary and example | Allowed imports | Forbidden dependencies |
+| --- | --- | --- | --- |
+| Domain | Kotlin CaptureNote / Python record invariants | Standard language values and domain policies | Android/Room, FastAPI/Pydantic, SQL, network clients |
+| Application | CaptureUseCase / ApproveDevelopment; OrganizerService / ProcessJob | Domain, meaningful capability/query/UoW ports | Concrete persistence, platform UI, HTTP frameworks/provider SDKs |
+| Infrastructure | RoomOrganizerQueries / mapped DAO; SQLAlchemyUnitOfWork / ProviderAdapter | Domain/application and implementation libraries | Owning screen state or introducing alternative business policies |
+| Presentation/interface | TasksViewModel + TasksScreen; resource routers + mapping | Application values/ports; UI or transport validation libraries | Direct DAO/repository/SQL access and business workflows |
+| Composition/runtime | AppModule / PlannerApp; bootstrap / worker runtime | Ports and implementations needed for wiring | Duplicated capture/approval/interpretation policies |
+
+For an Android feature, first reuse a domain policy and bounded application port; add a use case only when it owns a workflow. Implement atomic storage/outbox behavior in its adapter. Add immutable feature UiState and ViewModel methods, then stateless content with typed callbacks. Register routes centrally and reuse design-system components. Both capture surfaces call CaptureUseCase rather than duplicating its policy.
+
+For a backend feature, validate wire data at the API edge and map it into plain application values. Put ownership, transaction and idempotency decisions in the application workflow; add a bounded UoW query or external port when necessary. Implement SQL/provider details in infrastructure and bind in bootstrap. Keep provider I/O outside transactions. Test policy with fake ports and persistence/lease behavior with real database regressions; run the architecture checker and update owning docs.

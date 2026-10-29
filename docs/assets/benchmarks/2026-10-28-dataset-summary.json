@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-28",
+  "scope": "Local PostgreSQL synthetic learning journal snapshot; counts are not a model-quality score",
+  "migrationHead": "f26a81d705bc",
+  "observations": 4557,
+  "distinctInputTexts": 394,
+  "locales": {"en": 1551, "fr": 1494, "ru": 1496, "unknown": 16},
+  "sources": {
+    "generatedTemplateOrChallenge": 4356,
+    "importedHistoricalObservations": 173,
+    "liveSyntheticAccountEvents": 26,
+    "defaultPersistedLocalBenchmark": 2
+  },
+  "labels": {
+    "synthetic_template": 4326,
+    "synthetic_expected": 159,
+    "unlabeled": 57,
+    "model_prediction": 12,
+    "user_action": 2,
+    "user_edit": 1
+  },
+  "liveJournalSmoke": {"passed": 19, "total": 19},
+  "trainingStarted": false,
+  "limitations": [
+    "Context variants reuse text across dates and timezones",
+    "Generated cases were not all sent to a real model",
+    "Template expectations and model predictions have separate provenance",
+    "Thirty generated challenge cases intentionally remain unlabeled",
+    "Contribution Settings control has build/API coverage but separate device interaction acceptance remains open"
+  ]
+}

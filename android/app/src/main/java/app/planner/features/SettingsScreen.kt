@@ -1,5 +1,7 @@
 package app.planner.features
 
+import app.planner.navigation.ScreenNavigation
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -18,79 +20,49 @@ import app.planner.core.designsystem.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import app.planner.BuildConfig
-import app.planner.sync.SyncScheduler
 import app.planner.features.overlay.OverlayControls
-import app.planner.features.overlay.OverlayManager
-import com.google.gson.JsonArray
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 
-@Composable internal fun SettingsScreen(vm: PlannerViewModel, nav: NavHostController) {
+@Composable internal fun SettingsScreen(state: SettingsUiState, actions: SettingsActions, private: Boolean, changePrivacy: (Boolean)->Unit, nav: ScreenNavigation) {
     val context = LocalContext.current
     val density = androidx.compose.ui.platform.LocalDensity.current
     val compactHeader = density.fontScale > 1.2f || androidx.compose.ui.platform.LocalWindowInfo.current.containerSize.width / density.density < 380f
-    val settings by vm.settings.collectAsStateWithLifecycle()
-    val metadata by vm.metadata.collectAsStateWithLifecycle()
-    val outbox by vm.outbox.collectAsStateWithLifecycle()
-    var server by rememberSaveable { mutableStateOf(settings["serverUrl"] ?: if (BuildConfig.DEBUG) "http://10.0.2.2:8000" else "") }
+    val settings = state.settings
+    val metadata = state.metadata
+    val outbox = state.outbox
+    var server by rememberSaveable { mutableStateOf(settings["serverUrl"] ?: BuildConfig.DEFAULT_BACKEND_URL.ifBlank { if (BuildConfig.DEBUG) "http://10.0.2.2:8000" else "" }) }
     var invitation by rememberSaveable { mutableStateOf("") }
-    var connecting by remember { mutableStateOf(false) }
+    val connecting = "connect" in state.busy
     var clearing by remember { mutableStateOf(false) }
-    var conflict by remember { mutableStateOf<app.planner.core.model.OutboxOperation?>(null) }
-    var exporting by remember { mutableStateOf(false) }
+    var conflict by remember { mutableStateOf<app.planner.domain.model.OutboxOperation?>(null) }
+    val exporting = "export" in state.busy
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        if (uri != null) vm.action {
-            exporting = true
-            try {
-            withContext(Dispatchers.IO) {
-                context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { writer ->
-                    writer.write("{\"schemaVersion\":1,\"notes\":[")
-                    var before: String? = null; var beforeId: String? = null; var first = true
-                    while (true) {
-                        val page = vm.repository.dao.exportPage(50, before, beforeId)
-                        if (page.isEmpty()) break
-                        for (note in page) {
-                            if (!first) writer.write(",")
-                            first = false
-                            val value = vm.repository.gson.toJsonTree(note).asJsonObject
-                            value.add("records", JsonArray().apply { vm.repository.dao.recordsForNote(note.id).forEach { add(vm.repository.recordJson(it)) } })
-                            writer.write(value.toString())
-                        }
-                        before = page.last().createdAt; beforeId = page.last().id
-                    }
-                    writer.write("]}")
-                } ?: error("Export destination unavailable")
-            }
-            vm.message.value = "Export saved"
-            } finally { exporting = false }
-        }
+        if (uri != null) actions.export { context.contentResolver.openOutputStream(uri)?.bufferedWriter() }
     }
     LazyColumn(Modifier.fillMaxSize().padding(horizontal=20.dp).testTag("settings-list"),contentPadding=PaddingValues(top=10.dp,bottom=24.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
         item {Box {if(!compactHeader) Landscape(Modifier.align(Alignment.BottomEnd).width(150.dp).height(80.dp),sunrise=true);ScreenHeader("Settings",nav,"Make the app work for you.")}}
-        item {OverlayControls(vm)}
+        item {OverlayControls(settings, actions.setPreference, actions.report)}
         item {SettingsGroup("AI ORGANIZATION","AI organization & connection","Choose where your thoughts are interpreted.",Glyph.Sparkles) {
             Text("Cloud AI sends eligible notes to your configured backend and its provider. Private captures stay here.",style=MaterialTheme.typography.bodySmall)
             OutlinedTextField(server,{server=it},label={Text("Backend URL")},singleLine=true,modifier=Modifier.fillMaxWidth())
+            AccountControls(state, actions, server)
+            DatasetControls(state, actions)
+            Text("Advanced: operator invitation",style=MaterialTheme.typography.labelSmall)
             OutlinedTextField(invitation,{invitation=it},label={Text("One-time invitation")},singleLine=true,visualTransformation=PasswordVisualTransformation(),modifier=Modifier.fillMaxWidth())
-            Button({connecting=true;vm.action {try {vm.sync.connect(server.trim(),invitation);invitation="";SyncScheduler.request(context);vm.message.value="Connected"} finally {connecting=false}}},enabled=server.isNotBlank() && invitation.isNotBlank() && !connecting) {Text(if(connecting) "Connecting…" else "Connect")}
+            Button({actions.connect(server, invitation)},enabled=server.isNotBlank() && invitation.isNotBlank() && !connecting) {Text(if(connecting) "Connecting…" else "Connect")}
             Text("Connection: ${metadata["network"]?:"Not connected"} · AI: ${metadata["ai"]?:"Not configured"}",style=MaterialTheme.typography.bodySmall)
-            TextButton({vm.action {vm.sync.run()};SyncScheduler.request(context)}) {Text("Sync now")}
+            TextButton({actions.sync()}) {Text("Sync now")}
         }}
         item {SettingsGroup("PRIVACY","Privacy & data","Your notes, your choice of where they go.",Glyph.Shield) {
-            val private by vm.privateCapture.collectAsStateWithLifecycle()
             Text("Notes are saved on this device first. Private notes never enter the upload queue. No clipboard or screen-content monitoring.",style=MaterialTheme.typography.bodySmall)
-            TextButton({vm.setPrivacy(!private)}) {Text(if(private) "Private mode · learn about cloud AI" else "Switch new captures to private")}
+            TextButton({changePrivacy(!private)}) {Text(if(private) "Private mode · learn about cloud AI" else "Switch new captures to private")}
             Text("Changing mode does not recall notes you previously allowed to upload.",style=MaterialTheme.typography.bodySmall)
         }}
         item {SettingsGroup("APPEARANCE","Appearance","A comfortable view, light or dark.",Glyph.Palette) {
-            for((key,label) in listOf("system" to "Follow system","light" to "Light","dark" to "Dark")) Row(Modifier.fillMaxWidth().clickable {vm.action {vm.preferences.set("appearance",key)}},verticalAlignment=Alignment.CenterVertically) {RadioButton((settings["appearance"]?:"system")==key,{vm.action {vm.preferences.set("appearance",key)}});Text(label)}
+            for((key,label) in listOf("system" to "Follow system","light" to "Light","dark" to "Dark")) Row(Modifier.fillMaxWidth().clickable {actions.setPreference("appearance",key)},verticalAlignment=Alignment.CenterVertically) {RadioButton((settings["appearance"]?:"system")==key,{actions.setPreference("appearance",key)});Text(label)}
         }}
         item {SettingsGroup("CALENDAR","Calendar behavior","Set the first day of your week.",Glyph.Calendar) {
-            for((key,label) in listOf("sunday" to "Sunday","monday" to "Monday")) Row(Modifier.fillMaxWidth().clickable {vm.action {vm.preferences.set("weekStart",key)}},verticalAlignment=Alignment.CenterVertically) {RadioButton((settings["weekStart"]?:"sunday")==key,{vm.action {vm.preferences.set("weekStart",key)}});Text(label)}
+            for((key,label) in listOf("sunday" to "Sunday","monday" to "Monday")) Row(Modifier.fillMaxWidth().clickable {actions.setPreference("weekStart",key)},verticalAlignment=Alignment.CenterVertically) {RadioButton((settings["weekStart"]?:"sunday")==key,{actions.setPreference("weekStart",key)});Text(label)}
             Text("Deadlines and planned days stay separate from appointments. Calendar data stays within Planner.",style=MaterialTheme.typography.bodySmall)
         }}
         item {SettingsGroup("DATA & EXPORT","Data & export","Export your notes or clear this device.",Glyph.Download) {
@@ -106,18 +78,12 @@ import kotlinx.coroutines.withContext
             Text(operation.lastError?:"Change not synchronized",style=MaterialTheme.typography.bodySmall)
             if(operation.status=="conflict") TextButton({conflict=operation}) {Text("Keep this device's version")}
             else if(operation.path.startsWith("records/") && operation.method=="PATCH") TextButton({conflict=operation}) {Text("Send the latest saved version")}
-            else TextButton({vm.action {vm.repository.dao.operation(operation.copy(status="queued",retryCount=0,nextAttemptAt=0));vm.repository.requestSync()}}) {Text("Retry")}
+            else TextButton({actions.retry(operation)}) {Text("Retry")}
         }}}
         item {PlannerCard(color=MaterialTheme.colorScheme.primaryContainer) {Box(Modifier.fillMaxWidth().heightIn(min=60.dp)) {Landscape(Modifier.align(Alignment.BottomEnd).width(130.dp).height(60.dp));Column(Modifier.padding(14.dp)) {Text("A little more breathing room",style=MaterialTheme.typography.labelLarge);Text("Make this space yours.",style=MaterialTheme.typography.bodySmall)}}}}
     }
-    if (clearing) AlertDialog(onDismissRequest = { clearing = false }, title = { Text("Clear this device?") }, text = { Text("This removes local notes, records, drafts, queued changes, and the device credential. Server copies remain. Export anything you want to keep first.") }, confirmButton = { TextButton({ vm.action {
-        androidx.work.WorkManager.getInstance(context).cancelAllWork()
-        OverlayManager.stop(context)
-        app.planner.features.overlay.CaptureNotification.update(context, false)
-        vm.repository.syncMutex.withLock { vm.sync.tokens.clear(); vm.repository.clear(); vm.preferences.set("draft", ""); vm.preferences.set("overlayDraft", ""); vm.preferences.set("serverUrl", ""); vm.preferences.set("overlay", "false"); vm.preferences.set("notification", "false"); vm.preferences.set("cloudConsent", ""); vm.preferences.capturePrivacy(true) }
-        vm.setDraft(""); vm.page.value = 0; clearing = false; vm.message.value = "Local data cleared"
-    } }) { Text("Clear") } }, dismissButton = { TextButton({ clearing = false }) { Text("Cancel") } })
-    conflict?.let { operation -> AlertDialog(onDismissRequest = { conflict = null }, title = { Text("Keep this version?") }, text = { Text("Your local changes will be sent using the server's current revision. Previous server values are retained in correction history.") }, confirmButton = { TextButton({ vm.action { vm.sync.keepLocal(operation); conflict = null } }) { Text("Keep local changes") } }, dismissButton = { TextButton({ conflict = null }) { Text("Cancel") } }) }
+    if (clearing) AlertDialog(onDismissRequest = { clearing = false }, title = { Text("Clear this device?") }, text = { Text("This removes local notes, records, drafts, queued changes, and the device credential. Server copies remain. Export anything you want to keep first.") }, confirmButton = { TextButton({ actions.clear(); clearing = false  }) { Text("Clear") } }, dismissButton = { TextButton({ clearing = false }) { Text("Cancel") } })
+    conflict?.let { operation -> AlertDialog(onDismissRequest = { conflict = null }, title = { Text("Keep this version?") }, text = { Text("Your local changes will be sent using the server's current revision. Previous server values are retained in correction history.") }, confirmButton = { TextButton({ actions.keepLocal(operation); conflict = null }) { Text("Keep local changes") } }, dismissButton = { TextButton({ conflict = null }) { Text("Cancel") } }) }
 }
 
 @Composable internal fun SettingsGroup(label:String,title:String,subtitle:String,glyph:Glyph,content:@Composable ColumnScope.()->Unit) {

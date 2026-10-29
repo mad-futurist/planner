@@ -10,13 +10,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.planner.core.model.Record
+import app.planner.domain.model.Record
 import com.google.gson.*
 import java.time.LocalDate
 
 @Composable
-internal fun RecordEditor(vm: PlannerViewModel, record: Record, openRelated: ((String) -> Unit)? = null, close: () -> Unit) {
+internal fun RecordEditor(state: RecordUiState, save: (Record) -> Unit, complete: (Record) -> Unit, openRelated: ((String) -> Unit)? = null, close: () -> Unit) {
+    val record = state.record ?: return
+    val expectedVersion by rememberSaveable(record.id) { mutableStateOf(record.version) }
     var title by rememberSaveable(record.id) { mutableStateOf(record.title) }
     var kind by rememberSaveable(record.id) { mutableStateOf(record.baseKind) }
     var planned by rememberSaveable(record.id) { mutableStateOf(record.plannedFor) }
@@ -27,19 +28,19 @@ internal fun RecordEditor(vm: PlannerViewModel, record: Record, openRelated: ((S
     var reminder by rememberSaveable(record.id) { mutableStateOf(record.remindAt) }
     var customTypeId by rememberSaveable(record.id) { mutableStateOf(record.customTypeId) }
     var typeVersion by rememberSaveable(record.id) { mutableStateOf(record.typeSchemaVersion) }
-    val types by vm.types.collectAsStateWithLifecycle()
+    val types = state.types
     val definition = types.find { it.id == customTypeId && it.schemaVersion == typeVersion }
     val originalFields = remember(record.id) { JsonParser.parseString(record.fieldsJson).asJsonObject }
     val fields = rememberSaveable(record.id) { mutableStateOf(originalFields.entrySet().associate { it.key to if (it.value.isJsonPrimitive) it.value.asString else it.value.toString() }) }
     var typeMenu by remember { mutableStateOf(false) }
-    var saving by remember { mutableStateOf(false) }
+    val saving = state.saving
     var error by remember { mutableStateOf<String?>(null) }
-    val note by produceState<app.planner.core.model.RawNote?>(null, record.sourceNoteId) { value = vm.repository.dao.noteById(record.sourceNoteId) }
+    val note = state.note
     val specs = definition?.let { JsonParser.parseString(it.fieldDefinitions).asJsonObject } ?: JsonObject()
     val provenanceKeys = setOf("developedFrom", "splitFrom", "suggestionJobId")
     val keys = (specs.keySet() + fields.value.keys).distinct().filterNot { it in provenanceKeys }
     val originId = (originalFields.get("developedFrom") ?: originalFields.get("splitFrom"))?.takeIf { it.isJsonPrimitive }?.asString
-    val origin by produceState<Record?>(null, originId) { value = originId?.let { vm.repository.dao.recordById(it) } }
+    val origin = state.origin
     AlertDialog(onDismissRequest = close, title = { Text("Details") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             note?.let { Text("Original note", style = MaterialTheme.typography.labelSmall); Text(it.originalContent, style = MaterialTheme.typography.bodySmall) }
@@ -92,15 +93,14 @@ internal fun RecordEditor(vm: PlannerViewModel, record: Record, openRelated: ((S
             }
             if (customTypeId == null && "details" !in keys) TextButton({ fields.value = fields.value + ("details" to "") }) { Text("Add a detail") }
             Row {
-                TextButton({ vm.action { vm.repository.edit(record.copy(pinned = !record.pinned)); close() } }) { Text(if (record.pinned) "Unpin" else "Pin") }
-                TextButton({ vm.action { vm.repository.edit(record.copy(state = if (record.state == "archived") "pending" else "archived", completedAt = null)); close() } }) { Text(if (record.state == "archived") "Restore item" else "Archive") }
+                TextButton({ save(record.copy(version = expectedVersion, pinned = !record.pinned)) }) { Text(if (record.pinned) "Unpin" else "Pin") }
+                TextButton({ save(record.copy(version = expectedVersion, state = if (record.state == "archived") "pending" else "archived", completedAt = null)) }) { Text(if (record.state == "archived") "Restore item" else "Archive") }
             }
-            if (record.baseKind == "task") TextButton({ vm.action { vm.repository.complete(record, record.state == "completed"); close() } }) { Text(if (record.state == "completed") "Restore task" else "Complete task") }
-            error?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            if (record.baseKind == "task") TextButton({ complete(record) }) { Text(if (record.state == "completed") "Restore task" else "Complete task") }
+            (error ?: state.error)?.let { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
     }, confirmButton = { TextButton({
-        saving = true
-        vm.action {
+        run {
             try {
                 require(title.isNotBlank() && title.length <= 1000) { "Enter a title of up to 1,000 characters." }
                 val json = JsonObject()
@@ -117,9 +117,8 @@ internal fun RecordEditor(vm: PlannerViewModel, record: Record, openRelated: ((S
                         else -> json.addProperty(key, value)
                     }
                 }
-                vm.repository.edit(record.copy(title = title.trim(), baseKind = kind, customTypeId = customTypeId, typeSchemaVersion = typeVersion, fieldsJson = json.toString(), plannedFor = if (kind == "task") planned else null, dueDate = if (kind == "task") dueDate else null, dueAt = if (kind == "task") dueAt else null, startAt = if (kind in setOf("task", "event")) start else null, endAt = if (kind in setOf("task", "event")) end else null, remindAt = reminder, state = if (kind != "task" && record.state == "completed") "pending" else record.state, completedAt = if (kind == "task") record.completedAt else null))
-                close()
-            } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) { error = e.message ?: "Couldn't save. Your changes are still here." } finally { saving = false }
+                save(record.copy(version = expectedVersion, title = title.trim(), baseKind = kind, customTypeId = customTypeId, typeSchemaVersion = typeVersion, fieldsJson = json.toString(), plannedFor = if (kind == "task") planned else null, dueDate = if (kind == "task") dueDate else null, dueAt = if (kind == "task") dueAt else null, startAt = if (kind in setOf("task", "event")) start else null, endAt = if (kind in setOf("task", "event")) end else null, remindAt = reminder, state = if (kind != "task" && record.state == "completed") "pending" else record.state, completedAt = if (kind == "task") record.completedAt else null))
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) { error = e.message ?: "Couldn't save. Your changes are still here." }
         }
     }, enabled = !saving) { Text("Save") } }, dismissButton = { TextButton(close) { Text("Cancel") } })
 }

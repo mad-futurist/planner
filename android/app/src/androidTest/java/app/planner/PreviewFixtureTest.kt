@@ -61,12 +61,11 @@ class PreviewFixtureTest {
         }
         if(empty) {
             ui.waitUntil(10_000) {ui.onAllNodesWithText("A place for every thought").fetchSemanticsNodes().isNotEmpty()}
-            ui.onNodeWithTag("privacy").assert(hasText("Private · on this device"))
+            ui.onNodeWithTag("privacy").assert(hasText("Private"))
             capture("welcome-private")
             return
         }
-        val model=ui.runOnIdle {ViewModelProvider(ui.activity)[PlannerViewModel::class.java]}
-        ui.waitUntil(10_000) {model.todayItems.value.any {it.title=="Finish draft"}}
+        ui.waitUntil(10_000) {ui.onAllNodesWithText("Finish draft").fetchSemanticsNodes().isNotEmpty()}
         ui.onNodeWithTag("today-list").performScrollToNode(hasText("Buy lamp"))
         ui.onNodeWithText("Buy lamp").assertExists()
         ui.onNodeWithTag("today-list").performScrollToNode(hasText("Done today: 3", substring = true))
@@ -80,6 +79,13 @@ class PreviewFixtureTest {
                 ui.onNodeWithContentDescription("Navigate $label").performClick()
                 ui.onNodeWithTag(tag).performScrollToIndex(0)
                 capture(label.lowercase())
+            }
+            for((label,tag) in listOf("Journal" to "journal-list", "Review" to "review-list")) {
+                ui.onNodeWithTag("profile-list").performScrollToNode(hasText(label))
+                ui.onNode(hasText(label) and hasClickAction()).performClick()
+                ui.onNodeWithTag(tag).assertIsDisplayed()
+                capture(label.lowercase())
+                ui.onNodeWithContentDescription("Navigate Profile").performClick()
             }
             ui.onNodeWithTag("profile-list").performScrollToNode(hasText("Settings"))
             ui.onNode(hasText("Settings") and hasClickAction()).performClick()
@@ -102,6 +108,14 @@ class PreviewFixtureTest {
             capture("quick-capture")
             nativeNode("Save quick capture")!!.performAction(AccessibilityNodeInfo.ACTION_CLICK)
             ui.waitUntil(10_000) {runBlocking {repo.dao.notePage(50,0).any {it.originalContent=="A thought from another app" && it.source=="OVERLAY" && it.privacyMode=="LOCAL_ONLY"}}}
+            // Validate the configured factory independently of Android's validated-network gate.
+            val factoryProbe = androidx.work.OneTimeWorkRequestBuilder<app.planner.sync.SyncWorker>().build()
+            val workManager = androidx.work.WorkManager.getInstance(ui.activity)
+            workManager.enqueue(factoryProbe)
+            ui.waitUntil(30_000) {
+                workManager.getWorkInfoById(factoryProbe.id).get()?.state?.isFinished == true
+            }
+            org.junit.Assert.assertEquals(androidx.work.WorkInfo.State.SUCCEEDED, workManager.getWorkInfoById(factoryProbe.id).get()?.state)
             runBlocking {deps.preferences().set("overlay","false")}; OverlayManager.stop(ui.activity)
         }
     }

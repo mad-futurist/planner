@@ -61,6 +61,76 @@ class MockProvider:
         return Development(steps=["Contact school", "Recruit tutors", "Schedule a pilot"])
 
 
+def test_explicit_raw_only_capture_sync_does_not_enqueue_ai_or_create_events(system):
+    client, factory, headers, _ = system
+    note_id = capture(client, headers, content="dentist 16", manual=True, records=[])
+    with factory() as db:
+        assert db.get(Note, note_id).manual
+        assert db.scalar(select(func.count()).select_from(Job)) == 0
+        assert db.scalar(select(func.count()).select_from(Record)) == 0
+
+
+def test_explicit_capture_clarification_is_preserved_and_constrains_ai(system):
+    client, factory, headers, _ = system
+    hints = {"schemaVersion": 1, "clarifications": [{"start": 8, "end": 10, "text": "16", "kind": "datetime", "date": "2026-10-13", "time": "16:00"}]}
+    note_id = capture(client, headers, "dentist 16", interpretationHints=hints)
+    provider = MockProvider([{"baseKind": "event", "title": "Dentist", "startAt": "2026-10-13T14:00:00Z", "evidence": {"startAt": "dentist 16"}}])
+    assert process_one(factory, provider)
+    note = client.get(f"/api/v1/notes/{note_id}", headers=headers).json()
+    assert note["originalContent"] == "dentist 16" and note["interpretationHints"] == hints
+    assert note["records"][0]["startAt"] == "2026-10-13T14:00:00.000Z"
+    assert provider.context["interpretationHints"] == hints
+    wrong_id = capture(client, headers, "dentist 16", interpretationHints=hints)
+    assert process_one(factory, MockProvider([{"baseKind": "event", "title": "Dentist", "startAt": "2026-10-13T13:00:00Z", "evidence": {"startAt": "dentist 16"}}]))
+    assert client.get(f"/api/v1/notes/{wrong_id}", headers=headers).json()["records"] == []
+
+
+def test_ai_preview_has_persistent_owner_budget_and_does_not_save_notes(system, monkeypatch):
+    from app.config import settings
+    from app.persistence.models import ProviderRequest
+    monkeypatch.setattr(settings, "llm_api_key", "test-fixture-only")
+    monkeypatch.setattr(settings, "llm_model", "test-fixture")
+    monkeypatch.setattr(settings, "ai_daily_request_limit", 1)
+    monkeypatch.setattr(OpenAICompatibleProvider, "extract", lambda self, content, context: Extraction.model_validate({"records": [{"baseKind": "task", "title": "Buy milk"}]}))
+    client, factory, headers, another = system
+    body = {"content": "Buy milk", "createdAt": "2026-10-27T09:00:00Z"}
+    first = client.post("/api/v1/preview/ai", headers=headers, json=body)
+    assert first.status_code == 200 and first.json()["previewOnly"]
+    assert client.post("/api/v1/preview/ai", headers=headers, json=body).status_code == 429
+    assert client.get("/api/v1/notes", headers=headers).json()["notes"] == []
+    assert client.get("/api/v1/diagnostics", headers=headers).json()["aiRequestsToday"] == 1
+    assert client.get("/api/v1/diagnostics", headers=another()).json()["aiRequestsToday"] == 0
+    with factory() as db: assert db.scalar(select(func.count()).select_from(ProviderRequest)) == 1
+
+
+def test_daily_budget_defers_jobs_without_losing_notes_or_consuming_attempts(system, monkeypatch):
+    import app.jobs.worker as worker
+    from app.config import settings
+    monkeypatch.setattr(settings, "llm_api_key", "fixture")
+    monkeypatch.setattr(settings, "llm_model", "fixture")
+    monkeypatch.setattr(settings, "ai_daily_request_limit", 1)
+    monkeypatch.setattr(worker, "OpenAICompatibleProvider", lambda settings: MockProvider())
+    client, factory, headers, _ = system
+    capture(client, headers, "Buy lamp")
+    assert worker.process_one(factory)
+    second = capture(client, headers, "Buy bread")
+    assert worker.process_one(factory)
+    with factory() as db:
+        job = db.scalar(select(Job).where(Job.note_id == second))
+        assert job.status == "queued" and job.last_error == "provider_daily_limit" and job.attempts == 0
+        assert db.get(Note, second).content == "Buy bread"
+
+def test_readiness_requires_recent_worker_heartbeat(system):
+    from app.persistence.models import ServiceHeartbeat
+    client, factory, _, _ = system
+    assert client.get("/health").status_code == 200
+    assert client.get("/ready").status_code == 503
+    with factory() as db: db.add(ServiceHeartbeat(name="worker:fixture", seen_at=now())); db.commit()
+    assert client.get("/ready").status_code == 200
+    with factory() as db: db.get(ServiceHeartbeat, "worker:fixture").seen_at = "2000-01-01T00:00:00Z"; db.commit()
+    assert client.get("/ready").status_code == 503
+
+
 def test_health_and_openapi(system):
     client, _, headers, _ = system
     assert client.get("/health").json()["status"] == "ok"

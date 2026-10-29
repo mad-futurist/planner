@@ -1,0 +1,54 @@
+name: Verify Planner
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: planner
+          POSTGRES_PASSWORD: ci-fixture-password
+          POSTGRES_DB: planner
+        ports:
+          - 5432:5432
+        options: --health-cmd="pg_isready -U planner -d planner" --health-interval=5s --health-timeout=5s --health-retries=12
+    env:
+      PLANNER_TEST_POSTGRES_URL: postgresql+psycopg://planner:ci-fixture-password@127.0.0.1:5432/planner
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install uv==0.13.5
+      - run: uv sync --project backend --frozen --python 3.12
+      - run: uv run --project backend --frozen pytest backend/tests -q
+      - run: uv run --project backend --frozen python tools/check_architecture.py
+      - run: uv run --project backend --frozen python tools/check_docs.py
+      - run: uv run --frozen python -m app.benchmark --no-persist --output ../tmp/ci-benchmark.json
+        working-directory: backend
+      - run: docker build -t planner-api:ci backend
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+      - name: Accept SDK licenses for Gradle's pinned SDK installation
+        run: |
+          set +o pipefail
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+      - name: Build and verify
+        run: bash android/gradlew -p android :app:assembleDebug :app:assembleRelease :app:testDebugUnitTest :app:lintDebug --no-daemon --console=plain

@@ -4,42 +4,27 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
-import app.planner.core.database.*
-import app.planner.core.model.*
-import app.planner.core.designsystem.PlannerTheme
+import app.planner.domain.model.*
 import com.google.gson.*
 import java.time.*
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
-@Composable internal fun InterpretationEditor(vm: PlannerViewModel, note: RawNote, close: () -> Unit) {
+@Composable internal fun InterpretationEditor(state: InterpretationUiState, save: (String, String, String?) -> Unit, close: () -> Unit) {
+    val note = state.note ?: return
     var title by rememberSaveable(note.id) { mutableStateOf(note.content.take(1000)) }
     var kind by rememberSaveable(note.id) { mutableStateOf("task") }
     var planned by rememberSaveable(note.id) { mutableStateOf<String?>(null) }
-    val history by produceState<InterpretationHistory?>(null, note.id) { value = vm.repository.dao.latestHistory(note.id) }
+    val history = state.history
     AlertDialog(onDismissRequest = close, title = { Text("Organize note") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             Text(note.originalContent, style = MaterialTheme.typography.bodySmall)
@@ -51,8 +36,9 @@ import java.util.Locale
             KindPicker(kind) { kind = it }
             OutlinedTextField(title, { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth())
             if (kind == "task") DateControl("Plan for", planned, { planned = it })
+            state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
-    }, confirmButton = { TextButton({ vm.action { vm.repository.manualInterpretation(note, kind, title, if (kind == "task") planned else null); close() } }, enabled = title.isNotBlank()) { Text("Save") } }, dismissButton = { TextButton(close) { Text("Cancel") } })
+    }, confirmButton = { TextButton({ save(kind, title, planned) }, enabled = title.isNotBlank() && !state.saving) { Text("Save") } }, dismissButton = { TextButton(close) { Text("Cancel") } })
 }
 
 @Composable internal fun KindPicker(kind: String, select: (String) -> Unit) {
@@ -90,18 +76,16 @@ import java.util.Locale
     }
 }
 
-@Composable internal fun DevelopmentDialog(vm: PlannerViewModel, record: Record, close: () -> Unit) {
-    val jobMetadata by remember(record.id) { vm.repository.dao.observeMetaKey("job:${record.id}") }.collectAsStateWithLifecycle(null)
-    val raw = jobMetadata?.value
-    val job = raw?.let { JsonParser.parseString(it).asJsonObject }
-    val status = job?.get("status")?.asString ?: "unavailable"
-    val steps = if (status == "complete") job?.getAsJsonObject("result")?.getAsJsonArray("steps")?.map { it.asString }.orEmpty() else emptyList()
-    var selected by remember(raw) { mutableStateOf(steps.toSet()) }
-    var applying by remember { mutableStateOf(false) }
+@Composable internal fun DevelopmentDialog(state: DevelopmentUiState, approve: (List<String>) -> Unit, retry: () -> Unit, close: () -> Unit) {
+    val record = state.record ?: return
+    val status = state.status
+    val steps = state.steps.takeIf { state.error == null }.orEmpty()
+    var selected by remember(state.jobId, steps) { mutableStateOf(steps.toSet()) }
+    val applying = state.saving
     AlertDialog(onDismissRequest = close, title = { Text("Develop this idea") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             Text(record.title)
-            when (status) {
+            if (state.error != null) Text(state.error, color = MaterialTheme.colorScheme.error) else when (status) {
                 "queued", "running" -> Text("Waiting for AI suggestions. You can keep capturing thoughts.", Modifier.padding(top = 12.dp))
                 "complete" -> { Text("Choose what to turn into tasks.", Modifier.padding(vertical = 12.dp)); for (step in steps) Row(verticalAlignment = Alignment.CenterVertically) { Checkbox(step in selected, { checked -> selected = if (checked) selected + step else selected - step }); Text(step, Modifier.weight(1f)) } }
                 "unconfigured" -> Text("The backend AI provider is not configured. Your idea is saved; add next steps manually or configure the provider and retry.")
@@ -110,7 +94,7 @@ import java.util.Locale
             }
         }
     }, confirmButton = {
-        if (steps.isNotEmpty()) TextButton({ applying = true; vm.action { try { vm.sync.approve(record, job!!.get("id").asString, steps.filter { it in selected }); close() } finally { applying = false } } }, enabled = selected.isNotEmpty() && !applying) { Text("Create ${selected.size} tasks") }
-        else TextButton({ vm.action { vm.sync.develop(record) } }) { Text("Try again") }
+        if (steps.isNotEmpty()) TextButton({ approve(steps.filter { it in selected }) }, enabled = selected.isNotEmpty() && !applying) { Text("Create ${selected.size} tasks") }
+        else TextButton({ retry() }) { Text("Try again") }
     }, dismissButton = { TextButton(close) { Text("Close") } })
 }

@@ -42,7 +42,17 @@ Never document planned functionality as already implemented.
 
 ### Architecture rules
 
-- Preserve separation between presentation, domain, and data layers.
+- Maintain four logical layers on Android and backend: Domain, Application, Infrastructure, Presentation/Interface.
+- Domain imports no Android/Room/Retrofit, FastAPI/Pydantic/SQLAlchemy/httpx, application or infrastructure code.
+- Application owns workflows and ports, depends inward on domain, and does not import concrete adapters or HTTP DTOs.
+- Infrastructure implements ports. Hilt AppModule and Python bootstrap/main wire concrete implementations.
+- Feature ViewModels publish immutable UiState and typed commands. Keep mutable flows private/protected.
+- Compose content accepts state/callbacks; no repository, DAO, DataStore, SyncEngine or arbitrary business lambdas.
+- Keep Room storage entities and ORM objects inside infrastructure; use explicit domain mappings.
+- Main composer and native overlay share CaptureUseCase. Keep real overlay lifecycle/permissions intact.
+- Backend routers map inputs/results only. Application use cases own UoW boundaries; provider I/O stays outside DB transactions.
+- Preserve worker SKIP LOCKED claims, lease fencing and owner-before-job lock order on success and failure.
+- Run tools/check_architecture.py alongside behavioral tests. Add narrow compatibility exceptions to docs/DEPENDENCIES.md, never silently bypass checks.
 - Maintain offline-first behavior.
 - Avoid network calls on the UI thread.
 - Preserve backward compatibility or provide migrations.
@@ -97,3 +107,10 @@ record the decision.
 Code is the source of truth for implemented behavior.
 CONCEPT.md is the source of truth for intended product behavior.
 Explicitly document any discrepancy between them.
+
+### Architecture and migration knowledge
+
+- Read docs/DEPENDENCIES.md and docs/ARCHITECTURE_MIGRATION.md before structural work.
+- Current Room schema is v4. Do not apply the obsolete v3 instruction from the supplied refactor brief.
+- Source-compatible aliases/CLI paths are documented exceptions, not permission to reintroduce outward business-layer dependencies.
+- Record performed checks and remaining gates honestly; do not infer test completion from compilation or historical screenshots.

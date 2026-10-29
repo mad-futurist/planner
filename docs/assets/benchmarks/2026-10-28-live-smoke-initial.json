@@ -1,0 +1,387 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-28T09:34:45.358105+00:00",
+  "scope": "Synthetic server/API/real-worker smoke; Android UI and external account providers are not exercised",
+  "checks": [
+    {
+      "name": "en-call-not-appointment",
+      "passed": false,
+      "processingStatus": "review",
+      "records": [],
+      "interpretation": {
+        "id": "313f35ca-db9c-460f-a82e-1c61da98a540",
+        "noteId": "54061de1-6b5e-4b07-8796-e326ec0ac0ba",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "task",
+              "customTypeId": null,
+              "title": "Call the doctor",
+              "fields": {},
+              "startAt": null,
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": "2026-10-28",
+              "plannedFor": "2026-10-28",
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "quote": "Call the doctor tomorrow"
+              }
+            }
+          ],
+          "ambiguities": [
+            "Temporal field lacks original-text evidence"
+          ],
+          "riskLevel": "review_required"
+        },
+        "validationResult": "review",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T09:35:02.466Z"
+      }
+    },
+    {
+      "name": "en-event-explicit",
+      "passed": false,
+      "processingStatus": "failed",
+      "records": [],
+      "interpretation": null
+    },
+    {
+      "name": "fr-event-explicit",
+      "passed": false,
+      "processingStatus": "failed",
+      "records": [],
+      "interpretation": null
+    },
+    {
+      "name": "ru-event-explicit",
+      "passed": false,
+      "processingStatus": "review",
+      "records": [],
+      "interpretation": {
+        "id": "9d59a527-26d4-4d10-881a-acad4f155d02",
+        "noteId": "ef749132-8c61-4cbf-acca-b8f11725279d",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "event",
+              "customTypeId": null,
+              "title": "Стоматолог",
+              "fields": {},
+              "startAt": "2026-10-28T14:00:00.000Z",
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": "2026-10-28",
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "title": "Стоматолог завтра в 16:00"
+              }
+            }
+          ],
+          "ambiguities": [
+            "Temporal field lacks original-text evidence"
+          ],
+          "riskLevel": "review_required"
+        },
+        "validationResult": "review",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T09:35:04.453Z"
+      }
+    },
+    {
+      "name": "en-dentist-16",
+      "passed": true,
+      "processingStatus": "review",
+      "records": [],
+      "interpretation": {
+        "id": "ada0f202-de7e-407a-943a-f0276ade9222",
+        "noteId": "7e752d6b-e9a5-498b-8144-dd6ad2e24931",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [],
+          "ambiguities": [
+            "The note 'dentist 16' is ambiguous because it contains only 'dentist' and '16' with no clear context whether '16' refers to a day of month, hour, or something else. No date or time interpretation could be reliably extracted.",
+            "Capture requires explicit date/time clarification"
+          ],
+          "riskLevel": "review_required"
+        },
+        "validationResult": "review",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T09:35:05.901Z"
+      }
+    },
+    {
+      "name": "en-idea",
+      "passed": true,
+      "processingStatus": "organized",
+      "records": [
+        {
+          "id": "9c1c2766-ff30-593d-b46a-018ee7e4ab4a",
+          "sourceNoteId": "e09f521a-917d-4101-ba0f-98295645e7b7",
+          "baseKind": "idea",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "Build a reading garden",
+          "fields": {},
+          "startAt": null,
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T09:35:06.000Z",
+          "updatedAt": "2026-10-28T09:35:06.007Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ],
+      "interpretation": {
+        "id": "e391e192-4f1d-46f1-a184-24b38fa17f6e",
+        "noteId": "e09f521a-917d-4101-ba0f-98295645e7b7",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "idea",
+              "customTypeId": null,
+              "title": "Build a reading garden",
+              "fields": {},
+              "startAt": null,
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "note": "Idea: build a reading garden"
+              }
+            }
+          ],
+          "ambiguities": [],
+          "riskLevel": "validated_low"
+        },
+        "validationResult": "valid",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T09:35:05.981Z"
+      }
+    },
+    {
+      "name": "en-multi",
+      "passed": false,
+      "processingStatus": "review",
+      "records": [],
+      "interpretation": {
+        "id": "c6d2b353-382e-4080-8146-cd394b54ba52",
+        "noteId": "6f959ffc-75c5-4c5b-bc42-19149b18dac5",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "event",
+              "customTypeId": null,
+              "title": "Meet Nicolas",
+              "fields": {},
+              "startAt": "2026-10-28T12:00:00.000Z",
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "title": "Meet Nicolas tomorrow at 14:00",
+                "startAt": "tomorrow at 14:00"
+              }
+            },
+            {
+              "baseKind": "task",
+              "customTypeId": null,
+              "title": "Prepare questions",
+              "fields": {},
+              "startAt": null,
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": "2026-10-27",
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "title": "prepare questions by today",
+                "dueDate": "by today"
+              }
+            }
+          ],
+          "ambiguities": [
+            "Time differs from original-text evidence"
+          ],
+          "riskLevel": "review_required"
+        },
+        "validationResult": "review",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T09:35:07.992Z"
+      }
+    },
+    {
+      "name": "en-confirm-today-16",
+      "passed": false,
+      "processingStatus": "failed",
+      "records": [],
+      "interpretation": null
+    },
+    {
+      "name": "raw-only-does-not-create-event",
+      "passed": true
+    },
+    {
+      "name": "complete-and-undo",
+      "passed": false,
+      "reason": "No valid extracted task"
+    },
+    {
+      "name": "real-idea-development",
+      "passed": true,
+      "job": {
+        "id": "b4f34c40-2b2e-4ecd-9984-fba9ddceca77",
+        "noteId": "e09f521a-917d-4101-ba0f-98295645e7b7",
+        "recordId": "9c1c2766-ff30-593d-b46a-018ee7e4ab4a",
+        "inputVersion": 1,
+        "recordVersion": 1,
+        "kind": "develop",
+        "status": "complete",
+        "attempts": 1,
+        "lastError": null,
+        "result": {
+          "steps": [
+            "Select a quiet and accessible spot in the garden for the reading area.",
+            "Design a comfortable seating arrangement, considering weather protection and lighting.",
+            "Choose and plant greenery that creates a serene environment and provides shade.",
+            "Install bookshelves or storage for books that withstand outdoor conditions.",
+            "Create a maintenance plan to keep the garden clean and inviting throughout the year."
+          ]
+        }
+      }
+    },
+    {
+      "name": "registry-type-extraction",
+      "passed": false,
+      "records": [],
+      "processingStatus": "review"
+    },
+    {
+      "name": "registry-version-retention",
+      "passed": true
+    },
+    {
+      "name": "approved-rule-extraction",
+      "passed": true,
+      "records": [
+        {
+          "id": "ba096bf8-6bbb-5e68-bc89-055e709a6928",
+          "sourceNoteId": "b312f918-4d83-4e4c-a08d-8bfe2f885423",
+          "baseKind": "information",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "Useful article about reading gardens",
+          "fields": {},
+          "startAt": null,
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T09:35:14.401Z",
+          "updatedAt": "2026-10-28T09:35:14.403Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "explicit-ai-preview-requires-review",
+      "passed": true,
+      "preview": {
+        "schemaVersion": 1,
+        "engine": "provider:gpt-4.1-mini",
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentist appointment",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": "2026-11-16",
+            "plannedFor": "2026-11-16",
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "text": "dentist 16"
+            }
+          }
+        ],
+        "reviewReasons": [
+          "The exact time of the dentist appointment on the 16th is not specified. It is ambiguous whether '16' refers to November 16 or another month or day.",
+          "Capture requires explicit date/time clarification",
+          "Event has no confirmed start time",
+          "Temporal field lacks original-text evidence"
+        ],
+        "needsReview": true,
+        "previewOnly": true
+      }
+    },
+    {
+      "name": "incremental-feed",
+      "passed": true
+    }
+  ],
+  "cleanup": true,
+  "diagnostics": {
+    "jobs": {
+      "complete": 8,
+      "failed": 3
+    },
+    "oldestQueuedAt": null,
+    "aiRequestsToday": 12,
+    "aiDailyRequestLimit": 100
+  },
+  "sessionRevoked": true,
+  "passed": 8,
+  "executed": 16,
+  "success": false
+}

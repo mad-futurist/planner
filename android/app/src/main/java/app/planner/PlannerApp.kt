@@ -2,16 +2,18 @@ package app.planner
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
-import app.planner.data.PlannerRepository
 import app.planner.sync.SyncScheduler
+import app.planner.sync.PlannerWorkerFactory
+import androidx.work.Configuration
 import javax.inject.Inject
 
 @HiltAndroidApp
-class PlannerApp : Application() {
-    @Inject lateinit var repository: PlannerRepository
+class PlannerApp : Application(), Configuration.Provider {
+    @Inject lateinit var workerFactory: PlannerWorkerFactory
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
     override fun onCreate() {
         super.onCreate()
-        repository.requestSync = { SyncScheduler.request(this) }
         SyncScheduler.install(this)
     }
 }

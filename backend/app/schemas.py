@@ -1,20 +1,12 @@
 from datetime import date, datetime, timezone
+import re
 from typing import Any, Literal
 from uuid import UUID
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from app.persistence.models import now, uid
+from app.domain.time import now, uid, instant
 
 Kind = Literal["task", "event", "idea", "information"]
-
-
-def instant(value: str | None) -> str | None:
-    if value is None:
-        return None
-    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    if dt.tzinfo is None:
-        raise ValueError("An explicit offset is required")
-    return dt.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 class DTO(BaseModel):
@@ -73,6 +65,47 @@ class RecordDTO(DTO):
         return self
 
 
+class CaptureHintDTO(DTO):
+    start: int = Field(ge=0, le=40_000)
+    end: int = Field(ge=1, le=40_000)
+    text: str = Field(min_length=1, max_length=20_000)
+    kind: Literal["date", "time", "datetime", "literal"]
+    date: str | None = None
+    time: str | None = None
+
+    @model_validator(mode="after")
+    def valid_choice(self):
+        if self.date is not None: date.fromisoformat(self.date)
+        if self.time is not None:
+            from datetime import time
+            if not re.fullmatch(r"[0-9]{2}:[0-9]{2}", self.time): raise ValueError("Use HH:mm")
+            time.fromisoformat(self.time)
+        required = {"date": (True, False), "time": (False, True), "datetime": (True, True), "literal": (False, False)}[self.kind]
+        if (self.date is not None, self.time is not None) != required: raise ValueError("Clarification fields do not match its kind")
+        return self
+
+
+class InterpretationHintsDTO(DTO):
+    schemaVersion: Literal[1] = 1
+    clarifications: list[CaptureHintDTO] = Field(default_factory=list, max_length=24)
+
+
+class PreviewRequest(DTO):
+    content: str = Field(min_length=1, max_length=20_000)
+    createdAt: str
+    timezone: str = "UTC"
+    locale: str = Field(default="en", max_length=32)
+    interpretationHints: InterpretationHintsDTO = Field(default_factory=InterpretationHintsDTO)
+    _dates = field_validator("createdAt")(instant)
+    _zone = field_validator("timezone")(RecordDTO.valid_zone.__func__)
+
+    @model_validator(mode="after")
+    def matching_hints(self):
+        from app.domain.capture_preview import valid_hints
+        valid_hints(self.content, self.interpretationHints.model_dump())
+        return self
+
+
 class NoteDTO(DTO):
     id: UUID
     content: str = Field(min_length=1, max_length=20_000)
@@ -87,6 +120,7 @@ class NoteDTO(DTO):
     locale: str = Field(default="en", max_length=32)
     timezone: str = "UTC"
     manual: bool = False
+    interpretationHints: InterpretationHintsDTO = Field(default_factory=InterpretationHintsDTO)
     records: list[RecordDTO] = Field(default_factory=list, max_length=12)
     _dates = field_validator("createdAt", "updatedAt")(instant)
     _zone = field_validator("timezone")(RecordDTO.valid_zone.__func__)
@@ -97,6 +131,12 @@ class NoteDTO(DTO):
         if not value.strip():
             raise ValueError("Content must not be blank")
         return value
+
+    @model_validator(mode="after")
+    def matching_hints(self):
+        from app.domain.capture_preview import valid_hints
+        valid_hints(self.content, self.interpretationHints.model_dump())
+        return self
 
 
 class RecordMutation(RecordDTO):

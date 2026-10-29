@@ -1,10 +1,16 @@
 package app.planner.domain
 
-import app.planner.core.model.Record
+import app.planner.domain.model.Record
 import java.time.*
-import app.planner.core.isoInstant
 
 data class DayBounds(val day: String, val start: String, val end: String)
+fun taskBucket(record: Record, date: LocalDate, zone: ZoneId): String {
+    require(record.baseKind == "task")
+    val day = record.plannedFor ?: record.dueDate
+    if (day != null) return if (LocalDate.parse(day) <= date) "today" else "upcoming"
+    val instant = record.startAt ?: record.dueAt
+    return if (instant == null) "someday" else if (Instant.parse(instant) < date.plusDays(1).atStartOfDay(zone).toInstant()) "today" else "upcoming"
+}
 fun dayBounds(date: LocalDate, zone: ZoneId): DayBounds = DayBounds(date.toString(), isoInstant(date.atStartOfDay(zone).toInstant()), isoInstant(date.plusDays(1).atStartOfDay(zone).toInstant()))
 fun isVisibleToday(record: Record, date: LocalDate, zone: ZoneId): Boolean {
     if (record.state != "pending") return false

@@ -1,0 +1,1888 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-28T09:44:04.596120+00:00",
+  "engine": "gpt-4.1-mini",
+  "status": "complete",
+  "scope": "43 curated synthetic EN/FR/RU acceptance cases; not a held-out generalization study. Custom type assignment is not measured. Actual configured-provider inference followed by deterministic semantic validation; this evaluates the combined interpreter, not raw model accuracy.",
+  "executed": 43,
+  "passed": 42,
+  "entityDistribution": {
+    "task": 14,
+    "event": 26,
+    "idea": 3,
+    "information": 3
+  },
+  "confusion": [
+    {
+      "expected": "event",
+      "actual": "event",
+      "count": 26
+    },
+    {
+      "expected": "idea",
+      "actual": "idea",
+      "count": 3
+    },
+    {
+      "expected": "information",
+      "actual": "information",
+      "count": 3
+    },
+    {
+      "expected": "task",
+      "actual": "task",
+      "count": 14
+    }
+  ],
+  "calendarReadyEvents": 12,
+  "clarificationCases": 15,
+  "perLocale": {
+    "en": {
+      "cases": 20,
+      "passed": 20
+    },
+    "fr": {
+      "cases": 11,
+      "passed": 11
+    },
+    "ru": {
+      "cases": 12,
+      "passed": 11
+    }
+  },
+  "unsafeCalendarCases": 0,
+  "p50Milliseconds": 4484.722,
+  "p95Milliseconds": 5733.855,
+  "cases": [
+    {
+      "id": "en-task-buy",
+      "locale": "en",
+      "text": "Buy milk",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Buy milk",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 1789.752
+    },
+    {
+      "id": "fr-task-buy",
+      "locale": "fr",
+      "text": "Acheter du pain",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Acheter du pain",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4634.556
+    },
+    {
+      "id": "ru-task-buy",
+      "locale": "ru",
+      "text": "Купить молоко",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Купить молоко",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4164.667
+    },
+    {
+      "id": "en-call-not-appointment",
+      "locale": "en",
+      "text": "Call the doctor tomorrow",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Call the doctor",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": "2026-10-28",
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "plannedFor": "tomorrow"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "plannedFor": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3651.27
+    },
+    {
+      "id": "fr-call-not-appointment",
+      "locale": "fr",
+      "text": "Appeler le dentiste demain",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Appeler le dentiste",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": "2026-10-28",
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "plannedFor": "demain"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "plannedFor": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3805.897
+    },
+    {
+      "id": "ru-call-not-appointment",
+      "locale": "ru",
+      "text": "Позвонить врачу завтра",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Позвонить врачу",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": "2026-10-28",
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "plannedFor": "завтра"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "plannedFor": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3279.38
+    },
+    {
+      "id": "en-deadline",
+      "locale": "en",
+      "text": "Finish the report by Friday",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Finish the report",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": "2026-10-30",
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "dueDate": "by Friday"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "dueDate": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4771.439
+    },
+    {
+      "id": "fr-deadline",
+      "locale": "fr",
+      "text": "Envoyer le rapport avant vendredi",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Envoyer le rapport",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": "2026-10-30",
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "dueDate": "avant vendredi"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "dueDate": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3217.379
+    },
+    {
+      "id": "ru-deadline",
+      "locale": "ru",
+      "text": "Закончить отчет до пятницы",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Закончить отчет",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": "2026-10-30",
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "dueDate": "до пятницы"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "dueDate": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4792.049
+    },
+    {
+      "id": "en-event-explicit",
+      "locale": "en",
+      "text": "Dentist tomorrow at 16:00",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentist",
+            "fields": {},
+            "startAt": "2026-10-28T15:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Dentist tomorrow at 16:00"
+            },
+            "calendarEligible": true
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "startAt": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4892.196
+    },
+    {
+      "id": "fr-event-explicit",
+      "locale": "fr",
+      "text": "Dentiste demain à 16h00",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentiste",
+            "fields": {},
+            "startAt": "2026-10-28T15:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "demain à 16h00"
+            },
+            "calendarEligible": true
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "startAt": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 5213.702
+    },
+    {
+      "id": "ru-event-explicit",
+      "locale": "ru",
+      "text": "Стоматолог завтра в 16:00",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Стоматолог",
+            "fields": {},
+            "startAt": "2026-10-28T15:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "завтра в 16:00"
+            },
+            "calendarEligible": true
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "startAt": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 5291.357
+    },
+    {
+      "id": "en-hour-intro",
+      "locale": "en",
+      "text": "Meeting Thursday at 14",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Meeting Thursday at 14",
+            "fields": {},
+            "startAt": "2026-10-29T13:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Thursday at 14"
+            },
+            "calendarEligible": true
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "startAt": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4053.381
+    },
+    {
+      "id": "fr-hour-intro",
+      "locale": "fr",
+      "text": "Rendez-vous jeudi à 14",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Rendez-vous",
+            "fields": {},
+            "startAt": "2026-10-29T13:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "jeudi à 14"
+            },
+            "calendarEligible": true
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "startAt": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4502.03
+    },
+    {
+      "id": "ru-hour-intro",
+      "locale": "ru",
+      "text": "Встреча в четверг в 14",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Встреча",
+            "fields": {},
+            "startAt": "2026-10-29T13:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Встреча в четверг в 14"
+            },
+            "calendarEligible": true
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "startAt": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4545.862
+    },
+    {
+      "id": "en-dentist-16",
+      "locale": "en",
+      "text": "dentist 16",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "dentist",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The expression '16' is ambiguous: it could mean 16:00 (time) or the 16th day of a month. No explicit date or time is given for the dentist appointment."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 5187.226
+    },
+    {
+      "id": "fr-dentist-16",
+      "locale": "fr",
+      "text": "dentiste 16",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "dentiste 16",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The expression 'dentiste 16' is ambiguous regarding whether '16' refers to a day of the month or a time of day. The provided context does not clarify this."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4537.466
+    },
+    {
+      "id": "ru-dentist-16",
+      "locale": "ru",
+      "text": "стоматолог 16",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "стоматолог",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "Unclear whether '16' refers to day of month or time of day for the стоматолог event"
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3331.962
+    },
+    {
+      "id": "en-missing-day",
+      "locale": "en",
+      "text": "Dentist at 16:00",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentist at 16:00",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The note specifies a time '16:00' but does not specify a date for the dentist event, so the date is unknown and startAt is null."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3584.057
+    },
+    {
+      "id": "fr-missing-time",
+      "locale": "fr",
+      "text": "Dentiste demain",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentiste",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": "2026-10-28",
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "plannedFor": "demain"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "Missing time for the event 'Dentiste demain'. No specific start time was provided."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 5455.303
+    },
+    {
+      "id": "ru-missing-both",
+      "locale": "ru",
+      "text": "Встреча с Николя",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Встреча с Николя",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The note 'Встреча с Николя' does not contain any explicit date or time information to schedule the event. Date and time are missing thus the event timing is not resolved."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4155.292
+    },
+    {
+      "id": "en-short-date",
+      "locale": "en",
+      "text": "Dentist 16/11",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentist appointment",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": "2026-11-16",
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "dueDate": "16/11"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The date '16/11' is ambiguous; it is unclear if it refers to a specific year or a deadline. No explicit time is given."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          },
+          {
+            "reason": "Date resolution needs review"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4839.781
+    },
+    {
+      "id": "en-next-friday",
+      "locale": "en",
+      "text": "Meeting next Friday at 14:00",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Meeting",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "plannedFor": "next Friday",
+              "startAt": "at 14:00"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "Ambiguous weekday expression: \"next Friday\" could refer to more than one possible date depending on the user's convention."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4337.206
+    },
+    {
+      "id": "fr-next-friday",
+      "locale": "fr",
+      "text": "Rendez-vous vendredi prochain à 14:00",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Rendez-vous vendredi prochain à 14:00",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The phrase \"vendredi prochain\" is ambiguous because it can mean either the upcoming Friday in the current week or the Friday of the following week. Context is insufficient to determine the exact date."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 5063.832
+    },
+    {
+      "id": "ru-next-friday",
+      "locale": "ru",
+      "text": "Встреча в следующую пятницу в 14:00",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Встреча в следующую пятницу в 14:00",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Встреча в следующую пятницу в 14:00"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "Expression \"следующую пятницу\" is ambiguous without a reference date context that determines if it means the nearest upcoming Friday or the Friday of next week in the future."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4484.722
+    },
+    {
+      "id": "en-idea",
+      "locale": "en",
+      "text": "Idea: build a reading garden",
+      "expectedKinds": [
+        "idea"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "idea",
+            "customTypeId": null,
+            "title": "build a reading garden",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 5266.071
+    },
+    {
+      "id": "fr-idea",
+      "locale": "fr",
+      "text": "Idée: créer un jardin de lecture",
+      "expectedKinds": [
+        "idea"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "idea",
+            "customTypeId": null,
+            "title": "créer un jardin de lecture",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4467.369
+    },
+    {
+      "id": "ru-idea",
+      "locale": "ru",
+      "text": "Идея: сделать сад для чтения",
+      "expectedKinds": [
+        "idea"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "idea",
+            "customTypeId": null,
+            "title": "сделать сад для чтения",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3951.072
+    },
+    {
+      "id": "en-info",
+      "locale": "en",
+      "text": "WiFi password is maple-tree",
+      "expectedKinds": [
+        "information"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "information",
+            "customTypeId": null,
+            "title": "WiFi password is maple-tree",
+            "fields": {
+              "password": "maple-tree"
+            },
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4854.168
+    },
+    {
+      "id": "fr-info",
+      "locale": "fr",
+      "text": "Le code de la porte est 1632",
+      "expectedKinds": [
+        "information"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "information",
+            "customTypeId": null,
+            "title": "Le code de la porte est 1632",
+            "fields": {
+              "code": "1632"
+            },
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4559.934
+    },
+    {
+      "id": "ru-info",
+      "locale": "ru",
+      "text": "Пароль от WiFi: береза",
+      "expectedKinds": [
+        "information"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "information",
+            "customTypeId": null,
+            "title": "Пароль от WiFi",
+            "fields": {
+              "password": "береза"
+            },
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4900.678
+    },
+    {
+      "id": "en-multi",
+      "locale": "en",
+      "text": "Meet Nicolas tomorrow at 14:00 and prepare questions by today",
+      "expectedKinds": [
+        "event",
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Meet Nicolas",
+            "fields": {},
+            "startAt": "2026-10-28T13:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Meet Nicolas tomorrow at 14:00"
+            },
+            "calendarEligible": true
+          },
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Prepare questions",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": "2026-10-27",
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "dueDate": "prepare questions by today"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 6250.991
+    },
+    {
+      "id": "fr-multi",
+      "locale": "fr",
+      "text": "Rendez-vous demain à 14h00 et préparer les questions pour aujourd'hui",
+      "expectedKinds": [
+        "event",
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Rendez-vous",
+            "fields": {},
+            "startAt": "2026-10-28T13:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Rendez-vous demain à 14h00"
+            },
+            "calendarEligible": true
+          },
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "préparer les questions",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": "2026-10-27",
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "dueDate": "préparer les questions pour aujourd'hui"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 5733.855
+    },
+    {
+      "id": "ru-multi",
+      "locale": "ru",
+      "text": "Встреча завтра в 14:00 и подготовить вопросы до сегодня",
+      "expectedKinds": [
+        "event",
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Встреча в 14:00",
+            "fields": {},
+            "startAt": "2026-10-28T13:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Встреча завтра в 14:00"
+            },
+            "calendarEligible": true
+          },
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Подготовить вопросы",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": "2026-10-27",
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "dueDate": "подготовить вопросы до сегодня"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 5358.419
+    },
+    {
+      "id": "en-quantity",
+      "locale": "en",
+      "text": "Buy 16 apples",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Buy 16 apples",
+            "fields": {
+              "quantity": 16,
+              "item": "apples"
+            },
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 6165.735
+    },
+    {
+      "id": "ru-quantity",
+      "locale": "ru",
+      "text": "Купить 16 яблок",
+      "expectedKinds": [
+        "task"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "task",
+            "customTypeId": null,
+            "title": "Купить 16 яблок",
+            "fields": {
+              "quantity": 16,
+              "item": "яблок"
+            },
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {},
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The note does not specify any date or time for this task, so the temporal context is ambiguous."
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": false
+      },
+      "passed": false,
+      "error": null,
+      "milliseconds": 3723.899
+    },
+    {
+      "id": "en-pm",
+      "locale": "en",
+      "text": "Dentist tomorrow at 4:30 pm",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentist",
+            "fields": {},
+            "startAt": "2026-10-28T15:30:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Dentist tomorrow at 4:30 pm"
+            },
+            "calendarEligible": true
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "startAt": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3992.402
+    },
+    {
+      "id": "en-invalid-clock",
+      "locale": "en",
+      "text": "Dentist tomorrow at 25:00",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentist appointment",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": "2026-10-28",
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "dueDate": "tomorrow"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The time '25:00' is invalid and cannot be converted to a valid hour."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3382.108
+    },
+    {
+      "id": "en-repeated-clock",
+      "locale": "en",
+      "text": "Meeting 2026-10-25 at 02:30",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Meeting 2026-10-25 at 02:30",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Meeting 2026-10-25 at 02:30"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The time 02:30 on 2026-10-25 in Europe/Paris timezone is ambiguous due to possible clock_change around that date, preventing exact startAt resolution."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3567.15
+    },
+    {
+      "id": "en-missing-clock",
+      "locale": "en",
+      "text": "Meeting 2027-03-28 at 02:30",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Meeting",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "Meeting 2027-03-28 at 02:30"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "The event start time could be ambiguous due to clock change around the specified time."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 4110.073
+    },
+    {
+      "id": "en-confirm-today-16",
+      "locale": "en",
+      "text": "dentist 16",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "dentist",
+            "fields": {},
+            "startAt": "2026-10-27T15:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "dentist 16"
+            },
+            "calendarEligible": true
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "startAt": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3279.336
+    },
+    {
+      "id": "en-confirm-16th-needs-time",
+      "locale": "en",
+      "text": "dentist 16",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentist appointment",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "plannedFor": "16",
+              "dueDate": "16"
+            },
+            "calendarEligible": false
+          }
+        ],
+        "doubts": [
+          {
+            "reason": "Missing time information for 'dentist 16', making startAt and plannedFor indeterminate."
+          },
+          {
+            "reason": "Capture requires explicit date/time clarification"
+          },
+          {
+            "reason": "Event has no confirmed start time"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3763.669
+    },
+    {
+      "id": "emoji-utf16",
+      "locale": "en",
+      "text": "🦷 dentist 16",
+      "expectedKinds": [
+        "event"
+      ],
+      "actual": {
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentist appointment",
+            "fields": {},
+            "startAt": "2026-11-16T08:00:00.000Z",
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {
+              "startAt": "dentist 16"
+            },
+            "calendarEligible": true
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "startAt": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 3386.231
+    }
+  ]
+}

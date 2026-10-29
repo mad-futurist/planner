@@ -20,21 +20,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.planner.features.PlannerViewModel
 
-@Composable fun OverlayControls(vm: PlannerViewModel) {
+@Composable fun OverlayControls(values: Map<String, String>, setPreference: (String, String)->Unit, report: (String)->Unit) {
     val context = LocalContext.current
-    val values by vm.settings.collectAsStateWithLifecycle()
     val running by OverlayService.running.collectAsStateWithLifecycle()
     var explanation by remember { mutableStateOf(false) }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        vm.action {
+        run {
             val granted = Settings.canDrawOverlays(context)
-            vm.preferences.set("overlay", granted.toString())
-            if (granted && !OverlayManager.start(context)) vm.message.value = "Floating capture isn't available on this device. Use notification capture instead."
-            if (!granted) vm.message.value = "Overlay permission wasn't granted. In-app capture is still available."
+            setPreference("overlay", granted.toString())
+            if (granted && !OverlayManager.start(context)) report("Floating capture isn't available on this device. Use notification capture instead.")
+            if (!granted) report("Overlay permission wasn't granted. In-app capture is still available.")
         }
     }
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        vm.action { vm.preferences.set("notification", granted.toString()); CaptureNotification.update(context, granted); if (!granted) vm.message.value = "Notification permission wasn't granted." }
+        run { setPreference("notification", granted.toString()); CaptureNotification.update(context, granted); if (!granted) report("Notification permission wasn't granted.") }
     }
     Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
         PlannerCard(color=MaterialTheme.colorScheme.secondaryContainer.copy(alpha=.55f)) {
@@ -44,8 +43,8 @@ import app.planner.features.PlannerViewModel
                     Surface(color=MaterialTheme.colorScheme.secondaryContainer,shape=CircleShape) {Box(Modifier.size(38.dp),contentAlignment=Alignment.Center) {PlannerIcon(Glyph.Sparkles,Modifier.size(22.dp),MaterialTheme.colorScheme.secondary)}}
                     Column(Modifier.weight(1f).padding(horizontal=12.dp)) {Text("Floating quick capture",style=MaterialTheme.typography.titleMedium);Text(if(running) "Available over other apps while unlocked" else "A small button for thoughts from anywhere.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
                     Switch(values["overlay"]=="true" && Settings.canDrawOverlays(context),{enabled->
-                        if(!enabled) {OverlayManager.stop(context);vm.action {vm.preferences.set("overlay","false");CaptureNotification.update(context,values["notification"]=="true")}}
-                        else if(Settings.canDrawOverlays(context)) vm.action {vm.preferences.set("overlay","true");if(!OverlayManager.start(context)) vm.message.value="Floating capture couldn't start. Try notification capture."}
+                        if(!enabled) {OverlayManager.stop(context);run {setPreference("overlay","false");CaptureNotification.update(context,values["notification"]=="true")}}
+                        else if(Settings.canDrawOverlays(context)) run {setPreference("overlay","true");if(!OverlayManager.start(context)) report("Floating capture couldn't start. Try notification capture.")}
                         else explanation=true
                     })
                 }
@@ -57,7 +56,7 @@ import app.planner.features.PlannerViewModel
                 Row(Modifier.padding(top=12.dp),verticalAlignment=Alignment.CenterVertically) {
                     Surface(color=MaterialTheme.colorScheme.primaryContainer,shape=CircleShape) {Box(Modifier.size(38.dp),contentAlignment=Alignment.Center) {PlannerIcon(Glyph.Bell,Modifier.size(22.dp))}}
                     Column(Modifier.weight(1f).padding(horizontal=12.dp)) {Text("Notification capture",style=MaterialTheme.typography.titleMedium);Text("A shortcut to capture when the bubble isn't running.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
-                    Switch(values["notification"]=="true",{enabled->if(enabled && Build.VERSION.SDK_INT>=33) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS) else vm.action {vm.preferences.set("notification",enabled.toString());CaptureNotification.update(context,enabled)}})
+                    Switch(values["notification"]=="true",{enabled->if(enabled && Build.VERSION.SDK_INT>=33) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS) else run {setPreference("notification",enabled.toString());CaptureNotification.update(context,enabled)}})
                 }
             }
         }

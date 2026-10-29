@@ -1,0 +1,1673 @@
+{
+  "schemaVersion": 1,
+  "datasetRunId": "benchmark:ac03a447-fbfa-441d-ac97-2e8eed12fe0e",
+  "generatedAt": "2026-10-28T14:27:04.314192+00:00",
+  "capturedAt": "2026-10-28T10:00:00.000Z",
+  "timezone": "Europe/Paris",
+  "corpusId": "noncalendar_choices_v1.json",
+  "engine": "local-rules-v1",
+  "status": "complete",
+  "scope": "30 curated synthetic EN/FR/RU acceptance cases; not a held-out generalization study. Custom type assignment is not measured. Local rules are not AI inference. kindChoices marks unresolved user intent, not a commitment.",
+  "executed": 30,
+  "passed": 30,
+  "entityDistribution": {
+    "task": 23,
+    "information": 6,
+    "idea": 1,
+    "event": 1
+  },
+  "confusion": [
+    {
+      "expected": "event",
+      "actual": "event",
+      "count": 1
+    },
+    {
+      "expected": "idea",
+      "actual": "idea",
+      "count": 1
+    },
+    {
+      "expected": "information",
+      "actual": "information",
+      "count": 6
+    },
+    {
+      "expected": "task",
+      "actual": "task",
+      "count": 23
+    }
+  ],
+  "calendarReadyEvents": 0,
+  "clarificationCases": 2,
+  "perLocale": {
+    "en": {
+      "cases": 17,
+      "passed": 17
+    },
+    "fr": {
+      "cases": 6,
+      "passed": 6
+    },
+    "ru": {
+      "cases": 7,
+      "passed": 7
+    }
+  },
+  "unsafeCalendarCases": 0,
+  "p50Milliseconds": 0.144,
+  "p95Milliseconds": 0.497,
+  "cases": [
+    {
+      "id": "en-action-exact",
+      "locale": "en",
+      "text": "maybe find ai course",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "maybe find ai course",
+            "start": 0,
+            "end": 20,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 163.549
+    },
+    {
+      "id": "en-action-find",
+      "locale": "en",
+      "text": "find an AI course",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "find an AI course",
+            "start": 0,
+            "end": 17,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.272
+    },
+    {
+      "id": "en-action-please",
+      "locale": "en",
+      "text": "please find an AI course",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "please find an AI course",
+            "start": 0,
+            "end": 24,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.1
+    },
+    {
+      "id": "en-action-need",
+      "locale": "en",
+      "text": "I need to find an AI course",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "I need to find an AI course",
+            "start": 0,
+            "end": 27,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.154
+    },
+    {
+      "id": "en-action-perhaps",
+      "locale": "en",
+      "text": "perhaps research AI courses",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "perhaps research AI courses",
+            "start": 0,
+            "end": 27,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.14
+    },
+    {
+      "id": "en-action-buy",
+      "locale": "en",
+      "text": "maybe buy a notebook",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "maybe buy a notebook",
+            "start": 0,
+            "end": 20,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.144
+    },
+    {
+      "id": "en-action-could",
+      "locale": "en",
+      "text": "I could compare AI courses",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "I could compare AI courses",
+            "start": 0,
+            "end": 26,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.149
+    },
+    {
+      "id": "en-action-learn",
+      "locale": "en",
+      "text": "someday learn Python",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "someday learn Python",
+            "start": 0,
+            "end": 20,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.133
+    },
+    {
+      "id": "fr-action-maybe",
+      "locale": "fr",
+      "text": "peut-être trouver un cours IA",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "peut-être trouver un cours IA",
+            "start": 0,
+            "end": 29,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.099
+    },
+    {
+      "id": "fr-action-find",
+      "locale": "fr",
+      "text": "trouver un cours IA",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "trouver un cours IA",
+            "start": 0,
+            "end": 19,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.106
+    },
+    {
+      "id": "fr-action-could",
+      "locale": "fr",
+      "text": "je pourrais chercher un cours IA",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "je pourrais chercher un cours IA",
+            "start": 0,
+            "end": 32,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.146
+    },
+    {
+      "id": "fr-action-read",
+      "locale": "fr",
+      "text": "peut-être lire ce livre",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "peut-être lire ce livre",
+            "start": 0,
+            "end": 23,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.1
+    },
+    {
+      "id": "fr-action-learn",
+      "locale": "fr",
+      "text": "apprendre Python",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "apprendre Python",
+            "start": 0,
+            "end": 16,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.135
+    },
+    {
+      "id": "ru-action-maybe",
+      "locale": "ru",
+      "text": "может найти курс по ИИ",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "может найти курс по ИИ",
+            "start": 0,
+            "end": 22,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.18
+    },
+    {
+      "id": "ru-action-find",
+      "locale": "ru",
+      "text": "найти курс по ИИ",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "найти курс по ИИ",
+            "start": 0,
+            "end": 16,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.122
+    },
+    {
+      "id": "ru-action-possibly",
+      "locale": "ru",
+      "text": "возможно изучить Python",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "возможно изучить Python",
+            "start": 0,
+            "end": 23,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.151
+    },
+    {
+      "id": "ru-action-someday",
+      "locale": "ru",
+      "text": "когда-нибудь пройти курс",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "когда-нибудь пройти курс",
+            "start": 0,
+            "end": 24,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.114
+    },
+    {
+      "id": "ru-action-buy",
+      "locale": "ru",
+      "text": "может купить блокнот",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ]
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "может купить блокнот",
+            "start": 0,
+            "end": 20,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.21
+    },
+    {
+      "id": "ru-action-check",
+      "locale": "ru",
+      "text": "проверить расписание курсов",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "проверить расписание курсов",
+            "start": 0,
+            "end": 27,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.107
+    },
+    {
+      "id": "en-info",
+      "locale": "en",
+      "text": "AI course information",
+      "expectedKinds": [
+        "information"
+      ],
+      "expected": {
+        "kinds": [
+          "information"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "information",
+            "title": "AI course information",
+            "start": 0,
+            "end": 21,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.497
+    },
+    {
+      "id": "en-negative",
+      "locale": "en",
+      "text": "do not find a course",
+      "expectedKinds": [
+        "information"
+      ],
+      "expected": {
+        "kinds": [
+          "information"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "information",
+            "title": "do not find a course",
+            "start": 0,
+            "end": 20,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.147
+    },
+    {
+      "id": "en-maybe-negative",
+      "locale": "en",
+      "text": "maybe do not buy this",
+      "expectedKinds": [
+        "information"
+      ],
+      "expected": {
+        "kinds": [
+          "information"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "information",
+            "title": "maybe do not buy this",
+            "start": 0,
+            "end": 21,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.148
+    },
+    {
+      "id": "en-noun",
+      "locale": "en",
+      "text": "my course notes",
+      "expectedKinds": [
+        "information"
+      ],
+      "expected": {
+        "kinds": [
+          "information"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "information",
+            "title": "my course notes",
+            "start": 0,
+            "end": 15,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.139
+    },
+    {
+      "id": "en-idea",
+      "locale": "en",
+      "text": "idea: build an AI course",
+      "expectedKinds": [
+        "idea"
+      ],
+      "expected": {
+        "kinds": [
+          "idea"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "idea",
+            "title": "idea: build an AI course",
+            "start": 0,
+            "end": 24,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.09
+    },
+    {
+      "id": "fr-info",
+      "locale": "fr",
+      "text": "Les notes du cours IA",
+      "expectedKinds": [
+        "information"
+      ],
+      "expected": {
+        "kinds": [
+          "information"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "information",
+            "title": "Les notes du cours IA",
+            "start": 0,
+            "end": 21,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.108
+    },
+    {
+      "id": "ru-info",
+      "locale": "ru",
+      "text": "Материалы курса по ИИ",
+      "expectedKinds": [
+        "information"
+      ],
+      "expected": {
+        "kinds": [
+          "information"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "information",
+            "title": "Материалы курса по ИИ",
+            "start": 0,
+            "end": 21,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.108
+    },
+    {
+      "id": "en-event-known-clock",
+      "locale": "en",
+      "text": "dentist at 16",
+      "expectedKinds": [
+        "event"
+      ],
+      "expected": {
+        "kinds": [
+          "event"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [
+          "missing_date"
+        ],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "event",
+            "title": "dentist at 16",
+            "start": 0,
+            "end": 13,
+            "date": null,
+            "time": "16:00",
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": [
+          {
+            "start": 0,
+            "end": 13,
+            "text": "dentist at 16",
+            "reason": "missing_date"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.259
+    },
+    {
+      "id": "en-timed-action",
+      "locale": "en",
+      "text": "maybe find an AI course at 16",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [
+          "missing_date"
+        ],
+        "kindChoices": [
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "maybe find an AI course at 16",
+            "start": 0,
+            "end": 29,
+            "date": null,
+            "time": "16:00",
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": [
+          {
+            "start": 0,
+            "end": 29,
+            "text": "maybe find an AI course at 16",
+            "reason": "missing_date"
+          }
+        ]
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.144
+    },
+    {
+      "id": "en-dated-action",
+      "locale": "en",
+      "text": "maybe find an AI course tomorrow",
+      "expectedKinds": [
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task"
+        ],
+        "calendar": [
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          []
+        ],
+        "plannedFor": "2026-10-29"
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "maybe find an AI course tomorrow",
+            "start": 0,
+            "end": 32,
+            "date": "2026-10-29",
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": "2026-10-29",
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true,
+        "plannedFor": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.367
+    },
+    {
+      "id": "en-multi-choice",
+      "locale": "en",
+      "text": "maybe find ai course; buy milk",
+      "expectedKinds": [
+        "task",
+        "task"
+      ],
+      "expected": {
+        "kinds": [
+          "task",
+          "task"
+        ],
+        "calendar": [
+          false,
+          false
+        ],
+        "doubts": [],
+        "kindChoices": [
+          [
+            "task_deadline",
+            "task_unscheduled",
+            "idea"
+          ],
+          []
+        ]
+      },
+      "actual": {
+        "schemaVersion": 1,
+        "engine": "local-rules-v1",
+        "records": [
+          {
+            "baseKind": "task",
+            "title": "maybe find ai course",
+            "start": 0,
+            "end": 20,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": [
+              "task_deadline",
+              "task_unscheduled",
+              "idea"
+            ]
+          },
+          {
+            "baseKind": "task",
+            "title": "buy milk",
+            "start": 22,
+            "end": 30,
+            "date": null,
+            "time": null,
+            "startAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "calendarEligible": false,
+            "kindChoices": []
+          }
+        ],
+        "doubts": []
+      },
+      "checks": {
+        "entities": true,
+        "calendar": true,
+        "clarification": true,
+        "kindChoices": true
+      },
+      "passed": true,
+      "error": null,
+      "milliseconds": 0.19
+    }
+  ]
+}

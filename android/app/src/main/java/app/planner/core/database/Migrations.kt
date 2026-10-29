@@ -19,3 +19,11 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_outbox_noteId_path ON outbox(noteId, path)")
     }
 }
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE notes ADD COLUMN interpretationHintsJson TEXT NOT NULL DEFAULT '{}'")
+        // Replay history once to recover changes discarded by pre-inbox clients.
+        db.execSQL("UPDATE meta SET value = '0' WHERE `key` = 'cursor'")
+    }
+}

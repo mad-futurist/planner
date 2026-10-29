@@ -17,8 +17,11 @@ def strict_schema(model) -> dict:
                     if name in properties:
                         # Open-ended dictionaries are not supported by strict output. Preserve
                         # arbitrary registered field primitives with a bounded key/value wire list.
+                        key = {"type": "string"}
+                        if name == "evidence":
+                            key["enum"] = ["startAt", "endAt", "dueAt", "dueDate", "plannedFor", "remindAt"]
                         properties[name] = {"type": "array", "maxItems": 32 if name == "fields" else 10, "items": {
-                            "type": "object", "properties": {"key": {"type": "string"}, "value": {"type": "string", "description": "JSON-encoded value" if name == "fields" else "Exact original-text quote"}},
+                            "type": "object", "properties": {"key": key, "value": {"type": "string", "description": "JSON-encoded value, including double quotes around strings" if name == "fields" else "Exact original-text quote supporting this specific temporal field"}},
                             "required": ["key", "value"], "additionalProperties": False}}
                 node["required"] = list(properties)
                 node["additionalProperties"] = False

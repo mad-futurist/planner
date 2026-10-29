@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-28",
+  "device": "Medium_Phone_API_37.0, emulator-5554",
+  "appPid": 1787,
+  "userReportedWindow": {
+    "startDeviceLogTime": "13:08:19.187",
+    "endDeviceLogTime": "13:08:28.344",
+    "appCpuPercent": 72,
+    "appUserPercent": 15,
+    "appKernelPercent": 57,
+    "totalCpuPercent": 99
+  },
+  "observedAnrEventsDeviceLogTime": [
+    {"time": "13:08:00.710", "process": "com.android.systemui", "reason": "SystemUIService execution timeout"},
+    {"time": "13:08:23.547", "process": "com.google.android.inputmethod.latin", "reason": "Process startup timeout"},
+    {"time": "13:08:29.540", "process": "com.google.android.as", "reason": "Process startup timeout"},
+    {"time": "13:08:45.521", "process": "com.android.systemui", "reason": "Edge-swipe input timeout"},
+    {"time": "13:08:51.899", "process": "com.android.systemui", "reason": "StatusBar input timeout"}
+  ],
+  "laterIdleThreadSamples": {
+    "command": "top -H -b -n 3 -d 1 -p 1787",
+    "mainThreadCpuPercent": [0, 1, 1],
+    "otherPlannerThreadsCpuPercentInTheseSamples": 0,
+    "residentMemoryApproxMiB": 239,
+    "virtualCpuCount": 3,
+    "limitation": "Short later idle sample, not a reproduction of the reported spike or representative performance acceptance"
+  },
+  "latestAnrInspection": "dumpsys activity lastanr reported the System UI StatusBar input timeout",
+  "rootCauseOfReportedAppCpuSpike": "Not established; concurrent system timeouts are evidence of system contention, not proof of which component caused it",
+  "navigationFileSplitIsCpuFix": false,
+  "notesOrCredentialsIncluded": false
+}

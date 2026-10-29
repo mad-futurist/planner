@@ -3,7 +3,6 @@ package app.planner.core.designsystem
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.*
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -16,7 +15,7 @@ import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
-import app.planner.core.model.Record
+import app.planner.domain.model.Record
 import com.google.gson.JsonParser
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -93,7 +92,7 @@ fun taskDateLabel(record: Record, today: LocalDate=LocalDate.now()): String {
 
 @Composable fun TaskCard(record: Record, complete: () -> Unit, open: () -> Unit, compact: Boolean=false) {
     val color=if(record.pinned) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainerLow
-    PlannerCard(Modifier.padding(bottom=6.dp),color=color,endColor=if(record.pinned) color.copy(alpha=.75f) else color,onClick=open) {
+    PlannerCard(Modifier.padding(bottom=6.dp).testTag("task-${record.id}"),color=color,endColor=if(record.pinned) color.copy(alpha=.75f) else color,onClick=open) {
         Row(Modifier.fillMaxWidth().heightIn(min=if(compact) 56.dp else 66.dp).padding(start=2.dp,end=2.dp),verticalAlignment=Alignment.CenterVertically) {
             IconButton(complete,Modifier.size(48.dp).semantics { contentDescription="${if(record.state=="completed") "Restore" else "Complete"} ${record.title}" }) {
                 if(record.pinned && compact && record.state!="completed") PlannerIcon(Glyph.Star,Modifier.size(22.dp),Color(0xFFC08A0B),filled=true)
@@ -119,7 +118,7 @@ fun taskDateLabel(record: Record, today: LocalDate=LocalDate.now()): String {
 @Composable fun ScheduleCard(record: Record, date: LocalDate, open: () -> Unit) {
     val ongoing=record.startAt?.let { Instant.parse(it).atZone(ZoneId.systemDefault()).toLocalDate()<date }==true
     val line=MaterialTheme.colorScheme.primaryContainer
-    Row(Modifier.fillMaxWidth().padding(start=17.dp,bottom=6.dp).drawBehind { drawLine(line,androidx.compose.ui.geometry.Offset(0f,0f),androidx.compose.ui.geometry.Offset(0f,size.height+8.dp.toPx()),1.dp.toPx()) },verticalAlignment=Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().testTag("schedule-${record.id}").padding(start=17.dp,bottom=6.dp).drawBehind { drawLine(line,androidx.compose.ui.geometry.Offset(0f,0f),androidx.compose.ui.geometry.Offset(0f,size.height+8.dp.toPx()),1.dp.toPx()) },verticalAlignment=Alignment.CenterVertically) {
         Text(if(ongoing) "Ongoing" else recordClock(record.startAt),Modifier.width(66.dp).padding(start=8.dp),style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
         PlannerCard(Modifier.weight(1f),onClick=open) {
             Row(Modifier.fillMaxWidth().heightIn(min=66.dp),verticalAlignment=Alignment.CenterVertically) {
@@ -142,7 +141,7 @@ fun taskDateLabel(record: Record, today: LocalDate=LocalDate.now()): String {
 }
 
 @Composable fun IdeaCard(record: Record, open: () -> Unit, develop: () -> Unit, later: (() -> Unit)?=null, convert: (() -> Unit)?=null) {
-    PlannerCard(color=MaterialTheme.colorScheme.tertiaryContainer,onClick=open) {
+    PlannerCard(modifier=Modifier.testTag("idea-${record.id}"),color=MaterialTheme.colorScheme.tertiaryContainer,onClick=open) {
         Box(Modifier.fillMaxWidth().heightIn(min=148.dp)) {
             IdeaStairs(Modifier.align(Alignment.BottomStart).width(76.dp).height(146.dp))
             Column(Modifier.padding(start=87.dp,end=14.dp,top=16.dp,bottom=14.dp)) {
@@ -160,19 +159,3 @@ fun taskDateLabel(record: Record, today: LocalDate=LocalDate.now()): String {
 }
 
 @Composable fun EmptyState(text: String) { Text(text,Modifier.padding(start=48.dp,top=6.dp,bottom=14.dp),style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant) }
-
-data class Destination(val route: String,val label: String,val icon: Glyph)
-val PrimaryDestinations=listOf(Destination("today","Today",Glyph.Home),Destination("calendar","Calendar",Glyph.Calendar),Destination("tasks","Tasks",Glyph.Tasks),Destination("ideas","Ideas",Glyph.Bulb),Destination("profile","Profile",Glyph.User))
-@Composable fun PlannerBottomNavigation(route: String?, navigate: (String)->Unit) {
-    Surface(color=MaterialTheme.colorScheme.surfaceContainerLow,shape=RoundedCornerShape(24.dp),shadowElevation=1.dp,modifier=Modifier.fillMaxWidth()) {
-        Row(Modifier.padding(5.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
-            PrimaryDestinations.forEach { destination ->
-                val selected=route==destination.route
-                Column(Modifier.weight(1f).clip(RoundedCornerShape(19.dp)).background(if(selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent).selectable(selected=selected,role=Role.Tab,onClick={navigate(destination.route)}).heightIn(min=58.dp).padding(vertical=8.dp).semantics { contentDescription="Navigate ${destination.label}" },horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(3.dp)) {
-                    PlannerIcon(destination.icon,Modifier.size(22.dp),if(selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(destination.label,style=MaterialTheme.typography.labelSmall,color=if(selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,maxLines=1)
-                }
-            }
-        }
-    }
-}

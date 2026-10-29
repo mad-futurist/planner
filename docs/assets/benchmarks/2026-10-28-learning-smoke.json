@@ -1,0 +1,729 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-28T10:56:36.848488+00:00",
+  "scope": "Synthetic server/API/real-worker smoke; Android UI and external account providers are not exercised",
+  "checks": [
+    {
+      "name": "en-call-not-appointment",
+      "passed": true,
+      "processingStatus": "organized",
+      "records": [
+        {
+          "id": "e7b40b61-8410-5585-a704-a28aaf449e25",
+          "sourceNoteId": "4f0f0728-a541-45e8-97e4-c68a744f60e3",
+          "baseKind": "task",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "Call the doctor",
+          "fields": {},
+          "startAt": null,
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": "2026-10-28",
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:02.030Z",
+          "updatedAt": "2026-10-28T10:57:02.032Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ],
+      "interpretation": {
+        "id": "b9434496-751b-4492-8399-a67faf15c12c",
+        "noteId": "4f0f0728-a541-45e8-97e4-c68a744f60e3",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "task",
+              "customTypeId": null,
+              "title": "Call the doctor",
+              "fields": {},
+              "startAt": null,
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": "2026-10-28",
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "plannedFor": "tomorrow"
+              }
+            }
+          ],
+          "ambiguities": [],
+          "riskLevel": "validated_low"
+        },
+        "validationResult": "valid",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T10:57:02.018Z"
+      }
+    },
+    {
+      "name": "en-event-explicit",
+      "passed": true,
+      "processingStatus": "organized",
+      "records": [
+        {
+          "id": "41a1e585-8e77-5fb9-aa3c-05b92de9dc8e",
+          "sourceNoteId": "13ae0e04-db8d-4533-ba77-9ac217fbc867",
+          "baseKind": "event",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "Dentist appointment",
+          "fields": {},
+          "startAt": "2026-10-28T15:00:00.000Z",
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:01.952Z",
+          "updatedAt": "2026-10-28T10:57:01.959Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ],
+      "interpretation": {
+        "id": "33e760f9-f8ec-4476-a9bc-f6ea57cac9ed",
+        "noteId": "13ae0e04-db8d-4533-ba77-9ac217fbc867",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "event",
+              "customTypeId": null,
+              "title": "Dentist appointment",
+              "fields": {},
+              "startAt": "2026-10-28T15:00:00.000Z",
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "startAt": "Dentist tomorrow at 16:00"
+              }
+            }
+          ],
+          "ambiguities": [],
+          "riskLevel": "validated_low"
+        },
+        "validationResult": "valid",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T10:57:01.904Z"
+      }
+    },
+    {
+      "name": "fr-event-explicit",
+      "passed": true,
+      "processingStatus": "organized",
+      "records": [
+        {
+          "id": "2beaea89-7cdc-5558-a974-a72fda0b0530",
+          "sourceNoteId": "059da410-ae02-48ad-a75b-c195a11fe9c5",
+          "baseKind": "event",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "Dentist appointment",
+          "fields": {},
+          "startAt": "2026-10-28T15:00:00.000Z",
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:03.802Z",
+          "updatedAt": "2026-10-28T10:57:03.807Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ],
+      "interpretation": {
+        "id": "68095989-0ffb-4199-b820-2681d60849c2",
+        "noteId": "059da410-ae02-48ad-a75b-c195a11fe9c5",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "event",
+              "customTypeId": null,
+              "title": "Dentist appointment",
+              "fields": {},
+              "startAt": "2026-10-28T15:00:00.000Z",
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "startAt": "demain à 16h00"
+              }
+            }
+          ],
+          "ambiguities": [],
+          "riskLevel": "validated_low"
+        },
+        "validationResult": "valid",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T10:57:03.794Z"
+      }
+    },
+    {
+      "name": "ru-event-explicit",
+      "passed": true,
+      "processingStatus": "organized",
+      "records": [
+        {
+          "id": "4280ac0e-cf18-5e6a-afe1-b1d982d2fd59",
+          "sourceNoteId": "f27b6dbf-6580-4c6b-943e-406c0cdeb3af",
+          "baseKind": "event",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "Стоматолог",
+          "fields": {},
+          "startAt": "2026-10-28T15:00:00.000Z",
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:04.199Z",
+          "updatedAt": "2026-10-28T10:57:04.200Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ],
+      "interpretation": {
+        "id": "200cf93e-4ce3-4eb0-8186-febbebbadb1a",
+        "noteId": "f27b6dbf-6580-4c6b-943e-406c0cdeb3af",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "event",
+              "customTypeId": null,
+              "title": "Стоматолог",
+              "fields": {},
+              "startAt": "2026-10-28T15:00:00.000Z",
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "startAt": "Стоматолог завтра в 16:00"
+              }
+            }
+          ],
+          "ambiguities": [],
+          "riskLevel": "validated_low"
+        },
+        "validationResult": "valid",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T10:57:04.195Z"
+      }
+    },
+    {
+      "name": "en-dentist-16",
+      "passed": true,
+      "processingStatus": "review",
+      "records": [],
+      "interpretation": {
+        "id": "2a3146d5-acf3-4d4f-9245-3037cd66ef70",
+        "noteId": "6ff60b67-2589-4df8-8750-a02be954a0ca",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "event",
+              "customTypeId": null,
+              "title": "dentist 16",
+              "fields": {},
+              "startAt": null,
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {}
+            }
+          ],
+          "ambiguities": [
+            "The expression \"dentist 16\" is ambiguous regarding whether '16' refers to a time or a day. No explicit date or time could be determined from the note.",
+            "Capture requires explicit date/time clarification",
+            "Event has no confirmed start time"
+          ],
+          "riskLevel": "review_required"
+        },
+        "validationResult": "review",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T10:57:06.020Z"
+      }
+    },
+    {
+      "name": "en-idea",
+      "passed": true,
+      "processingStatus": "organized",
+      "records": [
+        {
+          "id": "9601ca45-5062-5281-bb73-726ebeba3dac",
+          "sourceNoteId": "823d011c-49ad-440c-bd4e-7f1ca8f52d65",
+          "baseKind": "idea",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "build a reading garden",
+          "fields": {},
+          "startAt": null,
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:05.838Z",
+          "updatedAt": "2026-10-28T10:57:05.846Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ],
+      "interpretation": {
+        "id": "7ed13d86-5b07-4937-9a59-2600810b67bc",
+        "noteId": "823d011c-49ad-440c-bd4e-7f1ca8f52d65",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "idea",
+              "customTypeId": null,
+              "title": "build a reading garden",
+              "fields": {},
+              "startAt": null,
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {}
+            }
+          ],
+          "ambiguities": [],
+          "riskLevel": "validated_low"
+        },
+        "validationResult": "valid",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T10:57:05.834Z"
+      }
+    },
+    {
+      "name": "en-multi",
+      "passed": true,
+      "processingStatus": "organized",
+      "records": [
+        {
+          "id": "40228a36-d242-59af-8ab7-22c9d11d23a8",
+          "sourceNoteId": "596e579a-0e1b-48f4-b4ef-b8604da3610f",
+          "baseKind": "event",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "Meet Nicolas",
+          "fields": {},
+          "startAt": "2026-10-28T13:00:00.000Z",
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:07.996Z",
+          "updatedAt": "2026-10-28T10:57:07.997Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        },
+        {
+          "id": "8b926db4-2351-52f2-91d0-7ba4794bc708",
+          "sourceNoteId": "596e579a-0e1b-48f4-b4ef-b8604da3610f",
+          "baseKind": "task",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "Prepare questions",
+          "fields": {},
+          "startAt": null,
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": "2026-10-27",
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:08.007Z",
+          "updatedAt": "2026-10-28T10:57:08.010Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ],
+      "interpretation": {
+        "id": "1dc8b0e8-dfcf-4064-a544-eacf6ab456b2",
+        "noteId": "596e579a-0e1b-48f4-b4ef-b8604da3610f",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "event",
+              "customTypeId": null,
+              "title": "Meet Nicolas",
+              "fields": {},
+              "startAt": "2026-10-28T13:00:00.000Z",
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "startAt": "Meet Nicolas tomorrow at 14:00"
+              }
+            },
+            {
+              "baseKind": "task",
+              "customTypeId": null,
+              "title": "Prepare questions",
+              "fields": {},
+              "startAt": null,
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": "2026-10-27",
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "dueDate": "prepare questions by today"
+              }
+            }
+          ],
+          "ambiguities": [],
+          "riskLevel": "validated_low"
+        },
+        "validationResult": "valid",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T10:57:07.992Z"
+      }
+    },
+    {
+      "name": "en-confirm-today-16",
+      "passed": true,
+      "processingStatus": "organized",
+      "records": [
+        {
+          "id": "654df317-08cd-539f-8d71-a48a589a9dfc",
+          "sourceNoteId": "43053fe5-4695-4218-9426-eae7a21520e6",
+          "baseKind": "event",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "Dentist appointment",
+          "fields": {},
+          "startAt": "2026-10-27T15:00:00.000Z",
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:07.556Z",
+          "updatedAt": "2026-10-28T10:57:07.558Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ],
+      "interpretation": {
+        "id": "354e7205-7e76-4cd8-90af-3bcda0ac6faa",
+        "noteId": "43053fe5-4695-4218-9426-eae7a21520e6",
+        "inputVersion": 1,
+        "schemaVersion": 1,
+        "modelVersion": "gpt-4.1-mini",
+        "proposedData": {
+          "schemaVersion": 1,
+          "records": [
+            {
+              "baseKind": "event",
+              "customTypeId": null,
+              "title": "Dentist appointment",
+              "fields": {},
+              "startAt": "2026-10-27T15:00:00.000Z",
+              "endAt": null,
+              "dueAt": null,
+              "dueDate": null,
+              "plannedFor": null,
+              "remindAt": null,
+              "timezone": "Europe/Paris",
+              "evidence": {
+                "startAt": "dentist 16"
+              }
+            }
+          ],
+          "ambiguities": [],
+          "riskLevel": "validated_low"
+        },
+        "validationResult": "valid",
+        "correctedByUser": false,
+        "createdAt": "2026-10-28T10:57:07.533Z"
+      }
+    },
+    {
+      "name": "raw-only-does-not-create-event",
+      "passed": true
+    },
+    {
+      "name": "complete-and-undo",
+      "passed": true
+    },
+    {
+      "name": "semantic-user-edit-retains-original",
+      "passed": true
+    },
+    {
+      "name": "real-idea-development",
+      "passed": true,
+      "job": {
+        "id": "0d361678-ae43-4292-883c-5a844fa48d98",
+        "noteId": "823d011c-49ad-440c-bd4e-7f1ca8f52d65",
+        "recordId": "9601ca45-5062-5281-bb73-726ebeba3dac",
+        "inputVersion": 1,
+        "recordVersion": 1,
+        "kind": "develop",
+        "status": "complete",
+        "attempts": 1,
+        "lastError": null,
+        "result": {
+          "steps": [
+            "Design the layout of the reading garden including seating areas and plant placement",
+            "Select plants and materials suitable for the local climate and garden environment",
+            "Prepare the site by clearing and leveling the ground",
+            "Install pathways, seating, and planting beds according to the design",
+            "Plant selected vegetation and set up any additional features like lighting or shelters"
+          ]
+        }
+      }
+    },
+    {
+      "name": "registry-type-extraction",
+      "passed": true,
+      "records": [
+        {
+          "id": "e86cc38a-7dbd-575f-b9d2-e6c83c85c108",
+          "sourceNoteId": "20a49de4-b689-46ad-abe2-47482d49717e",
+          "baseKind": "task",
+          "customTypeId": "5b4c55b7-97fc-49d6-9d5d-c3351260e5bc",
+          "typeSchemaVersion": 1,
+          "title": "Read chapter 2 of the book Dune",
+          "fields": {
+            "book": "Dune"
+          },
+          "startAt": null,
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:13.706Z",
+          "updatedAt": "2026-10-28T10:57:13.712Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ],
+      "processingStatus": "organized"
+    },
+    {
+      "name": "registry-version-retention",
+      "passed": true
+    },
+    {
+      "name": "approved-rule-extraction",
+      "passed": true,
+      "records": [
+        {
+          "id": "04a1eb2a-1862-5d15-9e79-28439ba635c7",
+          "sourceNoteId": "af4b5151-79e4-4076-a535-2f70ffe90579",
+          "baseKind": "information",
+          "customTypeId": null,
+          "typeSchemaVersion": null,
+          "title": "useful article about reading gardens",
+          "fields": {},
+          "startAt": null,
+          "endAt": null,
+          "dueAt": null,
+          "dueDate": null,
+          "plannedFor": null,
+          "remindAt": null,
+          "timezone": "Europe/Paris",
+          "recurrenceRule": null,
+          "state": "pending",
+          "completedAt": null,
+          "pinned": false,
+          "deferredUntil": null,
+          "createdAt": "2026-10-28T10:57:16.574Z",
+          "updatedAt": "2026-10-28T10:57:16.575Z",
+          "interpretationVersion": 1,
+          "isUserConfirmed": false,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "name": "explicit-ai-preview-requires-review",
+      "passed": true,
+      "preview": {
+        "schemaVersion": 1,
+        "engine": "provider:gpt-4.1-mini",
+        "records": [
+          {
+            "baseKind": "event",
+            "customTypeId": null,
+            "title": "Dentist appointment",
+            "fields": {},
+            "startAt": null,
+            "endAt": null,
+            "dueAt": null,
+            "dueDate": null,
+            "plannedFor": null,
+            "remindAt": null,
+            "timezone": "Europe/Paris",
+            "evidence": {}
+          }
+        ],
+        "reviewReasons": [
+          "Unclear whether '16' refers to a day of the month or a time of day for the dentist appointment.",
+          "Capture requires explicit date/time clarification",
+          "Event has no confirmed start time"
+        ],
+        "needsReview": true,
+        "previewOnly": true
+      }
+    },
+    {
+      "name": "incremental-feed",
+      "passed": true
+    },
+    {
+      "name": "passive-dataset-journal",
+      "passed": true,
+      "summary": {
+        "schemaVersion": 1,
+        "policyVersion": "learning-v1",
+        "contributionEnabled": false,
+        "consentUpdatedAt": null,
+        "examples": {
+          "ai_preview": 1,
+          "capture": 11,
+          "development": 1,
+          "interpretation": 10,
+          "record_edit": 1,
+          "task_state": 2
+        },
+        "total": 26
+      }
+    },
+    {
+      "name": "synthetic-dataset-survives-account-cleanup",
+      "passed": true,
+      "examplesRetained": 26
+    }
+  ],
+  "cleanup": true,
+  "diagnostics": {
+    "jobs": {
+      "complete": 11
+    },
+    "oldestQueuedAt": null,
+    "aiRequestsToday": 12,
+    "aiDailyRequestLimit": 100
+  },
+  "sessionRevoked": true,
+  "passed": 19,
+  "executed": 19,
+  "success": true
+}

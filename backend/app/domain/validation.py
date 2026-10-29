@@ -3,7 +3,8 @@ from datetime import date, datetime, timedelta
 from urllib.parse import urlparse
 from uuid import UUID
 from zoneinfo import ZoneInfo
-from app.schemas import Extraction, RecordDTO, TypeDTO, instant
+from app.domain.contracts import ExtractionData, RecordData, TypeData
+from app.domain.time import instant
 
 WEEKDAYS = [
     ("monday", "lundi", "понедельник"), ("tuesday", "mardi", "вторник"),
@@ -29,7 +30,7 @@ def resolve_day(evidence: str, reference: date) -> date | None:
     return None
 
 
-def validate_fields(record: RecordDTO, definition: TypeDTO | None):
+def validate_fields(record: RecordData, definition: TypeData | None):
     if definition is None:
         if record.customTypeId:
             raise ValueError("Unknown type version")
@@ -64,8 +65,12 @@ def validate_fields(record: RecordDTO, definition: TypeDTO | None):
         if kind == "quantity" and spec.unit and value["unit"] != spec.unit: raise ValueError("Unexpected quantity unit")
 
 
-def semantic_review(extraction: Extraction, content: str, created_at: str, timezone: str) -> list[str]:
+def semantic_review(extraction: ExtractionData, content: str, created_at: str, timezone: str, hints: dict | None = None) -> list[str]:
+    from app.domain.capture_preview import preview, valid_hints
+    clarifications = valid_hints(content, hints)
     reasons = list(extraction.ambiguities)
+    if preview(content, created_at, timezone, hints)["doubts"]:
+        reasons.append("Capture requires explicit date/time clarification")
     reference = datetime.fromisoformat(created_at.replace("Z", "+00:00")).astimezone(ZoneInfo(timezone)).date()
     for proposal in extraction.records:
         if proposal.baseKind == "event" and not proposal.startAt:
@@ -78,6 +83,7 @@ def semantic_review(extraction: Extraction, content: str, created_at: str, timez
             if not evidence or evidence.casefold() not in content.casefold():
                 reasons.append("Temporal field lacks original-text evidence")
                 continue
+            approved = [h for h in clarifications if h["text"].casefold() in evidence.casefold() and h["kind"] != "literal" and field in {"startAt", "dueAt", "dueDate", "plannedFor"}]
             if field.endswith("At"):
                 clocks = set()
                 for match in re.finditer(r"\b(\d{1,2})(?:[:h](\d{2}))?\s*(am|pm|h\b|heures?\b|час\w*)?(?![\d:h]|\.\d)", evidence.casefold()):
@@ -96,6 +102,8 @@ def semantic_review(extraction: Extraction, content: str, created_at: str, timez
                     if hour < 24 and minute < 60:
                         clocks.add((hour, minute))
                 local = datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(ZoneInfo(timezone))
+                for hint in approved:
+                    if hint.get("time"): clocks.add(tuple(map(int, hint["time"].split(":"))))
                 if not clocks:
                     reasons.append("A precise time was not supplied")
                 elif (local.hour, local.minute) not in clocks:
@@ -103,6 +111,8 @@ def semantic_review(extraction: Extraction, content: str, created_at: str, timez
                 if local.replace(fold=0).utcoffset() != local.replace(fold=1).utcoffset():
                     reasons.append("Repeated local time needs explicit confirmation")
             expected = resolve_day(evidence, reference)
+            hint_days = {h["date"] for h in approved if h.get("date")}
+            if len(hint_days) == 1: expected = date.fromisoformat(next(iter(hint_days)))
             actual = value if isinstance(value, date) else datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(ZoneInfo(timezone)).date()
             if expected is None or actual != expected:
                 reasons.append("Date resolution needs review")

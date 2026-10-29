@@ -1,9 +1,16 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
+from sqlalchemy import select
+from datetime import datetime, timedelta, timezone
+from app.persistence.models import ServiceHeartbeat
 from sqlalchemy.exc import IntegrityError
 from app.api.routes import router_for
+from app.api.accounts import router_for as account_router_for
+from app.api.dataset import router_for as dataset_router_for
 from app.config import settings
+from app.domain.errors import ApplicationError
 from app.persistence.database import SessionFactory
 
 
@@ -34,7 +41,22 @@ class BodyLimitMiddleware:
 def create_app(factory=SessionFactory):
     app = FastAPI(title="Planner API", version="1.0.0")
     app.add_middleware(BodyLimitMiddleware)
-    app.include_router(router_for(factory))
+    from app.bootstrap import organizer_dependencies
+    app_factory, organizer, identity = organizer_dependencies(factory)
+    app.include_router(router_for(app_factory, organizer, identity))
+    from app.application.accounts import AccountService
+    from app.infrastructure.gateways import AccountSecurityAdapter
+    app.include_router(account_router_for(app_factory, AccountService(settings, AccountSecurityAdapter(), identity)))
+    from app.application.dataset import DatasetService
+    app.include_router(dataset_router_for(app_factory, DatasetService(), identity))
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(request: Request, error: RequestValidationError):
+        return JSONResponse({"detail": [{"loc": item["loc"], "type": item["type"], "msg": item["msg"]} for item in error.errors()]}, status_code=422)
+
+    @app.exception_handler(ApplicationError)
+    async def application_error(request: Request, error: ApplicationError):
+        return JSONResponse({"detail": error.detail}, status_code=error.status, headers=error.headers)
 
     @app.exception_handler(ValueError)
     async def invalid_data(request: Request, error: ValueError):
@@ -51,6 +73,15 @@ def create_app(factory=SessionFactory):
         except Exception:
             return JSONResponse({"status": "database_unavailable"}, status_code=503)
         return {"status": "ok", "aiConfigured": settings.ai_available}
+
+    @app.get("/ready")
+    def ready():
+        try:
+            since = (datetime.now(timezone.utc) - timedelta(seconds=45)).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+            with factory() as db: worker = db.scalar(select(ServiceHeartbeat).where(ServiceHeartbeat.seen_at >= since).limit(1))
+            if worker is None: return JSONResponse({"status": "worker_unavailable"}, status_code=503)
+        except Exception: return JSONResponse({"status": "database_unavailable"}, status_code=503)
+        return {"status": "ready", "aiConfigured": settings.ai_available}
     return app
 
 

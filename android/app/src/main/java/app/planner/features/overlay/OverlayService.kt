@@ -21,11 +21,11 @@ import app.planner.core.Preferences
 import app.planner.core.CapturePrivacy
 import app.planner.core.designsystem.Glyph
 import app.planner.core.designsystem.Palette
-import app.planner.data.PlannerRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlin.math.abs
 
@@ -34,7 +34,7 @@ class OverlayService : Service() {
     private class CaptureBubble(context: Context) : ImageButton(context) {
         override fun performClick(): Boolean = super.performClick()
     }
-    @Inject lateinit var repository: PlannerRepository
+    @Inject lateinit var captureUseCase: app.planner.application.CaptureUseCase
     @Inject lateinit var preferences: Preferences
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate + CoroutineExceptionHandler { _, _ ->
         Toast.makeText(this, "Floating capture couldn't continue. Reopen Planner to try again.", Toast.LENGTH_LONG).show()
@@ -97,12 +97,12 @@ class OverlayService : Service() {
             overlayAppearance = saved["appearance"] ?: "system"
             positionX = saved["overlayX"]?.toFloatOrNull() ?: 1f; positionY = saved["overlayY"]?.toFloatOrNull() ?: 0.04f
             if (saved["overlay"] == "true" && Settings.canDrawOverlays(this@OverlayService)) {
-                running.value = true; getSystemService(android.app.NotificationManager::class.java).cancel(101); if (unlocked()) showBubble()
+                mutableRunning.value = true; getSystemService(android.app.NotificationManager::class.java).cancel(101); if (unlocked()) showBubble()
             } else stopSelf()
         }
         scope.launch {
             OverlayManager.appVisible.collect { visible ->
-                if (visible) { persistDraft(); removeWindows() } else if (running.value && unlocked()) { overlayAppearance = preferences.values.first()["appearance"] ?: "system"; showBubble() }
+                if (visible) { persistDraft(); removeWindows() } else if (mutableRunning.value && unlocked()) { overlayAppearance = preferences.values.first()["appearance"] ?: "system"; showBubble() }
             }
         }
     }
@@ -204,7 +204,7 @@ class OverlayService : Service() {
             send.isEnabled = false
             scope.launch {
                 try {
-                    repository.capture(capturedText, private, source = "OVERLAY")
+                    captureUseCase.capture(capturedText, private, source = "OVERLAY")
                     Toast.makeText(this@OverlayService, "Saved on this device", Toast.LENGTH_SHORT).show()
                     if (input.text.toString() == capturedText) { input.setText(""); preferences.set("overlayDraft", ""); closePanel() }
                 } catch (e: CancellationException) { throw e } catch (_: Exception) { Toast.makeText(this@OverlayService, "Couldn't save. Your draft is still here.", Toast.LENGTH_LONG).show() } finally { saving = false; send.isEnabled = input.text.isNotBlank() }
@@ -266,7 +266,7 @@ class OverlayService : Service() {
         persistDraft(); removeWindows(); if (unlocked()) showBubble()
     }
     override fun onDestroy() {
-        persistDraft(); removeWindows(); running.value = false
+        persistDraft(); removeWindows(); mutableRunning.value = false
         getSystemService(AppOpsManager::class.java).stopWatchingMode(permissionListener)
         try { unregisterReceiver(screenEvents) } catch (_: IllegalArgumentException) {}
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -274,5 +274,5 @@ class OverlayService : Service() {
         preferences.withLatest { saved -> CaptureNotification.update(appContext, saved["notification"] == "true") }
         scope.cancel(); super.onDestroy()
     }
-    companion object { val running = MutableStateFlow(false) }
+    companion object { private val mutableRunning = MutableStateFlow(false); val running = mutableRunning.asStateFlow() }
 }

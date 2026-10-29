@@ -1,3 +1,5 @@
+import java.net.URI
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -13,13 +15,30 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
+        val backendUrl = providers.environmentVariable("PLANNER_BACKEND_URL").orElse("").get()
+        require(backendUrl.isEmpty() || URI(backendUrl).let { it.scheme == "https" && it.host != null && it.userInfo == null && it.query == null && it.fragment == null }) { "PLANNER_BACKEND_URL must be an HTTPS URL" }
+        buildConfigField("String", "DEFAULT_BACKEND_URL", "\"${backendUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     testOptions { unitTests.isIncludeAndroidResources = true }
+    sourceSets["main"].assets.directories.add("../../backend/app/domain/assets")
+    val releaseKey = providers.environmentVariable("PLANNER_KEYSTORE_PATH").orNull
+    if (!releaseKey.isNullOrBlank()) {
+        signingConfigs.create("operatorRelease") {
+            storeFile = file(releaseKey)
+            storePassword = providers.environmentVariable("PLANNER_KEYSTORE_PASSWORD").get()
+            keyAlias = providers.environmentVariable("PLANNER_KEY_ALIAS").get()
+            keyPassword = providers.environmentVariable("PLANNER_KEY_PASSWORD").get()
+        }
+        buildTypes.getByName("release").signingConfig = signingConfigs.getByName("operatorRelease")
+    }
 }
 kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
+tasks.withType<Test>().configureEach {
+    inputs.files(fileTree("../../backend/app/domain/assets")).withPropertyName("captureInterpreterCorpus")
+}
 ksp { arg("room.schemaLocation", "$projectDir/schemas") }
 dependencies {
     implementation("androidx.core:core-ktx:1.19.1")
@@ -27,6 +46,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
     implementation("androidx.navigation:navigation-compose:2.10.2")
+    implementation("androidx.hilt:hilt-lifecycle-viewmodel-compose:1.4.0")
     implementation("androidx.compose.ui:ui:1.12.1")
     implementation("androidx.compose.ui:ui-tooling-preview:1.12.1")
     implementation("androidx.compose.foundation:foundation:1.12.1")
@@ -47,6 +67,8 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.11.0")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")
     androidTestImplementation("androidx.test:runner:1.7.0")
+    // Compose's transitive Espresso 3.6 calls InputManager.getInstance, removed in API 37.
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.12.1")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.12.1")
 }

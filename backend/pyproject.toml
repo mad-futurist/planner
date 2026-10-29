@@ -2,7 +2,18 @@
 name = "planner-backend"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "pydantic-settings>=2.6", "sqlalchemy>=2.0", "alembic>=1.14", "psycopg[binary]>=3.2", "httpx>=0.28"]
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic-settings>=2.6",
+    "sqlalchemy>=2.0",
+    "alembic>=1.14",
+    "psycopg[binary]>=3.2",
+    "httpx>=0.28",
+    "argon2-cffi>=25.1",
+    "pyjwt[crypto]>=2.10",
+    "email-validator>=2.2",
+]
 
 [dependency-groups]
 dev = ["pytest>=8.3"]

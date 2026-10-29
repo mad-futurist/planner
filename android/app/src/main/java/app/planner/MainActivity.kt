@@ -7,7 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import app.planner.features.PlannerViewModel
 import app.planner.features.PlannerUI
-import app.planner.sync.SyncEngine
+import app.planner.application.CloudGateway
+import app.planner.features.CaptureViewModel
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.Lifecycle
@@ -25,29 +26,35 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val vm: PlannerViewModel by viewModels()
-    @Inject lateinit var sync: SyncEngine
+    @Inject lateinit var sync: CloudGateway
+    private val capture: CaptureViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { PlannerUI(vm) }
-        if (intent.getBooleanExtra("capture", false)) vm.focusCapture.value += 1
+        setContent { PlannerUI(vm, capture) }
+        if (intent.getBooleanExtra("capture", false)) capture.focus()
+        acceptAuthIntent(intent)
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                while (isActive) { sync.run(); vm.refreshDay(); delay(8000) }
+                while (isActive) { sync.sync(); vm.refreshDay(); delay(8000) }
             }
         }
     }
-    override fun onStart() { super.onStart(); OverlayManager.appVisible.value = true }
-    override fun onStop() { OverlayManager.appVisible.value = false; super.onStop() }
+    override fun onStart() { super.onStart(); OverlayManager.setAppVisible(true) }
+    override fun onStop() { OverlayManager.setAppVisible(false); super.onStop() }
     override fun onResume() {
         super.onResume()
         lifecycleScope.launch {
-            try { OverlayManager.reconcile(this@MainActivity, vm.preferences.values.first()) }
-            catch (_: java.io.IOException) { vm.message.value = "Couldn't read capture preferences. In-app capture is available." }
+            try { OverlayManager.reconcile(this@MainActivity, vm.capturePreferences()) }
+            catch (_: java.io.IOException) { vm.report("Couldn't read capture preferences. In-app capture is available.") }
         }
     }
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        if (intent.getBooleanExtra("capture", false)) vm.focusCapture.value += 1
+        if (intent.getBooleanExtra("capture", false)) capture.focus()
+        acceptAuthIntent(intent)
+    }
+    private fun acceptAuthIntent(intent: Intent) {
+        intent.data?.takeIf { it.scheme == "app.planner" && it.host == "auth" }?.let { uri -> intent.data = null; vm.finishGoogle(uri.toString()) }
     }
 }

@@ -36,6 +36,9 @@ google-services.json
 
 # Backend and secrets
 .env
+.env.*
+!.env.example
+!.env.production.example
 .venv/
 __pycache__/
 .pytest_cache/
@@ -43,3 +46,6 @@ __pycache__/
 *.db
 *.sqlite*
 tmp/
+backups/
+*.dump
+*.jsonl

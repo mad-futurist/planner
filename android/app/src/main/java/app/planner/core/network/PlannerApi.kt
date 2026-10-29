@@ -11,4 +11,5 @@ interface PlannerApi {
     @GET suspend fun get(@Url path: String, @Header("Authorization") authorization: String): Response<JsonObject>
     @POST suspend fun post(@Url path: String, @Header("Authorization") authorization: String, @Header("Idempotency-Key") key: String, @Body body: JsonObject): Response<JsonObject>
     @HTTP(method = "PATCH", hasBody = true) suspend fun patch(@Url path: String, @Header("Authorization") authorization: String, @Header("Idempotency-Key") key: String, @Body body: JsonObject): Response<JsonObject>
+    @HTTP(method = "DELETE", hasBody = true) suspend fun delete(@Url path: String, @Header("Authorization") authorization: String, @Body body: JsonObject): Response<JsonObject>
 }

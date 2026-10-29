@@ -2,13 +2,13 @@ package app.planner.core.database
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
-import app.planner.core.model.*
+import app.planner.core.database.entities.*
 
 // Execution day takes priority over a deadline; instant fallback uses the device-day boundary.
 private const val TASK_BUCKET = "CASE WHEN COALESCE(plannedFor,dueDate) IS NOT NULL THEN CASE WHEN COALESCE(plannedFor,dueDate) <= :day THEN 'today' ELSE 'upcoming' END WHEN COALESCE(startAt,dueAt) IS NOT NULL THEN CASE WHEN COALESCE(startAt,dueAt) < :end THEN 'today' ELSE 'upcoming' END ELSE 'someday' END"
 
 @Dao
-interface PlannerDao {
+interface StorageDao {
     @Upsert suspend fun note(note: RawNote)
     @Upsert suspend fun record(record: Record)
     @Upsert suspend fun operation(operation: OutboxOperation)
@@ -21,6 +21,8 @@ interface PlannerDao {
     @Query("SELECT * FROM notes WHERE id = :id") suspend fun noteById(id: String): RawNote?
     @Query("SELECT * FROM records WHERE id = :id") suspend fun recordById(id: String): Record?
     @Query("SELECT * FROM meta WHERE `key` = :key") suspend fun metadata(key: String): Meta?
+    @Query("SELECT * FROM meta WHERE `key` LIKE 'incoming:%' AND `key` > :after ORDER BY `key` LIMIT :limit") suspend fun incoming(after: String = "", limit: Int = 100): List<Meta>
+    @Query("DELETE FROM meta WHERE `key` = :key") suspend fun deleteMeta(key: String)
     @Query("SELECT * FROM meta WHERE `key` IN ('owner','cursor','network','ai','lastSync','lastCaptureMs') OR `key` IN (SELECT 'triage:' || id FROM notes WHERE processingStatus = 'review' ORDER BY createdAt LIMIT 5)") fun observeMeta(): Flow<List<Meta>>
     @Query("SELECT * FROM meta WHERE `key` = :key") fun observeMetaKey(key: String): Flow<Meta?>
     @Query("SELECT * FROM notes ORDER BY createdAt DESC, id DESC LIMIT :limit OFFSET :offset") fun journal(limit: Int, offset: Int = 0): Flow<List<RawNote>>
@@ -72,5 +74,8 @@ interface PlannerDao {
     @Query("DELETE FROM meta") suspend fun clearMeta()
 }
 
-@Database(entities = [RawNote::class, Record::class, OutboxOperation::class, InterpretationHistory::class, UserCorrection::class, TypeDefinition::class, UserRule::class, IdeaSlot::class, Meta::class], version = 3, exportSchema = true)
-abstract class PlannerDatabase : RoomDatabase() { abstract fun dao(): PlannerDao }
+@Database(entities = [RawNote::class, Record::class, OutboxOperation::class, InterpretationHistory::class, UserCorrection::class, TypeDefinition::class, UserRule::class, IdeaSlot::class, Meta::class], version = 4, exportSchema = true)
+abstract class PlannerDatabase : RoomDatabase() {
+    abstract fun storage(): StorageDao
+    fun dao(): PlannerDao = PlannerDao(storage())
+}

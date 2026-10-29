@@ -1,7 +1,7 @@
 package app.planner.data
 
 import app.planner.core.database.*
-import app.planner.core.model.*
+import app.planner.domain.model.*
 import app.planner.domain.*
 import app.planner.core.isoInstant
 import app.planner.core.normalizeInstant
@@ -15,22 +15,53 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.flow.first
 
 @Singleton
-class PlannerRepository @Inject constructor(val database: PlannerDatabase, val gson: Gson) {
+class PlannerRepository @Inject constructor(val database: PlannerDatabase, val gson: Gson, private val scheduler: app.planner.application.SyncRequest = app.planner.application.SyncRequest {}) : app.planner.application.CaptureStore, app.planner.application.OrganizerCommands {
     val dao = database.dao()
     val syncMutex = Mutex()
-    var requestSync: () -> Unit = {}
+    fun requestSync() = scheduler.request()
 
-    suspend fun mergeNote(note: RawNote) {
+    suspend fun mergeNote(note: RawNote, fromAcknowledgment: Boolean = false) = database.withTransaction {
         val existing = dao.noteById(note.id)
-        if (existing?.privacyMode == "LOCAL_ONLY" || dao.pendingForNote(note.id) > 0) return
+        if (existing?.privacyMode == "LOCAL_ONLY") return@withTransaction
+        if (dao.pendingForNote(note.id) > 0) {
+            if (!fromAcknowledgment) deferIncoming("note", note.id, gson.toJsonTree(note).asJsonObject)
+            return@withTransaction
+        }
         if (existing == null || note.version >= existing.version) dao.note(note)
     }
 
-    suspend fun mergeRecord(record: Record) {
-        if (dao.noteById(record.sourceNoteId)?.privacyMode == "LOCAL_ONLY" || dao.pendingForNote(record.sourceNoteId) > 0) return
-        if (!record.isUserConfirmed && dao.confirmedForNote(record.sourceNoteId) > 0) return
+    suspend fun mergeRecord(record: Record) = database.withTransaction {
+        if (dao.noteById(record.sourceNoteId)?.privacyMode == "LOCAL_ONLY") return@withTransaction
+        if (dao.pendingForNote(record.sourceNoteId) > 0) { deferIncoming("record", record.id, gson.toJsonTree(record).asJsonObject); return@withTransaction }
+        if (!record.isUserConfirmed && dao.confirmedForNote(record.sourceNoteId) > 0) return@withTransaction
         val existing = dao.recordById(record.id)
         if (existing == null || record.version >= existing.version) dao.record(record)
+    }
+
+    private suspend fun deferIncoming(kind: String, id: String, value: JsonObject) {
+        val key = "incoming:$kind:$id"
+        val previous = dao.metadata(key)?.let { JsonParser.parseString(it.value).asJsonObject }
+        if (previous == null || value.get("version").asInt >= previous.get("version").asInt) dao.meta(Meta(key, value.toString()))
+    }
+
+    /** Latest remote snapshots survive cursor advancement and process death. */
+    suspend fun reconcileIncoming() = database.withTransaction {
+        val entries = dao.incoming(dao.metadata("inboxScan")?.value.orEmpty())
+        for (entry in entries) {
+            if (entry.key.startsWith("incoming:note:")) {
+                val note = gson.fromJson(entry.value, RawNote::class.java)
+                if (dao.pendingForNote(note.id) > 0) continue
+                mergeNote(note)
+            } else {
+                val record = gson.fromJson(entry.value, Record::class.java)
+                if (dao.pendingForNote(record.sourceNoteId) > 0) continue
+                mergeRecord(record)
+            }
+            // Only replay consumes the inbox. Note processing status can change at the
+            // same input version, so an older POST acknowledgment must not erase it.
+            if (dao.metadata(entry.key)?.value == entry.value) dao.deleteMeta(entry.key)
+        }
+        dao.meta(Meta("inboxScan", if (entries.size < 100) "" else entries.last().key))
     }
 
     suspend fun queueOperation(operation: OutboxOperation) {
@@ -42,17 +73,28 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
         remove("fieldsJson")
         add("fields", JsonParser.parseString(record.fieldsJson))
     }
+    fun noteJson(note: RawNote): JsonObject = gson.toJsonTree(note).asJsonObject.apply {
+        remove("interpretationHintsJson")
+        add("interpretationHints", JsonParser.parseString(note.interpretationHintsJson))
+    }
+    fun noteFromJson(value: JsonObject): RawNote = gson.fromJson(value.deepCopy().apply {
+        addProperty("interpretationHintsJson", (remove("interpretationHints") ?: JsonObject()).toString())
+    }, RawNote::class.java)
     fun recordFromJson(json: JsonObject): Record = gson.fromJson(json.deepCopy().apply {
         addProperty("fieldsJson", (get("fields") ?: JsonObject()).toString()); remove("fields")
     }, Record::class.java)
 
-    suspend fun capture(text: String, private: Boolean, source: String = "APP", manualKind: String? = null, plannedFor: String? = null): RawNote {
-        val (note, record) = CaptureNote.plan(text, private, source, manualKind, plannedFor)
+    suspend fun capture(text: String, private: Boolean, source: String = "APP", manualKind: String? = null, plannedFor: String? = null, interpretationHintsJson: String = "{}", eventStartAt: String? = null, rawOnly: Boolean = false, dueDate: String? = null): RawNote {
+        return app.planner.application.CaptureUseCase(this).capture(text, private, source, manualKind, plannedFor, interpretationHintsJson, eventStartAt, rawOnly, dueDate)
+    }
+
+    override suspend fun saveCapture(plan: CapturePlan): RawNote {
+        val (note, record) = plan
         database.withTransaction {
             dao.note(note)
             record?.let { dao.record(it) }
-            if (!private) {
-                val payload = gson.toJsonTree(note).asJsonObject
+            if (note.privacyMode != "LOCAL_ONLY") {
+                val payload = noteJson(note)
                 payload.add("records", JsonArray().apply { record?.let { add(recordJson(it)) } })
                 queueOperation(OutboxOperation(entityId = note.id, noteId = note.id, path = "notes", payload = payload.toString()))
             }
@@ -61,7 +103,22 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
         return note
     }
 
-    suspend fun edit(record: Record) {
+    suspend fun captureLocal(text: String, preview: CapturePreview, context: CaptureContext, interpretationHintsJson: String = "{}"): LocalCapturePlan {
+        return app.planner.application.CaptureUseCase(this).local(text, preview, context, interpretationHintsJson)
+    }
+
+    override suspend fun saveLocal(plan: LocalCapturePlan, preview: CapturePreview): LocalCapturePlan {
+        database.withTransaction {
+            dao.note(plan.note)
+            plan.records.forEach { dao.record(it) }
+            dao.history(InterpretationHistory(id = java.util.UUID.randomUUID().toString(), noteId = plan.note.id,
+                inputVersion = plan.note.version, schemaVersion = preview.schemaVersion, modelVersion = preview.engine,
+                proposedData = gson.toJson(preview), validationResult = "valid", createdAt = plan.note.createdAt))
+        }
+        return plan
+    }
+
+    override suspend fun edit(record: Record) {
         validateRecord(record)
         database.withTransaction {
             val before = dao.recordById(record.id) ?: return@withTransaction
@@ -78,7 +135,7 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
         runCatching { requestSync() }
     }
 
-    suspend fun complete(record: Record, undo: Boolean = false) = database.withTransaction {
+    override suspend fun complete(record: Record, undo: Boolean) = database.withTransaction {
         val current = dao.recordById(record.id) ?: return@withTransaction
         if ((undo && current.state == "pending") || (!undo && current.state == "completed")) return@withTransaction
         edit(completeTask(current, undo))
@@ -89,7 +146,7 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
         val slot = dao.ideaSlot(day) ?: dao.ideaCandidate(day)?.let { IdeaSlot(day, it.id).also { chosen -> dao.slot(chosen) } } ?: return@withTransaction null
         slot.recordId?.let { dao.recordById(it) }?.takeIf { it.baseKind == "idea" && it.state == "pending" && (it.deferredUntil == null || it.deferredUntil <= day) }
     }
-    suspend fun later(record: Record, date: LocalDate) = edit(record.copy(deferredUntil = date.plusDays(1).toString()))
+    override suspend fun later(record: Record, date: LocalDate) = edit(record.copy(deferredUntil = date.plusDays(1).toString()))
 
     /** Keep one daily set stable. Snoozes and completion hide a slot without silently replacing it. */
     suspend fun reviewTasks(date: LocalDate): List<Record> = database.withTransaction {
@@ -114,12 +171,12 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
         }
     }
 
-    suspend fun snoozeTask(record: Record, date: LocalDate) {
+    override suspend fun snoozeTask(record: Record, date: LocalDate) {
         dao.meta(Meta("task-snooze:${record.id}", date.plusDays(7).toString()))
     }
 
     /** New raw capture + new confirmed record; the originating idea/task is never rewritten. */
-    suspend fun linkedTask(origin: Record, title: String = origin.title, plannedFor: String? = null, private: Boolean = true): Record = database.withTransaction {
+    override suspend fun linkedTask(origin: Record, title: String, plannedFor: String?, private: Boolean): Record = database.withTransaction {
         require(title.isNotBlank() && title.length <= 1000) { "Enter an action of up to 1,000 characters." }
         val current = dao.recordById(origin.id) ?: error("The original item is no longer available.")
         require(current.state == "pending" && current.baseKind in setOf("idea", "task")) { "Restore this item before creating an action." }
@@ -128,14 +185,14 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
         val task = planned!!.copy(fieldsJson = JsonObject().apply { addProperty(if (current.baseKind == "idea") "developedFrom" else "splitFrom", current.id) }.toString())
         dao.note(newNote); dao.record(task)
         if (newNote.privacyMode != "LOCAL_ONLY") {
-            val payload = gson.toJsonTree(newNote).asJsonObject.apply { add("records", JsonArray().apply { add(recordJson(task)) }) }
+            val payload = noteJson(newNote).apply { add("records", JsonArray().apply { add(recordJson(task)) }) }
             queueOperation(OutboxOperation(entityId = newNote.id, noteId = newNote.id, path = "notes", payload = payload.toString()))
         }
         runCatching { requestSync() }
         task
     }
 
-    suspend fun manualInterpretation(note: RawNote, kind: String, title: String, plannedFor: String?) {
+    override suspend fun manualInterpretation(note: RawNote, kind: String, title: String, plannedFor: String?) {
         require(title.isNotBlank() && title.length <= 1000) { "Enter a title of up to 1,000 characters." }
         database.withTransaction {
             val record = Record(sourceNoteId = note.id, baseKind = kind, title = title, plannedFor = plannedFor, timezone = note.timezone, isUserConfirmed = true)
@@ -154,7 +211,7 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
         runCatching { requestSync() }
     }
 
-    suspend fun reprocess(note: RawNote) {
+    override suspend fun reprocess(note: RawNote) {
         require(note.privacyMode != "LOCAL_ONLY") { "This note is private. Organize it manually." }
         database.withTransaction {
             dao.noteStatus(note.id, "pending")
@@ -162,6 +219,9 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
         }
         runCatching { requestSync() }
     }
+
+    override suspend fun postponeReview(noteId: String, date: LocalDate) { dao.meta(Meta("triage:$noteId", date.toString())) }
+    override suspend fun captureDuration(milliseconds: Long) { dao.meta(Meta("lastCaptureMs", milliseconds.toString())) }
 
     suspend fun clear() = database.withTransaction {
         dao.clearOutbox(); dao.clearRecords(); dao.clearNotes(); dao.clearHistories(); dao.clearCorrections(); dao.clearSlots(); dao.clearTypes(); dao.clearRules(); dao.clearMeta()

@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-28",
+  "scope": "Local synthetic PostgreSQL snapshot after contextual-choice regressions; no model quality score",
+  "observations": 4631,
+  "distinctInputTexts": 423,
+  "addedObservations": {
+    "originalRegression": 43,
+    "intentChoiceCorpus": 30,
+    "partialPreChangeProbe": 1
+  },
+  "corpusResults": {
+    "originalLocal": {
+      "passed": 43,
+      "total": 43
+    },
+    "intentChoicesLocal": {
+      "passed": 30,
+      "total": 30
+    }
+  },
+  "locales": {
+    "en": 1589,
+    "fr": 1511,
+    "ru": 1515,
+    "unknown": 16
+  },
+  "provisionalKindsAreNotCommitments": true,
+  "trainingStarted": false,
+  "providerCallsInThisIncrement": 0
+}

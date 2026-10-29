@@ -4,16 +4,14 @@ import android.content.Context
 import androidx.work.*
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
-import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import java.util.concurrent.TimeUnit
 
 @EntryPoint @InstallIn(SingletonComponent::class)
 interface SyncDependencies { fun engine(): SyncEngine; fun repository(): app.planner.data.PlannerRepository; fun preferences(): app.planner.core.Preferences }
 
-class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class SyncWorker(context: Context, params: WorkerParameters, private val engine: SyncEngine) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        val engine = EntryPointAccessors.fromApplication(applicationContext, SyncDependencies::class.java).engine()
         return if (engine.run() && runAttemptCount < 8) Result.retry() else Result.success()
     }
 }

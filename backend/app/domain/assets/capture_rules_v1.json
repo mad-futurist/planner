@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "kinds": [
+    {
+      "kind": "idea",
+      "pattern": "\\b(idea|idée|idee|imagine)\\b|иде[яю]|придум|а что если"
+    },
+    {
+      "kind": "task",
+      "pattern": "^(?:please\\s+)?(?:call|buy|prepare|finish|send|write|pay|book|remember|todo|appeler|acheter|préparer|preparer|finir|envoyer|payer|réserver|reserver)\\b|^(?:позвон|купить|подготов|законч|отправ|напис|оплат|записа|нужно|надо)"
+    },
+    {
+      "kind": "task",
+      "pattern": "^(?:(?:(?:maybe|perhaps|possibly|someday|one\\s+day|please)\\s+|I\\s+(?:should|could|might|want\\s+to|need\\s+to)\\s+)?(?:call|buy|prepare|finish|send|write|pay|book|remember|find|research|check|learn|read|try|explore|compare|choose|create|start|look\\s+for)\\b|(?:(?:peut[- ]être|pourquoi\\s+pas|un\\s+jour)\\s+|je\\s+(?:devrais|pourrais|veux|voudrais)\\s+)?(?:appeler|acheter|préparer|preparer|finir|envoyer|payer|réserver|reserver|chercher|trouver|explorer|regarder|apprendre|lire|essayer|comparer|choisir|commencer|suivre)\\b|(?:(?:может(?:\\s+быть)?|возможно|когда-нибудь|как-нибудь|надо\\s+бы|нужно\\s+бы|хочу|стоит|неплохо\\s+бы)\\s+)?(?:купить|позвонить|подготовить|закончить|отправить|написать|оплатить|сделать|найти|изучить|посмотреть|почитать|проверить|поискать|подобрать|выбрать|пройти|попробовать)(?=\\s|$|[,.!?]))"
+    },
+    {
+      "kind": "event",
+      "pattern": "\\b(dentist|appointment|meeting|meet|lunch|dinner|flight|concert|rendez-vous|dentiste|réunion|reunion|déjeuner|dejeuner)\\b|стоматолог|дантист|встреч|при[её]м|ужин|обед|рейс|концерт"
+    }
+  ],
+  "split": "[;\\n]+|\\s+(?:and|et|и)\\s+(?=(?:prepare|buy|call|finish|send|meet|appeler|acheter|préparer|finir|envoyer|rendez-vous|подготов|купить|позвон|законч|отправ|встреч))",
+  "clock": "(?<![\\d:])(\\d{1,2})(?::|h)(\\d{2})(?![\\d:])",
+  "hour": "(?:\\bat|(?<![A-Za-zА-Яа-яЁёÀ-ÿ])à|(?<![A-Za-zА-Яа-яЁёÀ-ÿ])в)\\s+(\\d{1,2})(?![\\d:])",
+  "ampm": "\\b(1[0-2]|0?[1-9])(?::([0-5]\\d))?\\s*(am|pm)\\b",
+  "isoDate": "\\b\\d{4}-\\d{2}-\\d{2}\\b",
+  "shortDate": "(?<!\\d)\\d{1,2}[/.-]\\d{1,2}(?!\\d)",
+  "bareNumber": "(?<![\\d:/.-])\\b([1-9]|[12]\\d|3[01])\\b(?![\\d:/.-])",
+  "uncertainDate": "\\b(next|prochain|prochaine)\\b|следующ",
+  "deadline": "\\b(by|deadline|avant|pour)\\b|дедлайн|срок|(?:^|\\s)(?:до|к)\\s",
+  "address": "\\b(street|road|avenue|rue)\\b|улиц|проспект|дом\\s*\\d",
+  "relativeDays": [
+    {
+      "pattern": "\\b(tomorrow|demain)\\b|завтра",
+      "offset": 1
+    },
+    {
+      "pattern": "\\b(today|aujourd'hui|aujourdhui)\\b|сегодня",
+      "offset": 0
+    },
+    {
+      "pattern": "\\b(yesterday|hier)\\b|вчера",
+      "offset": -1
+    }
+  ],
+  "weekdays": [
+    "monday|lundi|понедельник",
+    "tuesday|mardi|вторник",
+    "wednesday|mercredi|сред[ау]",
+    "thursday|jeudi|четверг",
+    "friday|vendredi|пятниц",
+    "saturday|samedi|суббот",
+    "sunday|dimanche|воскресень"
+  ],
+  "tentativeAction": "^(?:(?:maybe|perhaps|possibly|someday|one\\s+day)\\s+|I\\s+(?:could|might)\\s+|(?:peut[- ]être|pourquoi\\s+pas|un\\s+jour)\\s+|je\\s+pourrais\\s+|(?:может(?:\\s+быть)?|возможно|когда-нибудь|как-нибудь|надо\\s+бы|нужно\\s+бы|неплохо\\s+бы)\\s+)"
+}

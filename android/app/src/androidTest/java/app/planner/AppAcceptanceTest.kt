@@ -20,6 +20,20 @@ class AppAcceptanceTest {
     @get:Rule val ui = createAndroidComposeRule<MainActivity>()
     private val dependencies get() = EntryPointAccessors.fromApplication(ui.activity.applicationContext, SyncDependencies::class.java)
     private val repository get() = dependencies.repository()
+    @Before fun prepareIndependentCaptureState() {
+        runBlocking { dependencies.preferences().capturePrivacy(true) }
+        val shell = androidx.lifecycle.ViewModelProvider(ui.activity)[app.planner.features.PlannerViewModel::class.java]
+        ui.waitUntil(10_000) { shell.uiState.value.settings["privateCapture"] == "true" }
+        shell.uiState.value.message?.let { shell.dismissMessage(it.id) }
+        ui.onNodeWithTag("capture").performTextClearance()
+    }
+    private fun originalOnly() {
+        ui.onNodeWithContentDescription("Choose capture type").performClick()
+        ui.onNodeWithText("Original note only").performClick()
+    }
+    private fun waitForDetailsToClose() {
+        ui.waitUntil(10_000) { ui.onAllNodesWithText("Details").fetchSemanticsNodes().isEmpty() }
+    }
     private fun navigate(label: String) {
         val primary = label in setOf("Today","Calendar","Tasks","Ideas","Profile")
         if(android.os.Build.VERSION.SDK_INT>=30) ui.activityRule.scenario.onActivity {it.window.insetsController?.hide(android.view.WindowInsets.Type.ime())}
@@ -41,6 +55,7 @@ class AppAcceptanceTest {
         ui.waitForIdle()
         if (ui.onAllNodesWithText("Cloud AI").fetchSemanticsNodes().isNotEmpty()) ui.onNodeWithTag("privacy").performClick()
         ui.onNodeWithTag("capture").performTextClearance()
+        originalOnly()
         ui.onNodeWithTag("capture").performTextInput(text)
         ui.onNodeWithTag("send").performClick()
         ui.waitUntil(10_000) { runBlocking { repository.dao.notePage(50, 0).any { it.originalContent == text && it.privacyMode == "LOCAL_ONLY" } } }
@@ -69,7 +84,9 @@ class AppAcceptanceTest {
         ui.waitUntil(10_000) { ui.onAllNodesWithContentDescription("Complete $title").fetchSemanticsNodes().isNotEmpty() }
         ui.onNodeWithContentDescription("Complete $title").performClick()
         ui.waitUntil(10_000) { runBlocking { repository.dao.recordById(task.id)?.state == "completed" } }
-        // Exercise the row after transient completion feedback stops covering its hit target.
+        // Dismiss via the real UI; accessibility may extend snackbar duration beyond ten seconds.
+        ui.waitUntil(10_000) { ui.onAllNodesWithContentDescription("Dismiss").fetchSemanticsNodes().isNotEmpty() }
+        ui.onNodeWithContentDescription("Dismiss").performClick()
         ui.waitUntil(10_000) { ui.onAllNodesWithText("Marked done").fetchSemanticsNodes().isEmpty() }
         val bounds = dayBounds(date, ZoneId.systemDefault())
         val count = runBlocking { repository.dao.completed(bounds.start, bounds.end).first().size }
@@ -100,17 +117,28 @@ class AppAcceptanceTest {
     }
 
     @Test fun eRealBackendSyncWorksWithoutProviderConfiguration() {
+        verifyRealBackendSync("invite", rawOnly = false, expectedStatus = "unconfigured")
+    }
+
+    @Test fun kConfiguredBackendAcceptsManualCaptureAndVersionedCorrections() {
+        val args = InstrumentationRegistry.getArguments()
+        Assume.assumeTrue("Run with a fresh synthetic-owner invitation", !args.getString("manualInvite").isNullOrBlank())
+        try { verifyRealBackendSync("manualInvite", rawOnly = true, expectedStatus = "organized") }
+        finally { runBlocking { dependencies.engine().signOut(); dependencies.preferences().set("serverUrl", "") } }
+    }
+
+    private fun verifyRealBackendSync(inviteArgument: String, rawOnly: Boolean, expectedStatus: String) {
         val arguments = InstrumentationRegistry.getArguments()
-        val invite = arguments.getString("invite")
+        val invite = arguments.getString(inviteArgument)
         Assume.assumeTrue("Run with a one-time local backend invitation", !invite.isNullOrBlank())
         val engine = dependencies.engine()
-        val note = runBlocking { repository.capture("Backend compatibility ${UUID.randomUUID().toString().take(8)}", false) }
+        val note = runBlocking { repository.capture("Backend compatibility ${UUID.randomUUID().toString().take(8)}", false, rawOnly = rawOnly) }
         runBlocking { engine.connect(arguments.getString("serverUrl") ?: "http://10.0.2.2:8000", invite!!) }
         var status = "pending"
         runBlocking {
-            repeat(15) { engine.run(); status = repository.dao.noteById(note.id)!!.processingStatus; if (status != "pending") return@runBlocking; delay(1000) }
+            repeat(15) { engine.run(); status = repository.dao.noteById(note.id)!!.processingStatus; if (status == expectedStatus) return@runBlocking; delay(1000) }
         }
-        assertEquals("unconfigured", status)
+        assertEquals(expectedStatus, status)
         assertTrue(runBlocking { repository.dao.recordsForNote(note.id).isEmpty() })
         runBlocking { repository.manualInterpretation(repository.dao.noteById(note.id)!!, "task", "Manual correction over real sync", LocalDate.now().toString()); engine.run() }
         val record = runBlocking { repository.dao.recordsForNote(note.id).single() }
@@ -149,6 +177,7 @@ class AppAcceptanceTest {
         ui.onNodeWithTag("privacy").performClick()
         ui.onNodeWithText("Keep private").performClick()
         val text="Private consent check ${UUID.randomUUID()}"
+        originalOnly()
         ui.onNodeWithTag("capture").performTextClearance();ui.onNodeWithTag("capture").performTextInput(text)
         ui.onNodeWithTag("send").performClick()
         ui.waitUntil(10_000) {runBlocking {repository.dao.notePage(50,0).any {it.originalContent==text && it.privacyMode=="LOCAL_ONLY"}}}
@@ -158,6 +187,7 @@ class AppAcceptanceTest {
         ui.onNodeWithTag("allow-cloud").performClick()
         ui.waitUntil(5_000) {runBlocking {prefs.values.first()["cloudConsent"]==app.planner.core.CapturePrivacy.CONSENT_VERSION}}
         val cloud="Consented capture ${UUID.randomUUID()}"
+        originalOnly()
         ui.onNodeWithTag("capture").performTextInput(cloud);ui.onNodeWithTag("send").performClick()
         ui.waitUntil(10_000) {runBlocking {repository.dao.notePage(50,0).any {it.originalContent==cloud && it.privacyMode=="CLOUD_ALLOWED"}}}
         runBlocking {prefs.capturePrivacy(true)}
@@ -179,10 +209,11 @@ class AppAcceptanceTest {
         ui.onNodeWithContentDescription("Details $title").performClick()
         ui.onNodeWithText("Restore item").performScrollTo().performClick()
         ui.waitUntil(10_000) {runBlocking {repository.dao.recordById(task.id)?.state=="pending"}}
+        waitForDetailsToClose()
         ui.activityRule.scenario.recreate();navigate("Tasks")
         ui.onNodeWithTag("filter-someday").performClick()
         ui.onNodeWithTag("tasks-list").performScrollToNode(hasText(title))
-        ui.onNodeWithText(title).assertIsDisplayed()
+        ui.onNodeWithTag("task-${task.id}").assertIsDisplayed()
     }
 
     @Test fun hGroupedSettingsApplyWeekPreferenceAndClearCancellationPreservesData() {
@@ -195,6 +226,7 @@ class AppAcceptanceTest {
         ui.onNodeWithTag("settings-list").performScrollToNode(hasText("Data & export"))
         ui.onNodeWithText("Data & export").performClick()
         ui.onNodeWithText("Clear local data").performScrollTo().performClick()
+        ui.waitUntil(8_000) { ui.onAllNodesWithText("Clear this device?").fetchSemanticsNodes().isNotEmpty() }
         ui.onNodeWithText("Clear this device?").assertExists()
         ui.onNodeWithText("Cancel").performClick()
         assertEquals(before,runBlocking {repository.dao.noteCount()})
@@ -248,6 +280,44 @@ class AppAcceptanceTest {
         assertEquals(idea.id,com.google.gson.JsonParser.parseString(task.fieldsJson).asJsonObject.get("developedFrom").asString)
         navigate("Ideas")
         ui.waitUntil(8_000) {ui.onAllNodesWithText("$title edited").fetchSemanticsNodes().isNotEmpty()}
+    }
+
+    private fun openIdeaEditor(title: String, recordId: String) {
+        navigate("Ideas")
+        ui.onNodeWithTag("idea-search").performTextReplacement(title)
+        ui.waitUntil(8_000) { ui.onAllNodesWithTag("idea-$recordId").fetchSemanticsNodes().isNotEmpty() }
+        ui.onNodeWithTag("ideas-list").performScrollToNode(hasTestTag("idea-$recordId"))
+        ui.onNodeWithTag("idea-$recordId").performClick()
+        ui.waitUntil(8_000) { ui.onAllNodes(hasSetTextAction() and hasText("Title")).fetchSemanticsNodes().isNotEmpty() }
+    }
+    @Test fun lEditorReopenUsesFreshRecordAfterSave() {
+        val title = "Reopen ${UUID.randomUUID().toString().take(8)}"
+        val note = runBlocking { repository.capture(title, true, manualKind = "idea") }
+        val record = runBlocking { repository.dao.recordsForNote(note.id).single() }
+        openIdeaEditor(title, record.id)
+        ui.onNode(hasSetTextAction() and hasText("Title")).performTextReplacement("$title edited")
+        ui.onNodeWithText("Save").performClick()
+        ui.waitUntil(8_000) { runBlocking { repository.dao.recordById(record.id)?.title == "$title edited" } }
+        ui.waitUntil(8_000) { ui.onAllNodesWithText("Details").fetchSemanticsNodes().isEmpty() }
+        openIdeaEditor("$title edited", record.id)
+        ui.onNode(hasSetTextAction() and hasText("Title")).assertTextContains("$title edited")
+        assertEquals(title, runBlocking { repository.dao.noteById(note.id)?.originalContent })
+    }
+    @Test fun mEditorRecreationKeepsOriginalExpectedVersion() {
+        val title = "Version ${UUID.randomUUID().toString().take(8)}"
+        val note = runBlocking { repository.capture(title, true, manualKind = "idea") }
+        val record = runBlocking { repository.dao.recordsForNote(note.id).single() }
+        openIdeaEditor(title, record.id)
+        ui.onNode(hasSetTextAction() and hasText("Title")).performTextReplacement("$title draft")
+        runBlocking { repository.edit(record.copy(title = "$title concurrent")) }
+        ui.activityRule.scenario.recreate()
+        ui.waitUntil(8_000) { ui.onAllNodes(hasSetTextAction() and hasText("Title")).fetchSemanticsNodes().isNotEmpty() }
+        ui.onNode(hasSetTextAction() and hasText("Title")).assertTextContains("$title draft")
+        ui.onNodeWithText("Save").performClick()
+        ui.waitUntil(8_000) { ui.onAllNodesWithText("This item changed while you were editing. Reopen its details to review the latest version.").fetchSemanticsNodes().isNotEmpty() }
+        assertEquals("$title concurrent", runBlocking { repository.dao.recordById(record.id)?.title })
+        assertEquals(record.version + 1, runBlocking { repository.dao.recordById(record.id)?.version })
+        ui.onNode(hasSetTextAction() and hasText("Title")).assertTextContains("$title draft")
     }
 
 }

@@ -33,6 +33,116 @@ class RepositoryTest {
         repo.capture("Private", true)
         assertNull(db.dao().nextOperation(Long.MAX_VALUE))
     }
+    private fun localInterpreter() = CaptureInterpreter(Gson().fromJson(java.io.File("../../backend/app/domain/assets/capture_rules_v1.json").readText(), CaptureRules::class.java))
+    @Test fun tentativeActionCannotBeAppliedBeforeUserChoosesItsMeaning() = runBlocking {
+        val text = "maybe find ai course"
+        val proposal = localInterpreter().preview(text, localContext)
+        assertEquals(listOf("task_deadline", "task_unscheduled", "idea"), proposal.records.single().kindChoices)
+        assertTrue(runCatching { repo.captureLocal(text, proposal, localContext) }.isFailure)
+        assertEquals(0, repo.dao.noteCount())
+        val chosen = repo.capture(text, true, manualKind = "idea")
+        assertEquals("idea", repo.dao.recordsForNote(chosen.id).single().baseKind)
+        assertEquals(text, chosen.originalContent)
+    }
+    @Test fun explicitTaskDeadlineDoesNotInventAScheduleOrExecutionDay() = runBlocking {
+        val note = repo.capture("maybe find ai course", true, manualKind = "task", dueDate = "2026-11-03")
+        val record = repo.dao.recordsForNote(note.id).single()
+        assertEquals("2026-11-03", record.dueDate)
+        assertNull(record.startAt); assertNull(record.plannedFor)
+        assertTrue(record.isUserConfirmed)
+        assertNull(repo.dao.nextOperation(Long.MAX_VALUE))
+        assertEquals("upcoming", taskBucket(record, LocalDate.parse("2026-10-28"), ZoneId.of("Europe/Paris")))
+    }
+    private val localContext get() = CaptureContext(Instant.parse("2026-10-28T10:00:00Z"), ZoneId.of("Europe/Paris"), "en")
+    @Test fun localDefaultProposalCreatesAllRecordsAndHistoryWithoutUpload() = runBlocking {
+        val text = "dentist 2026-10-31 at 16; buy milk; idea build a garden"
+        val result = repo.captureLocal(text, localInterpreter().preview(text, localContext), localContext)
+        assertEquals(text, repo.dao.noteById(result.note.id)!!.originalContent)
+        assertEquals(listOf("event", "task", "idea"), result.records.map { it.baseKind })
+        assertEquals(3, repo.dao.recordsForNote(result.note.id).size)
+        assertEquals("LOCAL_ONLY", result.note.privacyMode)
+        assertFalse(result.records.any { it.isUserConfirmed })
+        assertNull(repo.dao.nextOperation(Long.MAX_VALUE))
+        assertEquals("local-rules-v1", repo.dao.latestHistory(result.note.id)!!.modelVersion)
+        val bounds = dayBounds(LocalDate.parse("2026-10-31"), localContext.timezone)
+        assertTrue(repo.dao.day(bounds.day, bounds.start, bounds.end).first().any { it.id == result.records.first().id })
+        assertTrue(repo.dao.tasks("someday", "2026-10-28", bounds.end).first().any { it.id == result.records[1].id })
+    }
+    @Test fun localEnFrRuTasksAndAppointmentsArePersisted() = runBlocking {
+        val parser = localInterpreter()
+        for (text in listOf("buy milk", "acheter du lait", "купить молоко", "dentist 2026-10-31 at 16", "dentiste 2026-10-31 à 16", "стоматолог 2026-10-31 в 16")) {
+            val result = repo.captureLocal(text, parser.preview(text, localContext), localContext)
+            assertEquals(text, result.note.originalContent)
+            val record = repo.dao.recordsForNote(result.note.id).single()
+            if (text.contains("2026")) assertEquals(Instant.parse("2026-10-31T15:00:00Z"), Instant.parse(record.startAt))
+            else { assertEquals("task", record.baseKind); assertEquals("someday", taskBucket(record, LocalDate.parse("2026-10-28"), localContext.timezone)) }
+        }
+    }
+    @Test fun incompleteLocalInterpretationCannotLeavePartialNoteOrRecords() = runBlocking {
+        val text = "buy milk; dentist at 16"
+        assertTrue(runCatching { repo.captureLocal(text, localInterpreter().preview(text, localContext), localContext) }.isFailure)
+        assertEquals(0, repo.dao.noteCount())
+        val resolved = localInterpreter().preview("dentist 2026-10-31 at 16", localContext)
+        val forged = resolved.copy(records = resolved.records.map { it.copy(calendarEligible = false) })
+        assertTrue(runCatching { repo.captureLocal("dentist 2026-10-31 at 16", forged, localContext) }.isFailure)
+        assertEquals(0, repo.dao.noteCount())
+    }
+    @Test fun localDeadlineWithClockIsDueTimeRatherThanAppointment() = runBlocking {
+        val text = "finish report by 2026-10-31 at 16"
+        val record = repo.captureLocal(text, localInterpreter().preview(text, localContext), localContext).records.single()
+        assertNull(record.startAt)
+        assertNull(record.dueDate)
+        assertEquals("2026-10-31T15:00:00.000Z", record.dueAt)
+        assertFalse(isScheduledOnDay(record, LocalDate.parse("2026-10-31"), localContext.timezone))
+        assertEquals("upcoming", taskBucket(record, LocalDate.parse("2026-10-28"), localContext.timezone))
+    }
+    @Test fun localInterpretationRemainsCorrectableAndPreservesOriginal() = runBlocking {
+        val text = "buy milk"
+        val result = repo.captureLocal(text, localInterpreter().preview(text, localContext), localContext)
+        repo.edit(result.records.single().copy(title = "Buy oat milk"))
+        assertEquals(text, repo.dao.noteById(result.note.id)!!.originalContent)
+        assertEquals("Buy oat milk", repo.dao.recordsForNote(result.note.id).single().title)
+        assertNotNull(repo.dao.latestHistory(result.note.id))
+        assertNull(repo.dao.nextOperation(Long.MAX_VALUE))
+    }
+    @Test fun explicitlySavingRawOnlyNeverQueuesAutomaticInterpretation() = runBlocking {
+        val note = repo.capture("dentist 16", false, rawOnly = true)
+        assertTrue(note.manual)
+        assertTrue(db.dao().recordsForNote(note.id).isEmpty())
+        val payload = com.google.gson.JsonParser.parseString(db.dao().nextOperation(Long.MAX_VALUE)!!.payload).asJsonObject
+        assertTrue(payload["manual"].asBoolean)
+        assertEquals(0, payload.getAsJsonArray("records").size())
+    }
+    @Test fun pendingEditRetainsNewestSiblingSnapshotBeyondCursorAndAcknowledgment() = runBlocking {
+        val note = repo.capture("Two tasks", false, manualKind = "task")
+        db.dao().operationsForEntity(note.id).forEach { db.dao().deleteOperation(it.id) }
+        val first = db.dao().recordsForNote(note.id).single()
+        val sibling = Record(sourceNoteId = note.id, title = "Before", isUserConfirmed = true)
+        db.dao().record(sibling)
+        repo.edit(first.copy(title = "Local edit"))
+        repo.mergeRecord(sibling.copy(title = "Newest", version = 3))
+        repo.mergeRecord(sibling.copy(title = "Older", version = 2))
+        db.dao().meta(Meta("cursor", "42"))
+        assertEquals("Before", db.dao().recordById(sibling.id)!!.title)
+        db.dao().operationsForEntity(first.id).forEach { db.dao().deleteOperation(it.id) }
+        PlannerRepository(db, Gson()).reconcileIncoming()
+        assertEquals("Newest", db.dao().recordById(sibling.id)!!.title)
+        assertEquals("42", db.dao().metadata("cursor")!!.value)
+        assertTrue(db.dao().incoming().isEmpty())
+    }
+    @Test fun olderAcknowledgmentCannotEraseDeferredStatusAtTheSameNoteVersion() = runBlocking {
+        val note = repo.capture("Cloud note", false)
+        repo.mergeNote(note.copy(processingStatus = "organized", syncStatus = "synced"))
+        db.dao().operationsForEntity(note.id).forEach { db.dao().deleteOperation(it.id) }
+        val followup = OutboxOperation(entityId = note.id, noteId = note.id, path = "notes/${note.id}/reprocess", payload = "{}")
+        repo.queueOperation(followup)
+        repo.mergeNote(note.copy(processingStatus = "pending"), fromAcknowledgment = true)
+        db.dao().deleteOperation(followup.id)
+        repo.mergeNote(note.copy(processingStatus = "pending"), fromAcknowledgment = true)
+        repo.reconcileIncoming()
+        assertEquals("organized", db.dao().noteById(note.id)!!.processingStatus)
+        assertTrue(db.dao().incoming().isEmpty())
+    }
     @Test fun diskDatabaseSurvivesCloseAndRecreation() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
         context.deleteDatabase("persistence-test.db")
@@ -107,7 +217,7 @@ class RepositoryTest {
         assertEquals("PATCH", db.dao().nextOperation(Long.MAX_VALUE)?.method)
     }
     @Test fun failedBackgroundSchedulingDoesNotTurnCommittedCaptureIntoFailure() = runBlocking {
-        repo.requestSync = { error("Unavailable scheduler") }
+        repo = PlannerRepository(db, Gson(), app.planner.application.SyncRequest { error("Unavailable scheduler") })
         val saved = repo.capture("Durable without scheduler", false)
         assertEquals(saved.content, db.dao().noteById(saved.id)?.content)
         assertNotNull(db.dao().nextOperation(Long.MAX_VALUE))
@@ -134,7 +244,7 @@ class RepositoryTest {
     }
     @Test fun legacySchemasUpgradeWithoutLosingNotesOrOutbox() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        for (version in listOf(1, 2)) {
+        for (version in listOf(1, 2, 3)) {
             val name = "migration-$version.db"
             context.deleteDatabase(name)
             val schema = com.google.gson.JsonParser.parseString(java.io.File("schemas/app.planner.core.database.PlannerDatabase/$version.json").readText()).asJsonObject.getAsJsonObject("database")
@@ -149,10 +259,11 @@ class RepositoryTest {
                 legacy.execSQL("INSERT INTO outbox VALUES ('op', 'legacy', 'legacy', 'notes', 'POST', '{}', 2, 0, NULL, 'queued', 1)")
                 legacy.version = version
             }
-            val upgraded = Room.databaseBuilder(context, PlannerDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+            val upgraded = Room.databaseBuilder(context, PlannerDatabase::class.java, name).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
             try {
                 val saved = upgraded.dao().noteById("legacy")!!
                 assertEquals("Unchanged", saved.originalContent)
+                assertEquals("{}", saved.interpretationHintsJson)
                 if (version == 1) assertEquals("2026-10-14T00:00:00.000Z", saved.createdAt)
                 assertEquals(2, upgraded.dao().nextOperation(Long.MAX_VALUE)?.retryCount)
             } finally { upgraded.close(); context.deleteDatabase(name) }
