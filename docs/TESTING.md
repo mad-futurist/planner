@@ -2,6 +2,24 @@
 
 Last reviewed: **2026-10-21 (Europe/Paris)**. The correction increment is reported first; October 15/17 results remain historical below. Scope and feature statuses: [Features](FEATURES.md). Run on a disposable emulator; instrumentation adds QA notes, and the explicit preview fixture replaces local app data.
 
+## 2026-11-20 Semantic Composer v2
+
+Debug and instrumentation APKs assembled. All 26 Android unit tests passed, including Cyrillic fragment recognition and separate deadline persistence. Debug lint passed with zero errors and 17 warnings. On the disposable API 36 emulator nine local acceptance cases and both component goldens passed. The HTTP/backend case was skipped without an enrollment invitation.
+
+The persisted v2 fixture ran at 390×844 dp and at 360×844 dp with font scale 1.4. It renders all five routes, checks real Week and Month controls, exercises the deadline filter, opens an anchored time/date selector and chooses 18:00 and Tomorrow. It then verifies the unchanged original text, local-only privacy and exact confirmed event instant in Room. The fixture captures the composer at its clarification and ready states. Manual visual comparison used the supplied files, with the [visual audit](VISUAL_AUDIT.md#2026-11-20-semantic-composer-and-organizer) recording the actual renders.
+
+Run `PreviewFixtureTest` with `-e preview true -e visualV2 true` on a disposable AVD. The fixture replaces local QA data. Use `ru-RU` for the Cyrillic comparison and restore sources of viewport, density, font scale and locale overrides afterward. The architecture checker referenced in the package is absent in this checkout.
+
+## 2026-11-19 warm Today verification
+
+`:app:assembleDebug`, `:app:assembleDebugAndroidTest`, `:app:testDebugUnitTest` and `:app:lintDebug` passed. The unit suite reported 24 passed, with zero failures or skips. Lint reported zero errors and 17 warnings. The dedicated API 36 `Planner_Visual_QA` emulator passed nine local acceptance cases and both existing component golden comparisons. The conditional HTTP/backend acceptance case was skipped because no invitation was supplied. Empty/private and original persisted preview fixtures each passed.
+
+The warm persisted preview passed at 390×844 dp (975×2110, density 400, text scale 1.0), and at 360×844 dp (900×2110, density 400, text scale 1.4 with Android animation scales disabled). It checks the real Collection route/count, date selection and return from Calendar, checked and labeled restore control, 48 dp targets, and actual IME visibility with tabs hidden. Visual inspection checked Cyrillic text, screen bounds, the dark palette and the keyboard capture. Both bundled font cmaps contain the Cyrillic title and labels. A full spoken TalkBack traversal and physical-device checks remain open.
+
+Use the existing disposable QA emulator procedure below. Pass `-e preview true -e warmToday true` to `PreviewFixtureTest`. The warm fixture takes `warm-today`, `warm-today-dark` and `warm-today-ime` captures. For the Cyrillic visual check set the app locale to `ru-RU` with `adb shell cmd locale set-app-locales app.planner --locales ru-RU`. Restore the device window size, density, font/animation scales and app locale afterward. See the [visual audit](VISUAL_AUDIT.md#2026-11-19-warm-today) for the recorded round trip and comparison.
+
+The requested `tools/check_architecture.py` was absent from this checkout. The changed-path audit covered Android presentation, resources, tests and documentation, and `tools/check_docs.py` passed.
+
 ## Executed results
 
 2026-10-21 baseline: Android debug and original **15 unit tests passed**; backend **30 passed/1 PostgreSQL skip** while the local database service was stopped. Restoring that service enabled the PostgreSQL fixture.

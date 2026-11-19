@@ -10,6 +10,16 @@ Geometry: 20 dp page inset, 18 dp cards, 28 dp composer, 24 dp navigation, 48 dp
 
 Research: [Compose graphics](https://developer.android.com/develop/ui/compose/graphics/draw/overview) supports vector drawing and cached paths. [Kizitonwose Calendar](https://github.com/kizitonwose/Calendar) is customizable but excessive for seven date cells; retain native date pickers and build a small strip. [Roborazzi](https://github.com/takahirom/roborazzi) is a maintained screenshot option; assess compatibility before adding a Gradle plugin. Emulator captures and deterministic instrumentation fixtures are the initial comparison path. Final choices and executed results are recorded below and in Testing.
 
+## Warm Today
+
+[TodayDesign](../android/app/src/main/java/app/planner/core/designsystem/TodayDesign.kt) owns the warm organizer light/dark palette, Onest display/body typography, Manrope dates and metadata, and cached organic art paths. Kotlin tokens adapt the supplied `visual-v1` token JSON with contrast and inset adjustments. The type files and corresponding licenses are listed in [Bundled font sources](../android/licenses/FONT_SOURCES.md).
+
+The 28 dp task-panel corners enclose one continuous surface of live rows, a five-day strip and progress. The 27 dp Collection card clips asymmetric lavender paths. The application reuses the custom icon path renderer and a filled coffee vector based on the supplied scene's cup path. The mascot is the supplied clean source SVG and its paired transparent WebP from `cat_peek_app_assets.zip`. The SVG is retained in [Android assets](../android/app/src/main/assets/today/cat_peek_user_verified_vector.svg). The image is static and has no accessibility announcement. The date strip stays outside its painted area.
+
+The Today shell uses a dark pill composer and warm top-rounded navigation surface. Main actions retain 48 dp minimum targets. At higher font scales the cat stacks below the title and row text reflows. Journal, Review, Settings and the existing component reference goldens use the earlier theme.
+
+The v2 package's [design tokens](design/semantic-composer-v2/design-tokens.json) and [composer tokens](design/semantic-composer-v2/semantic-composer.json) define the shared warm chrome and dashed entity, temporal and idea outlines. [OrganizerVisuals](../android/app/src/main/java/app/planner/features/OrganizerVisuals.kt) shares warm headers, rounded panels, selectors and the supplied mascot across the organizer. The app draws the expanded editor's outlines from Compose text layout and positions the interpretation popup at the selected fragment.
+
 ## Component assessment and final choices
 
 Checked primary repositories on 2026-10-21:

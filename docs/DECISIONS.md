@@ -205,3 +205,21 @@ Component research: [Design system](DESIGN_SYSTEM.md). Verification: [Testing](T
 Implementation choices: native Compose/Material controls and original Canvas paths, bundled OFL Playfair Display/DM Sans, and native instrumentation goldens avoid a new runtime framework or an unvalidated screenshot Gradle plugin. See the candidate/license assessment in Design system. Cloud consent and capture mode commit together; legacy cloud preference alone no longer authorizes new captures. Profile tab returns to its root rather than restoring a secondary Journal/Settings destination. The expanded Tasks/Ideas lists page at 50 rows; the original Today focus cap stays intact.
 
 Linked manual actions use the active new-capture privacy choice and fail closed to private by default; private sources remain private even if cloud mode is selected. This prevents newly written smaller-action text from inheriting a formerly shared source's upload permission. Existing cloud records retain their original synchronization contract.
+
+
+## ADR-017: Warm Today visual pass
+
+Accepted 2026-11-19. The supplied approved Today PNG governs appearance. Use the provided transparent cat asset pair, local variable Onest/Manrope fonts, native Compose layout and a static organic backdrop. Keep the date strip clear by placing the mascot behind the task panel's upper edge. Lazy rows share a single visual surface so bounded day queries and long translated text can scroll.
+
+Continue the existing day-selection, focus, task completion, capture and privacy policies. Today date affordances send users to the existing Calendar day. The Collection card temporarily opens Ideas with a real count. Keep all five current primary routes during this pass. Collection/Inbox destinations and voice capture need product and implementation changes beyond this visual pass.
+
+The checkout's current packages are `core/designsystem` and `features`. The new presentation files follow those packages and reuse the existing icon renderer and shell. Room, DTOs, ViewModel queries and services need no visual-specific changes.
+
+
+## ADR-018: Semantic Composer and warm organizer screens
+
+Accepted 2026-11-20. The v2 package's Today PNG supplies the visual language. Calendar, Tasks, Ideas and Profile use their concept layouts with the repository's existing five destinations. Journal, Review and Settings keep their route entry points. A single dark bar opens a dedicated editor, with inline outlines and contextual controls inside that editor.
+
+`CaptureNote` is the existing capture policy entry point. The expanded editor runs a deterministic, bounded local draft reader. Saving a preview commits the raw note and any confirmed record together through the same repository operation and outbox policy. Plain automatic notes take the existing background path when authorized. A partial event date or time is stored as record detail until an instant can be determined. A deadline uses the deadline fields. DST gaps and overlaps require an explicit correction or a save with partial temporal details. The data schema and wire contract support the existing generic fields.
+
+The Week calendar uses existing day queries with a horizontally scrollable timeline and selected-day agenda. Month uses actual date arithmetic and the configured first weekday. Task views retain original discovery filters and add a query for explicit deadlines. Ideas group the visible saved page by its existing theme fields. Profile uses actual device/workspace identity and Room aggregates. Media controls in the concepts require a separate capture feature.

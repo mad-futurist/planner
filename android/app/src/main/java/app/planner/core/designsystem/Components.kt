@@ -11,12 +11,15 @@ import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import app.planner.core.model.Record
+import app.planner.R
 import com.google.gson.JsonParser
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -163,7 +166,51 @@ fun taskDateLabel(record: Record, today: LocalDate=LocalDate.now()): String {
 
 data class Destination(val route: String,val label: String,val icon: Glyph)
 val PrimaryDestinations=listOf(Destination("today","Today",Glyph.Home),Destination("calendar","Calendar",Glyph.Calendar),Destination("tasks","Tasks",Glyph.Tasks),Destination("ideas","Ideas",Glyph.Bulb),Destination("profile","Profile",Glyph.User))
-@Composable fun PlannerBottomNavigation(route: String?, navigate: (String)->Unit) {
+@Composable internal fun PlannerBottomNavigation(route: String?, navigate: (String)->Unit, warm: TodayColors? = null) {
+    if (warm != null) {
+        val shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
+        val density = LocalDensity.current
+        val windowWidth = LocalWindowInfo.current.containerSize.width
+        val largeLabels = density.fontScale > 1.2f && with(density) { windowWidth.toDp() >= 350.dp }
+        Surface(color = warm.surface, shape = shape, modifier = Modifier.fillMaxWidth()) {
+            Row(Modifier.navigationBarsPadding().padding(horizontal = 5.dp, vertical = 9.dp)) {
+                PrimaryDestinations.forEach { destination ->
+                    val selected = destination.route == route
+                    val label = stringResource(when (destination.route) {
+                        "today" -> R.string.today_title
+                        "calendar" -> R.string.today_nav_calendar
+                        "tasks" -> R.string.today_tasks
+                        "ideas" -> R.string.today_nav_ideas
+                        else -> R.string.today_nav_profile
+                    })
+                    val tint = if (selected) warm.ink else warm.muted
+                    val weight = if (largeLabels) when (destination.route) {
+                        "calendar" -> .25f
+                        "profile" -> .22f
+                        "today" -> .21f
+                        "tasks" -> .17f
+                        else -> .15f
+                    } else 1f
+                    Column(
+                        Modifier.weight(weight).clip(RoundedCornerShape(20.dp))
+                            .selectable(selected = selected, role = Role.Tab) { navigate(destination.route) }
+                            .heightIn(min = 56.dp).padding(horizontal = 2.dp, vertical = 7.dp)
+                            .semantics { contentDescription = "Navigate ${destination.label}" },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
+                        PlannerIcon(destination.icon, Modifier.size(23.dp), tint, filled = selected && destination.icon == Glyph.Home)
+                        Text(
+                            label, style = TodayType.nav, color = tint,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
+        return
+    }
     Surface(color=MaterialTheme.colorScheme.surfaceContainerLow,shape=RoundedCornerShape(24.dp),shadowElevation=1.dp,modifier=Modifier.fillMaxWidth()) {
         Row(Modifier.padding(5.dp),horizontalArrangement=Arrangement.SpaceEvenly) {
             PrimaryDestinations.forEach { destination ->

@@ -1,0 +1,274 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "project": "Planner",
+  "version": "semantic-composer-v2",
+  "source": {
+    "approvedReference": "screens/00_today_APPROVED.png",
+    "referencePixels": [
+      852,
+      1846
+    ],
+    "targetViewportDp": [
+      390,
+      844
+    ],
+    "scalePxPerDp": 2.18462,
+    "figmaFile": "https://www.figma.com/design/VlLMBpMEzHbR9snGNOEHru",
+    "figmaTodayNode": "3:9",
+    "fidelity": "Visual approval from supplied PNG; values approximate, validate by emulator screenshot.",
+    "figmaCaveat": "Figma is structural background only; approved PNG overrides mismatched appearance."
+  },
+  "color": {
+    "canvas": {
+      "$type": "color",
+      "$value": "#FCF6EF"
+    },
+    "surface": {
+      "$type": "color",
+      "$value": "#FFFCF8"
+    },
+    "textPrimary": {
+      "$type": "color",
+      "$value": "#292527"
+    },
+    "textSecondary": {
+      "$type": "color",
+      "$value": "#827973"
+    },
+    "outlineSubtle": {
+      "$type": "color",
+      "$value": "#EADFD6"
+    },
+    "peachLight": {
+      "$type": "color",
+      "$value": "#FBE8D7"
+    },
+    "peach": {
+      "$type": "color",
+      "$value": "#F8E1CD"
+    },
+    "peachMedium": {
+      "$type": "color",
+      "$value": "#F5CFAB"
+    },
+    "amber": {
+      "$type": "color",
+      "$value": "#F8C36D"
+    },
+    "amberDark": {
+      "$type": "color",
+      "$value": "#9A5D1E"
+    },
+    "lavender": {
+      "$type": "color",
+      "$value": "#EEE3F0"
+    },
+    "lavenderMid": {
+      "$type": "color",
+      "$value": "#DCC5E9"
+    },
+    "lavenderDark": {
+      "$type": "color",
+      "$value": "#B99AD8"
+    },
+    "sage": {
+      "$type": "color",
+      "$value": "#E7EDDF"
+    },
+    "rose": {
+      "$type": "color",
+      "$value": "#F8DFDB"
+    },
+    "completed": {
+      "$type": "color",
+      "$value": "#B6AEA8"
+    },
+    "catBody": {
+      "$type": "color",
+      "$value": "#292527"
+    },
+    "catEyes": {
+      "$type": "color",
+      "$value": "#FFD23F"
+    },
+    "catEar": {
+      "$type": "color",
+      "$value": "#E8A58E"
+    },
+    "white": {
+      "$type": "color",
+      "$value": "#FFFFFF"
+    }
+  },
+  "spacing": {
+    "2": {
+      "$type": "dimension",
+      "$value": "2px"
+    },
+    "4": {
+      "$type": "dimension",
+      "$value": "4px"
+    },
+    "6": {
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    "8": {
+      "$type": "dimension",
+      "$value": "8px"
+    },
+    "10": {
+      "$type": "dimension",
+      "$value": "10px"
+    },
+    "12": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    "14": {
+      "$type": "dimension",
+      "$value": "14px"
+    },
+    "16": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "18": {
+      "$type": "dimension",
+      "$value": "18px"
+    },
+    "20": {
+      "$type": "dimension",
+      "$value": "20px"
+    },
+    "24": {
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    "28": {
+      "$type": "dimension",
+      "$value": "28px"
+    },
+    "32": {
+      "$type": "dimension",
+      "$value": "32px"
+    },
+    "40": {
+      "$type": "dimension",
+      "$value": "40px"
+    },
+    "48": {
+      "$type": "dimension",
+      "$value": "48px"
+    }
+  },
+  "radius": {
+    "micro": {
+      "$type": "dimension",
+      "$value": "6px"
+    },
+    "badge": {
+      "$type": "dimension",
+      "$value": "14px"
+    },
+    "dateSelected": {
+      "$type": "dimension",
+      "$value": "21px"
+    },
+    "panel": {
+      "$type": "dimension",
+      "$value": "28px"
+    },
+    "collection": {
+      "$type": "dimension",
+      "$value": "27px"
+    },
+    "composer": {
+      "$type": "dimension",
+      "$value": "29px"
+    },
+    "nav": {
+      "$type": "dimension",
+      "$value": "32px"
+    },
+    "pill": {
+      "$type": "dimension",
+      "$value": "999px"
+    }
+  },
+  "font": {
+    "display": {
+      "$type": "fontFamily",
+      "$value": "Onest"
+    },
+    "body": {
+      "$type": "fontFamily",
+      "$value": "Onest"
+    },
+    "meta": {
+      "$type": "fontFamily",
+      "$value": "Manrope"
+    }
+  },
+  "fontSize": {
+    "display": {
+      "$type": "dimension",
+      "$value": "42px"
+    },
+    "section": {
+      "$type": "dimension",
+      "$value": "22px"
+    },
+    "cardTitle": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "body": {
+      "$type": "dimension",
+      "$value": "16px"
+    },
+    "bodySmall": {
+      "$type": "dimension",
+      "$value": "14px"
+    },
+    "meta": {
+      "$type": "dimension",
+      "$value": "12px"
+    },
+    "nav": {
+      "$type": "dimension",
+      "$value": "12px"
+    }
+  },
+  "lineHeight": {
+    "display": {
+      "$type": "dimension",
+      "$value": "48px"
+    },
+    "section": {
+      "$type": "dimension",
+      "$value": "28px"
+    },
+    "body": {
+      "$type": "dimension",
+      "$value": "24px"
+    },
+    "meta": {
+      "$type": "dimension",
+      "$value": "17px"
+    }
+  },
+  "icon": {
+    "strokeWidthDp": 1.9,
+    "sizeDp": 24,
+    "source": "assets/icons/*.svg",
+    "note": "Colored semantic coffee is an illustration, not a generic outline icon"
+  },
+  "touch": {
+    "minTargetDp": 48
+  },
+  "motion": {
+    "mascotMotion": "rare on contextual completions, no continual idle animation",
+    "respectReduceMotion": true
+  }
+}

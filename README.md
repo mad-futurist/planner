@@ -2,7 +2,7 @@
 
 A runnable offline-first Android AI organizer with a FastAPI/PostgreSQL backend. Capture first; keep original notes; return structured tasks, commitments and ideas through a calm Today screen. Room drives Android business data, and AI proposes information that deterministic, version-aware code applies.
 
-The app includes Today, day Calendar, Tasks, Ideas, Profile, Journal, Review, Settings, editable records, task completion/undo, durable sync and opt-in floating capture. It launches and supports private/manual capture without an AI key. The real provider adapter is implemented; **live AI remains unverified because no key/model was configured**.
+The app includes Today, day/week/month Calendar, Tasks, Ideas, Profile, Journal, Review, Settings, Semantic Composer, editable records, task completion/undo, durable sync and opt-in floating capture. It launches and supports private/manual capture without an AI key. The real provider adapter is implemented; **live AI remains unverified because no key/model was configured**.
 
 ## Run locally
 

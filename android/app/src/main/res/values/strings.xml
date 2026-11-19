@@ -1,7 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="quick_capture_title">Quick capture</string>
-    <string name="quick_capture_subtitle">Jot it down. Organize later.</string>
-    <string name="quick_capture_private">Keep on this device</string>
-    <string name="quick_capture_trust">Saved locally first</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Overlay translations have separate scope from Today. -->
+    <string name="quick_capture_title" tools:ignore="MissingTranslation">Quick capture</string>
+    <string name="quick_capture_subtitle" tools:ignore="MissingTranslation">Jot it down. Organize later.</string>
+    <string name="quick_capture_private" tools:ignore="MissingTranslation">Keep on this device</string>
+    <string name="quick_capture_trust" tools:ignore="MissingTranslation">Saved locally first</string>
+    <string name="today_title">Today</string>
+    <string name="today_tasks">Tasks</string>
+    <string name="today_collection">Collection</string>
+    <string name="today_open_date_picker">Choose a date in Calendar</string>
+    <string name="today_open_profile">Open profile</string>
+    <string name="today_open_settings">Open settings</string>
+    <string name="today_empty">Nothing planned for today.</string>
+    <string name="today_add_task">+ Add a task</string>
+    <string name="today_show_less">Show less</string>
+    <string name="today_done">Done today: %1$d</string>
+    <string name="today_progress">%1$d of %2$d</string>
+    <string name="today_due">Due %1$s</string>
+    <string name="today_ongoing">Ongoing</string>
+    <string name="today_restore">Restore %1$s</string>
+    <string name="today_complete">Complete %1$s</string>
+    <string name="today_details">Open details</string>
+    <string name="today_daily_idea">Idea of the day</string>
+    <string name="today_capture_hint">Capture a thought…</string>
+    <string name="today_private_mode">Private · on this device</string>
+    <string name="today_cloud_mode">Cloud AI · new notes may upload</string>
+    <string name="today_nav_calendar">Calendar</string>
+    <string name="today_nav_ideas">Ideas</string>
+    <string name="today_nav_profile">Profile</string>
+    <plurals name="today_saved_ideas">
+        <item quantity="one">%1$d saved idea</item>
+        <item quantity="other">%1$d saved ideas</item>
+    </plurals>
+    <plurals name="today_more_tasks">
+        <item quantity="one">+%1$d more task</item>
+        <item quantity="other">+%1$d more tasks</item>
+    </plurals>
 </resources>

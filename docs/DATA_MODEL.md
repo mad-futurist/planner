@@ -92,3 +92,8 @@ Room indices cover note creation/processing, source-note lookup, kind/state/plan
 Exports: [Room schema versions](../android/app/schemas/app.planner.core.database.PlannerDatabase/3.json). Upgrade code: [Room migrations](../android/app/src/main/java/app/planner/core/database/Migrations.kt), [Alembic revisions](../backend/alembic/versions/a15a67f338ba_initial.py). Normal upgrades never use destructive resets. The development-job downgrade deliberately refuses to discard revisions; restore a pre-upgrade backup instead. Executed migration results: [Testing](TESTING.md#executed-results).
 
 Related: [Architecture](ARCHITECTURE.md), [API](API.md), [Decisions](DECISIONS.md).
+
+
+### Semantic Composer capture
+
+The editor uses the existing raw-note and confirmed-record transaction. Date-only tasks populate `plannedFor`; explicit deadlines populate `dueDate` or `dueAt`. A dated and timed event uses `startAt`. Partial event date and partial clock hints use `suggestedDate` and `suggestedTime` in the existing generic record fields until a complete instant is supplied. Original text remains in `RawNote.originalContent`.

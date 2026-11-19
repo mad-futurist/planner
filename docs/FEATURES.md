@@ -1,6 +1,6 @@
 # Features and implementation status
 
-Last reviewed: **2026-10-21**. Code owns implemented behavior; [Concept](CONCEPT.md) owns intent. Status describes the evidence scope below, never universal device/provider coverage.
+Warm organizer and Semantic Composer status reviewed **2026-11-20**. Code owns implemented behavior; [Concept](CONCEPT.md) owns intent. Status describes the evidence scope below, never universal device/provider coverage.
 
 ## Status contract
 
@@ -21,9 +21,9 @@ Documentation is part of Done. Do not advance status from a picture, specificati
 | F02 | Local-first app capture and persistence | Verified | Repository atomic/private/disk tests, offline force-stop/reopen and instrumented UI capture/recreation |
 | F03 | Paginated Journal and original text | Verified | 50-note queries; original text observed after offline reopen and Activity recreation; huge-dataset scroll gate pending |
 | F04 | Manual interpretation/capture | Verified | Repository/instrumentation persistence; real-backend manual correction and complete/undo sync |
-| F05 | Room-driven Today, Schedule/Anytime/tomorrow | Verified | DST/date predicate tests, local completion UI, persisted fixture rendering; only API 36 visual acceptance |
+| F05 | Room-driven Today, Schedule/Anytime/tomorrow | Verified | Unified warm Today panel, date navigation, computed progress, completion/restore and persisted fixture on API 36. See Visual audit for remaining visual scope. |
 | F06 | Task editing/completion/undo/pin/reschedule/archive | Implemented | Completion/undo UI and repository tests; optimistic edit and duplicate-tap regression checks; all editor actions compile, broader picker/archive UX acceptance pending |
-| F07 | Internal day Calendar | Implemented | Navigation and temporal tests; local day/picker UI; manual DST picker interaction/other-device acceptance pending |
+| F07 | Internal day/week/month Calendar | Implemented | Real week timeline, month dates, selected-day agenda and separate planned/deadline rows. Broader device and DST picker acceptance remains open. |
 | F08 | Ideas, stable daily selection and Later | Verified | Persistent selection/deferral repository tests and actual saved-idea rendering; archive/restore supported in Details |
 | F09 | Develop idea and approved task conversion | In Progress | Real provider adapter/jobs and atomic once-only/stale approval unit test; live provider/suggestions UI acceptance unexecuted |
 | F10 | Bounded ambiguous-note Review | Implemented | Five-note SQL bound, persisted daily deferral and editable proposal title flow; automated backend ambiguity checks; full manual triage session pending |
@@ -45,9 +45,10 @@ Documentation is part of Done. Do not advance status from a picture, specificati
 | F26 | Persistent least-recently-shown idea rotation | Verified | Multiday deterministic repository regression, Later/Archive and kind-correction eligibility guards; Today render |
 | F27 | Non-destructive idea conversion/provenance | Verified | Atomic repository preservation/search regression and actual HTTP linked-task sync; source-link/editing and preserved idea search passed on API 36 |
 | F28 | Explicit informed cloud consent/private default | Verified | Fail-closed policy test and API 36 cancellation/private-no-outbox/explicit cloud capture acceptance; overlay consent guard implemented |
-| F29 | Reference-led reusable UI and navigation | Verified | All required actual emulator captures reviewed against references, corrected fonts/navigation/shadows/week dots; light/dark component goldens pass; small/font-scale scope is in Visual audit |
+| F29 | Reference-led reusable UI and navigation | Verified | Five warm organizer screens, supplied mascot, bundled Cyrillic fonts and working destinations reviewed on API 36. Collection opens Ideas. Collection/Inbox route migration remains planned. |
 | F30 | Bounded old-task return and triage | Verified | Stable three-slot review/snooze repository regression and API 36 Smaller action → linked task, original retained |
 | F31 | Searchable paginated saved ideas | Verified | Bound title/details query, 50-row paging, repository search and actual API 36 search → convert → source link → edit |
+| F32 | Semantic Composer with local preview and manual correction | Implemented | Free text, selectable outlines, contextual clarification and preview. Confirmed capture uses the existing atomic note/record write. See Testing for emulator scope. |
 
 Global Search, media/voice, external calendars, timed reminder delivery, recurrence expansion, cloud backup/import, fine-tuning and embeddings remain **Planned/outside delivered MVP**. Stored reminder/recurrence fields do not establish delivery.
 

@@ -1,0 +1,82 @@
+{
+  "schema": "planner.semantic-composer.v1",
+  "behavior": "progressive-disclosure",
+  "states": [
+    "collapsed",
+    "editing",
+    "interpreting",
+    "clarifying",
+    "ready-to-save",
+    "manual-mode"
+  ],
+  "interpretations": [
+    "task",
+    "event",
+    "deadline",
+    "idea",
+    "note",
+    "information"
+  ],
+  "recordTypeIsNotMultiSelect": true,
+  "defaultInput": "free-text",
+  "typeSelectorDefaultVisible": false,
+  "semanticHighlights": {
+    "entity": {
+      "stroke": "#5794CB",
+      "strokeStyle": "dashed",
+      "radiusDp": 9,
+      "paddingInlineDp": 4
+    },
+    "temporal": {
+      "stroke": "#D9A235",
+      "strokeStyle": "dashed",
+      "radiusDp": 9,
+      "paddingInlineDp": 4
+    },
+    "idea": {
+      "stroke": "#A78AD0",
+      "strokeStyle": "dashed",
+      "radiusDp": 9,
+      "paddingInlineDp": 4
+    }
+  },
+  "componentDimensionsDp": {
+    "collapsedHeight": 58,
+    "collapsedRadius": 29,
+    "touchTargetMinimum": 48,
+    "horizontalMargin": 20,
+    "expandedPanelRadius": 30,
+    "summaryPanelRadius": 22
+  },
+  "layering": [
+    "background accent",
+    "editor background",
+    "semantic outlines",
+    "inline text",
+    "popover anchored above selected token",
+    "clarification panel below editor",
+    "interpretation summary below editor",
+    "save action"
+  ],
+  "explicitConsent": "Save local raw text regardless of AI confidence; never silently invent dates/times.",
+  "example": {
+    "raw": "Записаться к стоматологу в 6",
+    "assumedIntent": "event",
+    "ambiguousToken": "в 6",
+    "clarification1": [
+      "06:00",
+      "18:00"
+    ],
+    "clarification2": [
+      "Сегодня",
+      "Завтра",
+      "Другая дата",
+      "Пропустить"
+    ],
+    "selected": {
+      "time": "18:00",
+      "date": null
+    },
+    "preview": "Событие · 18:00 · дата не указана"
+  }
+}

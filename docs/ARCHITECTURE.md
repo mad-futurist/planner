@@ -10,7 +10,7 @@ Backend is a Python 3.12 modular monolith with a separately run worker sharing P
 
 The installed IDE is Android Studio 2026.2.2. Studio Quail 4 (2026.1.4) or newer supporting AGP 9.4 is required for IDE sync; the earlier 2025.2.1 installation supported only AGP 8.13. Keep the pinned toolchain; no downgrade was made. The current bundled JBR runs the wrapper; Java 17 remains the output target. See [Running](RUNNING.md).
 
-Presentation now uses a shared [design system](DESIGN_SYSTEM.md), a navigation/composer shell, [organizer screens](../android/app/src/main/java/app/planner/features/OrganizerScreens.kt), and separate [record dialogs](../android/app/src/main/java/app/planner/features/RecordDialogs.kt). No new runtime UI dependency was introduced. Fonts and licenses are bundled for offline rendering. Task/idea lists page 50 rows; count/profile queries aggregate in Room rather than counting the visible page. Daily review/rotation reuse existing Meta/IdeaSlot tables; schema stays v3.
+Presentation now uses a shared [design system](DESIGN_SYSTEM.md), a navigation/composer shell, a dedicated [Today screen](../android/app/src/main/java/app/planner/features/TodayScreen.kt), [organizer screens](../android/app/src/main/java/app/planner/features/OrganizerScreens.kt), and separate [record dialogs](../android/app/src/main/java/app/planner/features/RecordDialogs.kt). Fonts, licenses and the supplied Today mascot are bundled for offline rendering. Today collects the existing lifecycle-aware ViewModel flows. Its decoration and route actions are presentation-only. Task/idea lists page 50 rows; count/profile queries aggregate in Room rather than counting the visible page. Daily review/rotation reuse existing Meta/IdeaSlot tables; schema stays v3.
 
 ## Source map
 
@@ -32,6 +32,8 @@ Presentation now uses a shared [design system](DESIGN_SYSTEM.md), a navigation/c
 ```mermaid
 flowchart LR
     UI[Compose or overlay] --> Domain[Capture planning]
+    UI --> Draft[Local draft reader and preview]
+    Draft --> Domain
     Domain --> Repo[Repository transaction]
     Repo --> Room[(Room: notes, records, outbox)]
     Room -->|Flow and StateFlow| UI
@@ -46,7 +48,7 @@ flowchart LR
     Sync -->|Merge and cursor transaction| Room
 ```
 
-1. Local transaction stores immutable original text and, for eligible captures, stable outbox payload/ID. Manual capture also creates a confirmed record. Private notes create no upload operation.
+1. The main editor can preview deterministic local draft hints before capture. The existing local transaction stores immutable original text and, for eligible captures, stable outbox payload/ID. Manual capture also creates a confirmed record. Private notes create no upload operation.
 2. Room queries drive UI state; DataStore drives preference state. Remote JSON never becomes a competing business-data source. Post-commit scheduling failure cannot turn a saved capture into a reported save failure.
 3. Sync serializes through a repository mutex, sends parents before dependent edits, persists retry/conflict state, then applies changed records and cursor atomically. [API](API.md#synchronization-protocol) owns the exact protocol.
 4. API authorizes, applies idempotency, and commits note/job/change state. Per-user advisory locks serialize feed writers so allocated sequence order follows commit order.

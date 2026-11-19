@@ -36,6 +36,9 @@ enum class Glyph(val path: String) {
     Moon("M20 16 C8 18 6 6 10 2 C-3 7 3 25 16 21 Z"),
     Video("M3 5 L15 5 L15 19 L3 19 Z M15 9 L22 5 L22 19 L15 15"),
     Location("M12 23 C10 20 4 14 4 9 C4 -1 20 -1 20 9 C20 14 14 20 12 23 Z M9 9 A3 3 0 1 0 15 9 A3 3 0 1 0 9 9"),
+    Settings("M12 4 L14 2 L17 3 L17 6 L20 7 L22 10 L20 12 L22 14 L20 17 L17 18 L17 21 L14 22 L12 20 L10 22 L7 21 L7 18 L4 17 L2 14 L4 12 L2 10 L4 7 L7 6 L7 3 L10 2 Z M15 12 A3 3 0 1 0 9 12 A3 3 0 1 0 15 12"),
+    People("M12 8 A4 4 0 1 0 4 8 A4 4 0 1 0 12 8 M2 21 V18 C2 13 14 13 14 18 V21 M16 4 A4 4 0 0 1 16 12 M17 15 Q22 15 22 19 V21"),
+    Attachment("M9 17 L17 9 Q19 7 17 5 Q15 3 13 5 L4 14 Q1 17 4 20 Q7 23 10 20 L21 9 M9 17 Q8 18 7 17 Q6 16 7 15 L15 7"),
 }
 @Composable fun PlannerIcon(glyph: Glyph, modifier: Modifier = Modifier, tint: Color = MaterialTheme.colorScheme.primary, filled: Boolean = false) {
     val path = remember(glyph) { PathParser().parsePathString(glyph.path).toPath() }

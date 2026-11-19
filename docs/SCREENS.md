@@ -1,18 +1,18 @@
 # Screens and UX
 
-Last reviewed: **2026-10-21**. The supplied images are visual targets under [ADR-016](DECISIONS.md#adr-016-reference-led-ui-and-complete-task-discovery). Current emulator comparisons: [Visual audit](VISUAL_AUDIT.md). Historical captures remain separately labeled.
+Reviewed **2026-11-20** under [ADR-018](DECISIONS.md#adr-018-semantic-composer-and-warm-organizer-screens). Emulator comparisons are in [Visual audit](VISUAL_AUDIT.md).
 
 ## Current navigation and interactions
 
-[PlannerUI](../android/app/src/main/java/app/planner/features/PlannerUI.kt) owns the persistent composer and consistent Today / Calendar / Tasks / Ideas / Profile navigation. Saved primary navigation entries restore useful route/list state. Profile links Journal, Review and Settings. Secondary headers have Back. Keyboard visibility hides primary navigation while keeping capture above IME/system insets. No chat, month grid or analytics view exists.
+[PlannerUI](../android/app/src/main/java/app/planner/features/PlannerUI.kt) owns Today, Calendar, Tasks, Ideas and Profile navigation. Profile links Journal, Review and Settings. The dark bar opens Semantic Composer as a temporary route over the originating screen. Closing returns there and retains the draft. Quick capture notifications route to the editor.
 
-The plus menu chooses Note for AI, Task for today, Task without a date, Idea, Event or Information. Classification is optional. Text saves after one Room transaction; raw input is independent of interpretation. Main/overlay inputs cap at 20,000 characters; in-flight saves prevent duplicate submission and retain newer typing. Drafts persist through DataStore. Local save confirmation never implies successful AI.
+[Semantic Composer](../android/app/src/main/java/app/planner/features/SemanticComposer.kt) accepts free text. It shows blue entity/link, lavender idea and amber date/time outlines when the local reader recognizes supported fragments. Tapping a fragment opens a selector above it. A text menu exposes the same fragments for accessibility. Ambiguous bare hours offer morning and evening, followed by a date question when needed. Switching to date asks for the month containing the identified day. The preview exposes the selected kind and temporal fields. Manual mode and Note are available through the kind selector.
 
-The composer states Private / on this device by default. An empty Today includes a nonblocking first-use explanation of private Journal storage, manual capture and optional cloud interpretation. Choosing Cloud AI first explains server/provider transmission, relevant context, queued offline uploads, provider retention responsibility, and the ability to switch back. Consent does not upload existing private notes. Cancel keeps captures private. Missing/legacy preferences fail closed. The overlay follows the same stored policy and directs first-time consent to Planner.
+Save commits the original draft exactly as typed, with a confirmed structured record when selected. Automatic drafts without a recognized kind use plain capture. Confirmed dates and times form a real instant when the local zone has a unique offset. Partial event/time details stay visible in record details and Journal. The editor displays the current privacy mode. Consent authorizes future cloud saves and leaves existing private notes local. The keyboard and content scroll independently of the save bar.
 
 ## Shared design and UI states
 
-[Design system](DESIGN_SYSTEM.md) owns bundled fonts/licenses, semantic color tokens, cards, icons and vector illustrations. Large serif headings, contemporary body text, ivory/mint/sand/apricot/lavender surfaces and soft elevation now follow the supplied references. Actual values/counts/identity/status come from local state. No fake user initials, provider activity, streaks or rewards.
+[Design system](DESIGN_SYSTEM.md) owns bundled fonts/licenses, semantic color tokens, cards, icons and vector illustrations. Today uses a warm Onest/Manrope treatment. Calendar, Tasks, Ideas and Profile share the warm system. Journal, Review and Settings retain the earlier theme. Actual values/counts/identity/status come from local state. No fake user initials, provider activity, streaks or rewards.
 
 | State | Actual behavior |
 | --- | --- |
@@ -21,23 +21,27 @@ The composer states Private / on this device by default. An empty Today includes
 | Query error | Distinct safe error and Try again; no fabricated empty-data claim |
 | Saving / saved | Duplicate send guard; confirmation after Room commit; continued typing retained |
 | Offline / pending | Local reading/editing works; cloud-eligible outbox persists |
-| AI unavailable / failed | Honest header/Journal status and Retry AI; private mode is explicit |
+| AI unavailable / failed | Honest Today/Journal status and Retry AI; private mode is explicit |
 | Stale edit / invalid form | Retain form and explain correction/reopen requirement |
 | Permission denied / revoked | Actual toggle state; in-app capture and notification alternative |
 
 ## Today
 
-[Organizer screens](../android/app/src/main/java/app/planner/features/OrganizerScreens.kt) uses the real device date/locale. Apricot sunrise preview shows the earliest tomorrow commitment and real remaining count. Schedule uses chronological timeline cards; Anytime initially shows two selected untimed tasks, then an explicit +N expansion. Deadlines never become invented meetings. Star/checkbox controls complete with Undo; card/details opens editing.
+[TodayScreen](../android/app/src/main/java/app/planner/features/TodayScreen.kt) uses the current device date and locale. The date pill opens a native picker and hands the result to Calendar. The five-day strip starts on Today and opens the chosen date in Calendar. Profile and Settings are direct header actions.
 
-Idea of the day uses a persisted daily slot with least-recently-shown eligible rotation. The lavender card supports Details, Develop and Later. Later leaves today’s slot empty, with alternatives considered on subsequent days. Done today uses actual completion instants and expands into restorable tasks. One quiet Worth revisiting link can lead to at most three older unresolved tasks in Review; it does not add them to the focus pool. Temporal predicates: [Data model](DATA_MODEL.md#temporal-semantics).
+One warm panel groups due tasks, chronological commitments, and the remaining Anytime focus. The Anytime selection remains pinned-first and initially capped at two. Deadline chips and appointment clocks read separate record fields. Task checkboxes complete with Undo or restore a completed task. Timed non-task records still open Details through their rows. Progress counts tasks in the Today query plus tasks actually completed today. The latest completion appears inline, with a disclosure when more are available.
+
+Collection opens the existing Ideas route and reports the real saved-ideas count. The conditional tomorrow preview, persisted Idea of the day with Develop/Later, Review shortcut and connection status remain available below the panel. Empty, loading and error states display real local-query results. The privacy explanation remains available on first use.
+
+The dark bar opens Semantic Composer. The existing five tabs include the Ideas and Profile routes. Voice capture has separate scope. Temporal predicates are documented in [Data model](DATA_MODEL.md#temporal-semantics).
 
 ## Calendar
 
-The month label opens a native date picker; previous/next week controls and seven date cells change the selected day. Actual Room counts drive week dots. Week start is configurable in Settings. Today returns to the device day. Timed commitments and planned/due tasks are separate groups with editable cards. Local empty/loading/error states are explicit. No external calendar writes or invented appointment duration.
+Day, Week and Month modes share the selected date. Week scrolls horizontally through seven real date columns and timed records. Month uses the real month length and configured week start. The month label opens the native date picker. The selected-day agenda keeps appointments and planned/due tasks separate. Local empty/loading/error states are explicit. No external calendar writes or invented appointment duration.
 
 ## Tasks
 
-Today & earlier, Upcoming and Someday filters have Room-derived counts. More views exposes All unfinished, Completed and Archived. Lists page 50 rows, pinned first; pinned/ordinary sections collapse independently. Someday includes every task with no execution date, deadline or start. Earlier tasks remain reachable without red warning states. All unfinished resolves cross-date cases without silently changing dates.
+Today & earlier, No date, Deadlines and Completed are direct filters. More views exposes All unfinished, Upcoming and Archived. Lists page 50 rows, pinned first. Pinned and ordinary sections collapse independently. Someday includes every task with no execution date, deadline or start. Earlier tasks remain reachable without red warning states. All unfinished resolves cross-date cases without silently changing dates.
 
 Completion/Undo, Details, planned date/deadline editing, reschedule, pin/unpin and archive/restore all use the existing repository/records. Add task selects manual undated capture. Pagination and empty states preserve discoverability beyond the Today day-query bound.
 

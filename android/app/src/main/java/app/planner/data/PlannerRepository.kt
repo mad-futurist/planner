@@ -46,8 +46,8 @@ class PlannerRepository @Inject constructor(val database: PlannerDatabase, val g
         addProperty("fieldsJson", (get("fields") ?: JsonObject()).toString()); remove("fields")
     }, Record::class.java)
 
-    suspend fun capture(text: String, private: Boolean, source: String = "APP", manualKind: String? = null, plannedFor: String? = null): RawNote {
-        val (note, record) = CaptureNote.plan(text, private, source, manualKind, plannedFor)
+    suspend fun capture(text: String, private: Boolean, source: String = "APP", manualKind: String? = null, plannedFor: String? = null, interpretation: CaptureInterpretation? = null): RawNote {
+        val (note, record) = CaptureNote.plan(text, private, source, manualKind, plannedFor, interpretation = interpretation)
         database.withTransaction {
             dao.note(note)
             record?.let { dao.record(it) }

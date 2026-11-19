@@ -29,6 +29,14 @@ Acceptance groups:
 
 Delivered: paginated Tasks including undated/earlier/archive recovery; real Profile summaries; bounded persistent old-task review; multiday idea rotation; preserved idea-to-task provenance/search; informed cloud consent; strict provider schema negotiation and bare-hour validation; reusable reference-led design, all routes and refined native overlay. Bundled fonts/licenses, runtime comparisons and component goldens are included. No runtime UI framework or toolchain churn was introduced.
 
+## 2026-11-19 Today visual pass
+
+The warm Today visual pass uses the approved PNG and provided mascot, with the original persistence and capture paths. [Visual audit](VISUAL_AUDIT.md) records the device evidence. Calendar visual work starts after Today review. The Collection/Inbox route migration and voice capture have separate scope.
+
+## 2026-11-20 Semantic Composer v2
+
+Today, Calendar, Tasks, Ideas and Profile share the warm design. The Android editor supports offline draft interpretation, interactive fragments, manual mode and atomic save. The Collection/Inbox navigation migration and media capture remain separate scope. Device and comparison evidence is tracked in the visual audit.
+
 ## Pending acceptance tasks
 
 2026-10-21 functional corrections and reference-led UI are implemented; scoped visual/device verification is recorded in [Features](FEATURES.md) and [Visual audit](VISUAL_AUDIT.md). Room schema, backend DTOs and the existing outbox are preserved. Live inference remains blocked by absent credentials rather than a fabricated pass.

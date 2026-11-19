@@ -7,6 +7,7 @@ import app.planner.core.database.*
 import app.planner.core.model.*
 import app.planner.data.PlannerRepository
 import app.planner.domain.dayBounds
+import app.planner.domain.CaptureInterpretation
 import app.planner.sync.SyncEngine
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -85,7 +86,7 @@ class PlannerViewModel @Inject constructor(val repository: PlannerRepository, va
     fun action(block: suspend () -> Unit) = viewModelScope.launch {
         try { block() } catch (e: CancellationException) { throw e } catch (e: IllegalArgumentException) { message.value = e.message } catch (_: Exception) { message.value = "Couldn't save this change. Please try again." }
     }
-    fun capture(manualKind: String? = null) {
+    fun capture(manualKind: String? = null, interpretation: CaptureInterpretation? = null, onSaved: () -> Unit = {}) {
         if (saving.value || draft.value.isBlank()) return
         val text = draft.value
         val private = privateCapture.value
@@ -93,8 +94,11 @@ class PlannerViewModel @Inject constructor(val repository: PlannerRepository, va
         action {
             try {
                 val started = System.nanoTime()
-                repository.capture(text, private, manualKind = if(manualKind == "task_unscheduled") "task" else manualKind, plannedFor = if (manualKind == "task") today.value.toString() else null)
-                if (draft.value == text) setDraft("")
+                repository.capture(text, private, manualKind = if(manualKind == "task_unscheduled") "task" else manualKind, plannedFor = if (manualKind == "task") today.value.toString() else null, interpretation = interpretation)
+                if (draft.value == text) {
+                    setDraft("")
+                    onSaved()
+                }
                 captureKind.value = null
                 page.value = 0
                 message.value = "Saved on this device"
@@ -109,6 +113,10 @@ class PlannerViewModel @Inject constructor(val repository: PlannerRepository, va
         if (currentZone != observedZone) { observedZone = currentZone; reloadLocalQueries() }
     }
     fun reloadLocalQueries() { reload.value += 1 }
+    fun calendarDayRecords(day: LocalDate, zone: ZoneId): Flow<List<Record>> = reload.flatMapLatest {
+        val bounds = dayBounds(day, zone)
+        dao.day(bounds.day, bounds.start, bounds.end).catch { emit(emptyList()) }
+    }
     fun setPrivacy(private: Boolean) = action {
         if (!private && preferences.values.first()["cloudConsent"] != CapturePrivacy.CONSENT_VERSION) cloudExplanation.value = true
         else { preferences.capturePrivacy(private); privateCapture.value = private }

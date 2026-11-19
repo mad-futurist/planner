@@ -39,7 +39,8 @@ class AppAcceptanceTest {
         val text = "Capture ${UUID.randomUUID()}"
         runBlocking { dependencies.preferences().values.first() }
         ui.waitForIdle()
-        if (ui.onAllNodesWithText("Cloud AI").fetchSemanticsNodes().isNotEmpty()) ui.onNodeWithTag("privacy").performClick()
+        ui.onNodeWithTag("capture-bar").performClick()
+        if (ui.onAllNodesWithText("Cloud AI · new notes may upload").fetchSemanticsNodes().isNotEmpty()) ui.onNodeWithTag("privacy").performClick()
         ui.onNodeWithTag("capture").performTextClearance()
         ui.onNodeWithTag("capture").performTextInput(text)
         ui.onNodeWithTag("send").performClick()
@@ -73,8 +74,10 @@ class AppAcceptanceTest {
         ui.waitUntil(10_000) { ui.onAllNodesWithText("Marked done").fetchSemanticsNodes().isEmpty() }
         val bounds = dayBounds(date, ZoneId.systemDefault())
         val count = runBlocking { repository.dao.completed(bounds.start, bounds.end).first().size }
-        ui.onNodeWithTag("today-list").performScrollToNode(hasText("Done today: $count", substring = true))
-        ui.onNode(hasText("Done today: $count", substring = true) and hasClickAction()).performClick()
+        if (count > 1) {
+            ui.onNodeWithTag("today-list").performScrollToNode(hasText("Done today: $count", substring = true))
+            ui.onNode(hasText("Done today: $count", substring = true) and hasClickAction()).performClick()
+        }
         ui.onNodeWithTag("today-list").performScrollToNode(hasContentDescription("Restore $title"))
         ui.onNodeWithContentDescription("Restore $title").performClick()
         ui.waitUntil(10_000) { runBlocking { repository.dao.recordById(task.id)?.state == "pending" } }
@@ -84,7 +87,7 @@ class AppAcceptanceTest {
         for ((route, title) in listOf("Journal" to "Journal", "Calendar" to "Calendar", "Tasks" to "Tasks", "Ideas" to "Ideas", "Profile" to "Profile", "Review" to "Review", "Settings" to "Settings", "Today" to "Today")) {
             navigate(route)
             ui.onNode(hasText(title) and !hasClickAction()).assertExists()
-            ui.onNodeWithTag("capture").assertExists()
+            ui.onNodeWithTag("capture-bar").assertExists()
         }
     }
 
@@ -146,6 +149,7 @@ class AppAcceptanceTest {
         runBlocking {prefs.set("cloudConsent","");prefs.capturePrivacy(true)}
         ui.activityRule.scenario.recreate()
         ui.waitForIdle()
+        ui.onNodeWithTag("capture-bar").performClick()
         ui.onNodeWithTag("privacy").performClick()
         ui.onNodeWithText("Keep private").performClick()
         val text="Private consent check ${UUID.randomUUID()}"
@@ -154,6 +158,7 @@ class AppAcceptanceTest {
         ui.waitUntil(10_000) {runBlocking {repository.dao.notePage(50,0).any {it.originalContent==text && it.privacyMode=="LOCAL_ONLY"}}}
         val note=runBlocking {repository.dao.notePage(50,0).first {it.originalContent==text}}
         assertEquals(0,runBlocking {repository.dao.pendingForNote(note.id)})
+        ui.onNodeWithTag("capture-bar").performClick()
         ui.onNodeWithTag("privacy").performClick()
         ui.onNodeWithTag("allow-cloud").performClick()
         ui.waitUntil(5_000) {runBlocking {prefs.values.first()["cloudConsent"]==app.planner.core.CapturePrivacy.CONSENT_VERSION}}
@@ -236,9 +241,11 @@ class AppAcceptanceTest {
         ui.waitUntil(8_000) {runBlocking {repository.dao.tasks("someday",bounds.day,bounds.end).first().any {it.title==title}}}
         val task=runBlocking {repository.dao.tasks("someday",bounds.day,bounds.end).first().first {it.title==title}}
         assertEquals("idea",runBlocking {repository.dao.recordById(idea.id)?.baseKind})
+        ui.waitUntil(10_000) { ui.onAllNodesWithText("Task created · your idea is still saved").fetchSemanticsNodes().isEmpty() }
         navigate("Tasks");ui.onNodeWithTag("filter-someday").performClick()
         ui.onNodeWithTag("tasks-list").performScrollToNode(hasText(title))
         ui.onNodeWithContentDescription("Details $title").performClick()
+        ui.waitUntil(8_000) { ui.onAllNodesWithText("From idea: $title").fetchSemanticsNodes().isNotEmpty() }
         ui.onNodeWithText("From idea: $title").performScrollTo().performClick()
         ui.waitUntil(8_000) {ui.onAllNodesWithText("Kind: Idea").fetchSemanticsNodes().isNotEmpty()}
         ui.onNode(hasSetTextAction() and hasText(title)).performTextClearance()

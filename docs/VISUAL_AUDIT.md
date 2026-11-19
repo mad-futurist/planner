@@ -1,5 +1,40 @@
 # Visual audit
 
+## 2026-11-20 Semantic Composer and organizer
+
+The Today file in the v2 ZIP is pixel-identical to [the approved Today image](assets/screens/today-approved-warm.png). The supplied SVG/WebP cat pair matches the bundled assets byte for byte. The other package images are composition concepts. Comparisons show the package reference on the left and the actual API 36 emulator on the right, each scaled to 390 dp width at its original aspect ratio.
+
+- [Today render](assets/runtime/2026-11-20/today.png) and [approved comparison](assets/runtime/2026-11-20/today-comparison.png). The shared capsule replaces the inline editor and privacy row. Tapping opens the dedicated editor. The device supplies the date, status icons and gestures.
+- [Calendar Week](assets/runtime/2026-11-20/calendar.png), [Month](assets/runtime/2026-11-20/calendar-month.png) and [Week concept comparison](assets/runtime/2026-11-20/calendar-comparison.png). The compact mascot and week alignment keep the selected day and more of the timeline visible. The grid scrolls horizontally. Event cards use a readable minimum height and detail rows retain exact time. The agenda puts planned tasks and deadlines in a separate group.
+- [Tasks render](assets/runtime/2026-11-20/tasks.png) and [concept comparison](assets/runtime/2026-11-20/tasks-comparison.png). The filter row gives the longer Completed label more space. Real task rows share a panel and thin dividers. Later uses the existing Upcoming query.
+- [Ideas render](assets/runtime/2026-11-20/ideas.png) and [concept comparison](assets/runtime/2026-11-20/ideas-comparison.png). The first real saved idea gets the lavender accent. Search, theme grouping, Develop and Make a task are working controls. There is no synthesized featured content.
+- [Profile render](assets/runtime/2026-11-20/profile.png) and [concept comparison](assets/runtime/2026-11-20/profile-comparison.png). A local device profile and actual Room counts fill the identity and statistics panel. Journal, Review and Settings preserve their working entry points.
+- [Anchored composer selector](assets/runtime/2026-11-20/composer-token.png), [date clarification](assets/runtime/2026-11-20/composer-question.png), [resolved preview](assets/runtime/2026-11-20/composer-ready.png) and [composer concept comparison](assets/runtime/2026-11-20/composer-token-comparison.png). The Russian dentist example shows dashed text bounds, a popup above the ambiguous fragment, and the next question below the editor. App privacy and text-menu actions replace illustrative media buttons. The confirmed record uses the same raw text and the date/time chosen in the editor.
+
+The organizer follows the established five-destination navigation. A [360 dp enlarged-text capture](assets/runtime/2026-11-20/composer-360dp.png) illustrates scrolling and the anchored selector at font scale 1.4. See [Testing](TESTING.md#2026-11-20-semantic-composer-v2) for executed scope.
+
+## 2026-11-19 warm Today
+
+The [approved Today image](assets/screens/today-approved-warm.png) sets the visual target. [First emulator pass](assets/runtime/2026-11-19/today-first-pass.png) and [final emulator pass](assets/runtime/2026-11-19/today-390.png) use actual persisted private fixture records. The [comparison](assets/runtime/2026-11-19/today-reference-comparison.png) shows a 50% overlay on the left and absolute RGB difference on the right at 390×844. It is a geometry aid. Device chrome, content, font rasterization and destination changes contribute to the difference.
+
+<img src="assets/runtime/2026-11-19/today-390.png" alt="Final Cyrillic Today at 390 by 844 dp with the full Collection card visible" width="300" />
+
+The first comparison drove five corrections.
+
+1. The upper-right peach shape had a straight inner edge. A continuous contour now curves behind the header and mascot.
+2. The mascot sat fully above the panel. Its supplied transparent artwork now peeks behind the top edge and leaves all five dates clear.
+3. The bottom of the task panel showed square corners and a trailing divider. The last live row shares the rounded bottom with the panel actions.
+4. The Collection card was cropped at the fold. The dark composer now fits its privacy label and control alongside the text field, so the full collection card is visible at 390 dp.
+5. The calendar/header controls sat high and the navigation compressed the composer gap. Revised insets and spacing align the title, panel and collection more closely with the supplied composition.
+
+The [360 dp / 140% text capture](assets/runtime/2026-11-19/today-360-large-text.png) stacks the mascot below the title. The task title and long date wrap, and the nav allocates extra width to its longer labels. Larger-text content scrolls past the fold. The [dark capture](assets/runtime/2026-11-19/today-390-dark.png) uses the warm dark palette. The [keyboard capture](assets/runtime/2026-11-19/today-390-keyboard.png) shows the live IME and composer, with tabs hidden while typing.
+
+The fixture uses the device date, computed progress and saved-ideas count. Collection opens Ideas. Android supplies the system chrome. The five working destinations remain visible, including Tasks and Profile. The composer uses its working save button and explicit privacy controls. The provided vector pair has taller proportions and amber accent marks. These are visible differences from the approved PNG. Collection/Inbox routes and voice capture have separate scope.
+
+The supplied asset catalog was used as a visual guide. The named handoff document paths were absent from the checkout. The available design token JSON, approved PNG, verified cat asset pair and scene vectors supplied the implementation details. The existing two design-system component goldens represent the earlier shared palette and were checked separately.
+
+## 2026-10-21 reference and device audit
+
 2026-10-21. Status: **Verified on the documented emulator configurations**. The five unchanged references are visual targets. Runtime captures below are actual interactive Compose/native screens populated only by the explicitly invoked QA fixture. They are not production seed data or live AI results.
 
 ## Environment and provenance

@@ -25,6 +25,8 @@ The interface answers “What matters now?” and “Where do I put the next tho
 
 ### Capture and organize
 
+The compact input opens a free-text editor. Local draft suggestions are optional and expose only recognized fragments and relevant questions. The user can accept the preview, change its kind or temporal fields, or save a plain note. Private capture stays on the device. Cloud-authorized text without a confirmed interpretation follows the background interpretation path.
+
 Write in the main composer or floating panel; keep the private default or explicitly consent to Cloud AI for future captures. Save raw text and eligible outbox work in one Room transaction. Confirm after commit and allow the next thought immediately. Cloud-eligible notes synchronize and undergo background interpretation. Pending, failed, ambiguous, and unconfigured processing remain separate from successful local saving. Manual organization remains usable offline.
 
 Examples: “Call the doctor tomorrow” is an untimed task; “Finish the report by Friday” has a deadline; “Meet Nicolas Thursday at 14:00 and prepare questions by Wednesday” may produce multiple records. English, French, and Russian are supported extraction inputs; live quality still needs [provider acceptance](TESTING.md#live-provider-smoke-test).
@@ -35,7 +37,7 @@ Journal exposes original text, timestamp, processing status, and interpretations
 
 ### Plan a day
 
-Today contains scheduled commitments, a two-item initial Anytime focus pool, a quiet tomorrow preview, one stable saved idea, and an actual completed-task recap. It does not surface a red overdue backlog. Date navigation in Calendar exposes scheduling, planning, and deadline meanings. See [temporal semantics](DATA_MODEL.md#temporal-semantics) for the implemented inclusion policy.
+Today shows scheduled commitments, a two-item initial Anytime focus pool, and actual completion progress in a single panel. Its collection entry leads to saved ideas. A quiet tomorrow preview, one stable saved idea, and the completed-task disclosure remain part of the day flow. It does not surface a red overdue backlog. Date navigation in Calendar exposes scheduling, planning, and deadline meanings. See [temporal semantics](DATA_MODEL.md#temporal-semantics) for the implemented inclusion policy.
 
 ### Find an unfinished task
 

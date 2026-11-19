@@ -4,6 +4,7 @@ import app.planner.core.isoInstant
 import app.planner.core.model.RawNote
 import app.planner.core.model.Record
 import java.time.Instant
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Locale
 
@@ -12,12 +13,38 @@ data class CapturePlan(val note: RawNote, val record: Record?)
 
 /** Pure capture policy; persistence and scheduling are applied by the repository. */
 object CaptureNote {
-    fun plan(text: String, private: Boolean, source: String, manualKind: String?, plannedFor: String?, context: CaptureContext = CaptureContext()): CapturePlan {
+    fun plan(text: String, private: Boolean, source: String, manualKind: String?, plannedFor: String?, context: CaptureContext = CaptureContext(), interpretation: CaptureInterpretation? = null): CapturePlan {
         require(text.isNotBlank() && text.length <= 20_000) { "Write a note of up to 20,000 characters." }
         require(source in setOf("APP", "OVERLAY"))
         require(manualKind == null || manualKind in setOf("task", "event", "idea", "information"))
-        val note = RawNote(content = text, createdAt = isoInstant(context.instant), privacyMode = if (private) "LOCAL_ONLY" else "CLOUD_ALLOWED", source = source, processingStatus = if (private || manualKind != null) "local" else "pending", syncStatus = if (private) "local" else "pending", locale = context.locale, timezone = context.timezone.id, manual = manualKind != null)
-        val record = manualKind?.let { Record(sourceNoteId = note.id, baseKind = it, title = text.lineSequence().first { line -> line.isNotBlank() }.trim().take(1000), plannedFor = if (it == "task") plannedFor else null, timezone = note.timezone, createdAt = note.createdAt, isUserConfirmed = true) }
+        require(manualKind == null || interpretation == null)
+        val kind = interpretation?.kind?.recordKind ?: manualKind
+        val manual = interpretation != null || manualKind != null
+        val note = RawNote(content = text, createdAt = isoInstant(context.instant), privacyMode = if (private) "LOCAL_ONLY" else "CLOUD_ALLOWED", source = source, processingStatus = if (private || manual) "local" else "pending", syncStatus = if (private) "local" else "pending", locale = context.locale, timezone = context.timezone.id, manual = manual)
+        val record = kind?.let {
+            val day = interpretation?.day
+            val time = interpretation?.time
+            val instant = if (day != null && time != null) {
+                val local = LocalDateTime.of(day, time)
+                val offset = context.timezone.rules.getValidOffsets(local).singleOrNull()
+                require(offset != null) { "Choose another time or save without scheduling. This time is ambiguous or unavailable." }
+                isoInstant(local.toInstant(offset))
+            } else null
+            val deadline = interpretation?.kind == CaptureKind.DEADLINE
+            val fields = when {
+                time != null && instant == null -> """{"suggestedTime":"$time"}"""
+                day != null && kind == "event" && instant == null -> """{"suggestedDate":"$day"}"""
+                else -> "{}"
+            }
+            Record(
+                sourceNoteId = note.id, baseKind = it,
+                title = text.lineSequence().first { line -> line.isNotBlank() }.trim().take(1000),
+                fieldsJson = fields, startAt = instant.takeUnless { deadline },
+                dueAt = instant.takeIf { deadline }, dueDate = day?.toString().takeIf { deadline && instant == null },
+                plannedFor = if (kind == "task" && !deadline) day?.toString() ?: plannedFor else null,
+                timezone = note.timezone, createdAt = note.createdAt, isUserConfirmed = true,
+            )
+        }
         return CapturePlan(note, record)
     }
 }

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="today_title">Сегодня</string>
+    <string name="today_tasks">Задачи</string>
+    <string name="today_collection">Коллекция</string>
+    <string name="today_open_date_picker">Выбрать дату в календаре</string>
+    <string name="today_open_profile">Открыть профиль</string>
+    <string name="today_open_settings">Открыть настройки</string>
+    <string name="today_empty">На сегодня ничего не запланировано.</string>
+    <string name="today_add_task">+ Добавить задачу</string>
+    <string name="today_show_less">Свернуть</string>
+    <string name="today_done">Выполнено сегодня: %1$d</string>
+    <string name="today_progress">%1$d из %2$d</string>
+    <string name="today_due">До %1$s</string>
+    <string name="today_ongoing">Продолжается</string>
+    <string name="today_restore">Вернуть задачу %1$s</string>
+    <string name="today_complete">Выполнить задачу %1$s</string>
+    <string name="today_details">Открыть подробности</string>
+    <string name="today_daily_idea">Идея дня</string>
+    <string name="today_capture_hint">Записать мысль…</string>
+    <string name="today_private_mode">Приватно · на устройстве</string>
+    <string name="today_cloud_mode">Облачный ИИ · заметки могут отправляться</string>
+    <string name="today_nav_calendar">Календарь</string>
+    <string name="today_nav_ideas">Идеи</string>
+    <string name="today_nav_profile">Профиль</string>
+    <plurals name="today_saved_ideas">
+        <item quantity="one">%1$d сохранённая идея</item>
+        <item quantity="few">%1$d сохранённые идеи</item>
+        <item quantity="many">%1$d сохранённых идей</item>
+        <item quantity="other">%1$d сохранённой идеи</item>
+    </plurals>
+    <plurals name="today_more_tasks">
+        <item quantity="one">Ещё %1$d задача</item>
+        <item quantity="few">Ещё %1$d задачи</item>
+        <item quantity="many">Ещё %1$d задач</item>
+        <item quantity="other">Ещё %1$d задачи</item>
+    </plurals>
+</resources>
